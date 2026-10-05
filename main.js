@@ -343,6 +343,8 @@
     const reopen = document.getElementById("reopen-mail");
     if (reopen) reopen.href = href;
     form.hidden = true;
+    const note = document.querySelector(".brief-note");
+    if (note) note.hidden = true;
     if (success) success.hidden = false;
     if (formStatus) formStatus.textContent = "Le brief est prêt. La messagerie va s’ouvrir.";
     window.location.href = href;
@@ -350,6 +352,7 @@
 
   document.getElementById("edit-brief")?.addEventListener("click", () => {
     if (success) success.hidden = true;
+    document.querySelector(".brief-note")?.removeAttribute("hidden");
     if (form) {
       form.hidden = false;
       form.elements.nom?.focus();

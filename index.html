@@ -18,8 +18,21 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://buttiscreen.fr/" />
     <meta property="og:locale" content="fr_FR" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://buttiscreen.fr/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="BUTTISCREEN, studio de montage vidéo" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BUTTISCREEN — Studio de montage vidéo" />
+    <meta name="twitter:description" content="On cherche le cut qui tient. Montage, étalonnage et déclinaisons." />
+    <meta name="twitter:image" content="https://buttiscreen.fr/og.png" />
+    <link rel="alternate" hreflang="fr" href="https://buttiscreen.fr/" />
+    <link rel="privacy-policy" href="https://buttiscreen.fr/politique.html" />
+    <link rel="manifest" href="site.webmanifest" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="icon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="preload" href="fonts/bricolage-800.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="styles.css" />
     <script type="application/ld+json">
@@ -462,6 +475,7 @@
             <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
             Rien n’est enregistré sur le site.
           </p>
+          <div class="contact-layout">
           <form class="brief" id="brief" action="mailto:contact@buttiscreen.fr" method="post" enctype="text/plain" novalidate>
             <label class="field">
               <span>Nom</span>
@@ -494,7 +508,22 @@
             <div class="field full form-actions">
               <button class="btn" type="submit">Envoyer le brief</button>
             </div>
+            <p class="fine full">
+              Le message part depuis votre messagerie.
+              <a href="politique.html">Politique de confidentialité</a>.
+            </p>
           </form>
+          <aside class="brief-note">
+            <p class="kicker">Dans le message</p>
+            <ul>
+              <li>Durée visée</li>
+              <li>Où le film sera vu</li>
+              <li>Date de livraison</li>
+              <li>Cadres utiles : 16:9, 9:16, 1:1</li>
+            </ul>
+            <p>Pas de grille de prix. Le devis suit le brief.</p>
+          </aside>
+          </div>
           <div class="form-success" id="form-success" hidden>
             <p class="kicker">Brief prêt</p>
             <h3>Votre messagerie s’ouvre avec le message.</h3>
@@ -513,6 +542,7 @@
             <p>© 2026 BUTTISCREEN</p>
             <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
             <a href="mentions.html">Mentions légales</a>
+            <a href="politique.html">Confidentialité</a>
           </footer>
         </div>
       </section>
