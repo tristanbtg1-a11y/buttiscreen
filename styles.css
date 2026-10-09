@@ -1697,6 +1697,267 @@ dialog#viewer::backdrop {
   }
 }
 
+.tunnel {
+  padding-top: 36px;
+  padding-bottom: 72px;
+}
+
+.tunnel h1 {
+  font-size: clamp(2.6rem, 7vw, 5.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  margin: 8px 0 16px;
+}
+
+.tunnel-lede {
+  max-width: 42rem;
+}
+
+.tunnel-track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 28px 0;
+  padding-bottom: 8px;
+}
+
+.tunnel-clip {
+  flex: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(247, 244, 239, 0.28);
+  background: transparent;
+  color: var(--paper-2);
+  font: inherit;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.tunnel-clip.is-on {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #140b08;
+}
+
+.tunnel-clip:disabled {
+  opacity: 0.4;
+}
+
+.tunnel-pane .brief {
+  max-width: 760px;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.slot {
+  min-height: 48px;
+  border: 1px solid rgba(247, 244, 239, 0.28);
+  background: transparent;
+  color: var(--paper-2);
+  font: inherit;
+}
+
+.slot.is-on {
+  background: var(--neon);
+  border-color: var(--neon);
+  color: #140b08;
+}
+
+.recap {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 8px 16px;
+  margin: 0 0 20px;
+  max-width: 40rem;
+}
+
+.recap dt {
+  color: var(--muted);
+  font-family: var(--font-m);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.recap dd {
+  margin: 0;
+}
+
+.locker {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+  max-width: 36rem;
+}
+
+.locker li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-m);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
+
+.tunnel {
+  padding: calc(var(--header) + 28px) 0 80px;
+}
+
+.tunnel-title {
+  font-size: clamp(3.2rem, 8vw, 6.4rem);
+  margin-top: 8px;
+}
+
+.tunnel-title .dot {
+  color: var(--ember);
+}
+
+.tunnel-lede {
+  max-width: 46ch;
+  color: var(--muted);
+  margin-top: 14px;
+}
+
+.tunnel-track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 28px 0;
+  padding-bottom: 8px;
+}
+
+.tunnel-track .clip {
+  position: relative;
+  flex: none;
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: rgba(247, 244, 239, 0.78);
+  background: #1a1228;
+  border: 0;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.tunnel-pane h2 {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  margin: 8px 0 16px;
+}
+
+.tunnel-form {
+  margin-top: 18px;
+}
+
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.slot {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(247, 244, 239, 0.28);
+  background: transparent;
+  color: var(--paper-2);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.slot.is-active,
+.slot:hover {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #140b08;
+}
+
+.recap {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.recap div {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.recap dt {
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.recap dd {
+  margin: 0;
+}
+
+.locker {
+  list-style: none;
+  margin: 22px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.locker li {
+  min-height: 140px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #100c18;
+  border: 1px solid rgba(247, 244, 239, 0.16);
+}
+
+.locker span,
+.locker em {
+  font-family: var(--font-m);
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.locker strong {
+  font-size: 1.8rem;
+  letter-spacing: -0.04em;
+}
+
+.locker em {
+  color: var(--ember);
+}
+
+@media (max-width: 720px) {
+  .locker,
+  .recap div {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
