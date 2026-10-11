@@ -12,6 +12,13 @@
     creneau: "",
   };
 
+  const note = sessionStorage.getItem("buttiscreen.panier.note");
+  const messageField = document.querySelector('[name="message"]');
+  if (note && messageField && !messageField.value) {
+    store.message = note;
+    messageField.value = note;
+  }
+
   const menu = document.getElementById("menu");
   const menuBtn = document.querySelector(".menu-btn");
   menuBtn?.addEventListener("click", () => {

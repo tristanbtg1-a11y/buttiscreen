@@ -56,7 +56,7 @@
         <div class="brand">
           <a class="logo" href="#titre">
             <span class="mark" aria-hidden="true"></span>
-            <span>BUTTISCREEN</span>
+            <span class="logo-word">BUTTISCREEN</span>
           </a>
           <nav class="socials" aria-label="Réseaux sociaux">
             <a class="social" href="https://www.instagram.com/buttiscreen" data-network="instagram" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -91,16 +91,38 @@
           <a href="#methode">Méthode</a>
           <a href="#contact">Contact</a>
           <a href="commande.html" target="_blank" rel="noopener noreferrer">Ma commande</a>
+          <a href="produits.html" target="_blank" rel="noopener noreferrer">Produits</a>
         </nav>
         <a class="btn header-cta" href="tunnel.html">Démarrer</a>
-        <button
-          class="menu-btn"
-          type="button"
-          aria-expanded="false"
-          aria-controls="menu"
-        >
-          Menu
-        </button>
+        <div class="header-tools">
+          <a class="cart-link" href="panier.html" aria-label="Mon panier">
+            <span class="cart-face">
+              <svg class="cart-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <g class="cart-body">
+                  <path class="cart-handle" d="M6.2 7.2 5 3.8H2.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path class="cart-basket" d="M6.2 7.2h14.2l-1.4 9.2H7.6L6.2 7.2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                </g>
+                <g class="cart-wheel">
+                  <circle cx="9.2" cy="19.7" r="1.15" fill="none" stroke="currentColor" stroke-width="1.15"/>
+                  <circle cx="9.55" cy="19.35" r="0.38" fill="currentColor"/>
+                </g>
+                <g class="cart-wheel">
+                  <circle cx="16.6" cy="19.7" r="1.15" fill="none" stroke="currentColor" stroke-width="1.15"/>
+                  <circle cx="16.95" cy="19.35" r="0.38" fill="currentColor"/>
+                </g>
+              </svg>
+            </span>
+            <span class="cart-count" data-cart-count hidden>0</span>
+          </a>
+          <button
+            class="menu-btn"
+            type="button"
+            aria-expanded="false"
+            aria-controls="menu"
+          >
+            Menu
+          </button>
+        </div>
       </div>
     </header>
     <div class="menu" id="menu" hidden>
@@ -110,6 +132,7 @@
       <a href="#methode">Méthode</a>
       <a href="tunnel.html">Démarrer un projet</a>
       <a href="commande.html" target="_blank" rel="noopener noreferrer">Ma commande</a>
+      <a class="menu-produits" href="produits.html" target="_blank" rel="noopener noreferrer">Produits</a>
     </div>
 
     <main id="contenu" tabindex="-1">
@@ -611,6 +634,7 @@
         </div>
       </div>
     </dialog>
+    <script src="boutique.js"></script>
     <script src="main.js"></script>
   </body>
 </html>
