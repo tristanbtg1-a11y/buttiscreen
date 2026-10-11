@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Atelier — BUTTISCREEN</title>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#07060d" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#contenu">Aller au contenu</a>
+    <header class="header is-scrolled">
+      <div class="wrap header-inner">
+        <div class="brand">
+          <a class="logo" href="index.html">
+            <span class="mark" aria-hidden="true"></span>
+            <span>BUTTISCREEN</span>
+          </a>
+        </div>
+        <a class="btn ghost header-cta" href="commande.html">Ma commande</a>
+      </div>
+    </header>
+
+    <main id="contenu" class="wrap order" tabindex="-1">
+      <section id="atelier-gate">
+        <p class="kicker">Studio</p>
+        <h1 class="order-title" id="gate-title">Protéger l’atelier<span class="dot">.</span></h1>
+        <p class="order-lede" id="gate-copy">Choisissez un mot de passe. Il reste dans ce navigateur.</p>
+        <form class="brief order-form" id="atelier-gate-form">
+          <label class="field full">
+            <span>Mot de passe atelier</span>
+            <input name="motdepasse" type="password" autocomplete="current-password" required />
+          </label>
+          <p class="field-error full" id="atelier-gate-error" hidden></p>
+          <div class="field full form-actions">
+            <button class="btn" type="submit">Enregistrer</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="atelier-desk" hidden>
+        <p class="kicker">Studio</p>
+        <h1 class="order-title">Atelier<span class="dot">.</span></h1>
+        <p class="order-lede">
+          Déposez ici l’état, le délai et la facture. Le client les voit dans Ma commande, sur ce navigateur.
+        </p>
+        <div id="atelier-list" class="atelier-list" aria-label="Commandes"></div>
+        <form class="brief order-form" id="atelier-form">
+          <label class="field">
+            <span>E-mail du client</span>
+            <input name="email" type="email" autocomplete="off" required />
+          </label>
+          <label class="field">
+            <span>Titre du projet</span>
+            <input name="titre" type="text" />
+          </label>
+          <label class="field">
+            <span>État de production</span>
+            <select name="etat" required></select>
+          </label>
+          <label class="field">
+            <span>Délai de livraison</span>
+            <input name="delai" type="date" />
+          </label>
+          <label class="field full">
+            <span>Facture PDF</span>
+            <input name="facture" type="file" accept="application/pdf,.pdf" />
+          </label>
+          <p class="field-error full" id="atelier-error" hidden></p>
+          <p class="fine full" id="atelier-saved" hidden></p>
+          <div class="field full form-actions">
+            <button class="btn" type="submit">Enregistrer le suivi</button>
+            <button class="btn ghost" type="button" id="clear-file">Retirer la facture</button>
+          </div>
+        </form>
+      </section>
+    </main>
+    <script src="commande-store.js"></script>
+    <script src="atelier.js"></script>
+  </body>
+</html>
