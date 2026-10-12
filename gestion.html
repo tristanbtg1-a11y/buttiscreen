@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gestion — BUTTISCREEN</title>
+    <meta
+      name="description"
+      content="Consultation des rendez-vous et des commandes BUTTISCREEN."
+    />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href="https://buttiscreen.fr/gestion.html" />
+    <meta name="theme-color" content="#07060d" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css?v=gestion" />
+  </head>
+  <body data-shop>
+    <a class="skip" href="#contenu">Aller au contenu</a>
+    <header class="header is-scrolled" id="header">
+      <div class="wrap header-inner">
+        <div class="brand">
+          <a class="logo" href="index.html">
+            <span class="mark" aria-hidden="true"></span>
+            <span class="logo-word">BUTTISCREEN</span>
+          </a>
+          <nav class="socials" aria-label="Réseaux sociaux">
+            <a class="social" href="https://www.instagram.com/buttiscreen" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.4" cy="6.6" r="1.05" fill="currentColor"/></svg>
+            </a>
+            <a class="social" href="https://www.youtube.com/@Buttiscreen" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.2" y="6" width="19.6" height="12" rx="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.2 9.4v5.2l4.8-2.6z" fill="currentColor"/></svg>
+            </a>
+            <a class="social" href="https://www.tiktok.com/@buttiscreen" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.2 3.2c.5 2.4 2 4 4.4 4.5v2.3a6.6 6.6 0 0 1-4.1-1.4v6.2a5 5 0 1 1-5-5c.3 0 .6 0 .8.1v2.5a2.5 2.5 0 1 0 1.7 2.4V3.2h2.2z"/></svg>
+            </a>
+            <a class="social" href="https://www.linkedin.com/in/tristan-buttighoffer-8a93393a8" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.6" cy="4.4" r="2.15" fill="currentColor"/><path fill="currentColor" d="M3.6 8.4h4V20.6h-4zm6.6 0H20.2V20.6H16.6V12.2H13.8V20.6H10.2z"/></svg>
+            </a>
+          </nav>
+        </div>
+        <a class="header-quiet" href="index.html">Studio</a>
+        <a class="btn header-cta" href="commande.html">Ma commande</a>
+        <div class="header-tools">
+          <a class="cart-link" href="panier.html" aria-label="Mon panier">
+            <span class="cart-face">
+              <svg class="cart-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <g class="cart-body">
+                  <path class="cart-handle" d="M6.2 7.2 5 3.8H2.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path class="cart-basket" d="M6.2 7.2h14.2l-1.4 9.2H7.6L6.2 7.2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                </g>
+                <g class="cart-wheel">
+                  <circle cx="9.2" cy="19.7" r="1.15" fill="none" stroke="currentColor" stroke-width="1.15"/>
+                  <circle cx="9.55" cy="19.35" r="0.38" fill="currentColor"/>
+                </g>
+                <g class="cart-wheel">
+                  <circle cx="16.6" cy="19.7" r="1.15" fill="none" stroke="currentColor" stroke-width="1.15"/>
+                  <circle cx="16.95" cy="19.35" r="0.38" fill="currentColor"/>
+                </g>
+              </svg>
+            </span>
+            <span class="cart-count" data-cart-count hidden>0</span>
+          </a>
+          <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
+        </div>
+      </div>
+    </header>
+    <div class="menu" id="menu" hidden>
+      <a href="index.html">Studio</a>
+      <a href="index.html#travail">Séquences</a>
+      <a href="index.html#contact">Contact</a>
+      <a href="commande.html" target="_blank" rel="noopener noreferrer">Ma commande</a>
+      <a href="gestion.html">Gestion</a>
+      <a class="menu-produits" href="produits.html">Produits</a>
+    </div>
+
+    <main id="contenu" class="wrap order" tabindex="-1">
+      <p class="kicker">Studio</p>
+      <h1 class="order-title">Gestion<span class="dot">.</span></h1>
+
+      <section id="gate">
+        <p class="order-lede">
+          Rendez-vous, commandes en cours et commandes closes. Accès réservé au studio.
+        </p>
+        <form class="brief order-form" id="gate-form" novalidate>
+          <label class="field full">
+            <span>E-mail</span>
+            <input name="email" type="email" autocomplete="username" inputmode="email" required />
+          </label>
+          <label class="field full">
+            <span>Mot de passe</span>
+            <input name="motdepasse" type="password" autocomplete="current-password" required />
+          </label>
+          <p class="field-error full" id="gate-error" hidden></p>
+          <div class="field full form-actions">
+            <button class="btn" id="gate-submit" type="submit">Ouvrir</button>
+          </div>
+          <p class="fine full">Ce n’est pas le mot de passe d’un compte client.</p>
+        </form>
+      </section>
+
+      <section id="board" class="gestion-board" hidden tabindex="-1" aria-labelledby="board-title">
+        <h2 id="board-title">Rendez-vous</h2>
+        <div id="rdv-list"></div>
+        <div class="gestion-cols">
+          <section aria-labelledby="cours-title">
+            <h2 id="cours-title">En cours</h2>
+            <div id="cours-list"></div>
+          </section>
+          <section aria-labelledby="closes-title">
+            <h2 id="closes-title">Closes</h2>
+            <div id="closes-list"></div>
+          </section>
+        </div>
+        <div class="order-session">
+          <button type="button" id="refresh">Actualiser</button>
+          <button type="button" id="logout">Fermer la session</button>
+        </div>
+      </section>
+    </main>
+    <script src="boutique.js"></script>
+    <script src="gestion.js"></script>
+  </body>
+</html>

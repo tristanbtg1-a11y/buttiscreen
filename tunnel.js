@@ -1,6 +1,6 @@
 (() => {
   const MAILHOOK = "4wxc1v3zhi3323lkdnpej56j5havqk2g@hook.eu1.make.com";
-  const WEBHOOK = "https://hook.eu1.make.com/93bbp3rk7109ee5cjtjlh35fvqyfcutf";
+  const WEBHOOK = "https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3";
   const STUDIO = "contact@buttiscreen.fr";
   const store = {
     nom: "",
@@ -153,12 +153,19 @@
 
   document.getElementById("send-brief")?.addEventListener("click", async () => {
     const status = document.getElementById("send-status");
-    const payload = { ...store, studio: "BUTTISCREEN", fuseau: "Europe/Paris" };
+    const slug = String(store.email || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const payload = {
+      ...store,
+      studio: "BUTTISCREEN",
+      fuseau: "Europe/Paris",
+      action: "rdv",
+      cree: new Date().toISOString(),
+      clef: `rdv-${slug}-${Date.now()}`,
+    };
     try {
       await fetch(WEBHOOK, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
     } catch {

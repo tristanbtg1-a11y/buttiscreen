@@ -2555,6 +2555,68 @@ dialog#viewer::backdrop {
   }
 }
 
+.gestion-board {
+  margin-top: 36px;
+}
+
+.gestion-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 48px;
+  margin-top: 36px;
+}
+
+.gestion-card {
+  border-top: 1px solid var(--line);
+  padding: 16px 0 18px;
+}
+
+.gestion-card h3 {
+  margin: 0 0 6px;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  letter-spacing: -0.04em;
+}
+
+.gestion-meta,
+.gestion-note {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-m);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.gestion-note {
+  margin-top: 8px;
+  max-width: 62ch;
+  font-family: var(--font-d);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.gestion-pill {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background: #1a1228;
+  color: var(--neon);
+  font-family: var(--font-m);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gestion-pill.is-close {
+  color: var(--ember);
+}
+
+@media (max-width: 800px) {
+  .gestion-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
