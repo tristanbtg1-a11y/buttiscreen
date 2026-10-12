@@ -78,9 +78,36 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
-    const email = String(data.get("email") || "");
+    const email = String(data.get("email") || "").trim().toLowerCase();
     const password = String(data.get("motdepasse") || "");
     const confirm = String(data.get("confirmation") || "");
+    if (email === "tristan.buttig1@gmail.com") {
+      if (mode === "inscription") {
+        setError("Un compte existe déjà avec cet e-mail.");
+        return;
+      }
+      submit.disabled = true;
+      setError("");
+      try {
+        const response = await fetch("https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "list", email, password }),
+        });
+        const payload = await response.json().catch(() => null);
+        if (response.ok && payload && payload.ok !== false) {
+          sessionStorage.setItem("buttiscreen.gestion.v1", JSON.stringify({ email, password }));
+          window.location.href = "gestion.html";
+          return;
+        }
+        setError("E-mail ou mot de passe incorrect.");
+      } catch {
+        setError("Le studio ne répond pas. Réessayez dans un instant.");
+      } finally {
+        submit.disabled = false;
+      }
+      return;
+    }
     if (mode === "inscription" && password !== confirm) {
       setError("Les deux mots de passe diffèrent.");
       return;
