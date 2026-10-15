@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=conversation" />
+    <link rel="stylesheet" href="styles.css?v=etat-commande" />
   </head>
   <body data-shop>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -118,6 +118,20 @@
         </div>
       </section>
     </main>
+    <dialog id="etat-dialog" aria-labelledby="etat-title">
+      <div class="file-pop">
+        <div class="file-pop-bar">
+          <h2 id="etat-title">État de la commande</h2>
+          <button class="btn ghost" type="button" id="etat-close">Fermer</button>
+        </div>
+        <p class="fine" id="etat-who"></p>
+        <div class="etat-actions">
+          <button class="btn" type="button" data-set-etat="montage">Montage</button>
+          <button class="btn" type="button" data-set-etat="etalonnage">Étalonnage</button>
+        </div>
+        <p class="fine" id="etat-status" role="status"></p>
+      </div>
+    </dialog>
     <dialog id="gestion-chat" aria-labelledby="gestion-chat-title">
       <div class="file-pop chat-pop">
         <div class="file-pop-bar">
@@ -136,7 +150,8 @@
       </div>
     </dialog>
     <script src="conversation.js?v=conversation"></script>
+    <script src="commande-store.js?v=etat-commande"></script>
     <script src="boutique.js"></script>
-    <script src="gestion.js?v=conversation"></script>
+    <script src="gestion.js?v=etat-commande"></script>
   </body>
 </html>

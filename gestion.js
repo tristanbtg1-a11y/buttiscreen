@@ -88,6 +88,18 @@
     return { ok: true, items: readItems(data) };
   };
 
+  const RANK = ["brief", "preparation", "montage", "etalonnage", "livraison"];
+
+  const shownEtat = (email, remote) => {
+    const local = window.ButtiCommande?.projectFor(email)?.etat || "";
+    return RANK.indexOf(local) > RANK.indexOf(remote) ? local : remote || local;
+  };
+
+  const stateButton = (email) =>
+    String(email || "").includes("@")
+      ? `<button class="btn ghost" type="button" data-etat="${esc(email)}">État de la commande</button>`
+      : "";
+
   const chatButton = (email) =>
     String(email || "").includes("@")
       ? `<button class="btn ghost" type="button" data-chat="${esc(email)}">Conversation</button>`
@@ -150,21 +162,28 @@
     </article>
   `;
 
-  const cardCommande = (item, pay) => `
+  const cardCommande = (item, pay, withState) => {
+    const etat = shownEtat(item.email, item.etat);
+    return `
     <article class="gestion-card">
       <p class="gestion-pill${item.statut === "close" ? " is-close" : ""}">${item.statut === "close" ? "Close" : "En cours"}</p>
       <h3>${esc(item.projet || item.nom || item.email || "Commande")}</h3>
       ${line("Client", item.nom && item.nom !== item.projet ? item.nom : "")}
       ${line("E-mail", item.email)}
-      ${line("État", ETATS[item.etat] || item.etat)}
+      ${line("État", ETATS[etat] || etat)}
       ${line("Délai", item.delai)}
       ${line("Mise à jour", when(item.cree))}
       ${payBox(item, pay)}
+      ${withState ? stateButton(item.email) : ""}
       ${chatButton(item.email)}
     </article>
   `;
+  };
+
+  let listedItems = [];
 
   const paint = (items) => {
+    listedItems = items;
     const byDate = (a, b) => String(b.cree).localeCompare(String(a.cree));
     const payments = new Map(
       items
@@ -180,8 +199,8 @@
       node.innerHTML = rows.length ? rows.map(html).join("") : `<p class="gestion-meta">${empty}</p>`;
     };
     fill("rdv-list", rdv, (item) => cardRdv(item, withPay(item)), "Aucun rendez-vous.");
-    fill("cours-list", cours, (item) => cardCommande(item, withPay(item)), "Aucune commande en cours.");
-    fill("closes-list", closes, (item) => cardCommande(item, withPay(item)), "Aucune commande close.");
+    fill("cours-list", cours, (item) => cardCommande(item, withPay(item), true), "Aucune commande en cours.");
+    fill("closes-list", closes, (item) => cardCommande(item, withPay(item), false), "Aucune commande close.");
   };
 
   const showError = (message) => {
@@ -395,6 +414,52 @@
     });
     window.addEventListener("storage", (event) => {
       if (event.key === "buttiscreen.conversation.v1" && chatDialog.open) paintChat();
+    });
+  }
+
+  const etatDialog = document.getElementById("etat-dialog");
+  const etatWho = document.getElementById("etat-who");
+  const etatStatus = document.getElementById("etat-status");
+  let etatEmail = "";
+  const markEtat = () => {
+    const current = window.ButtiCommande?.projectFor(etatEmail)?.etat || "";
+    etatDialog?.querySelectorAll("[data-set-etat]").forEach((button) => {
+      button.setAttribute("aria-pressed", button.dataset.setEtat === current ? "true" : "false");
+    });
+  };
+  const openEtat = (email) => {
+    etatEmail = String(email || "").trim().toLowerCase();
+    if (!etatEmail || !etatDialog) return;
+    if (etatWho) etatWho.textContent = etatEmail;
+    if (etatStatus) etatStatus.textContent = "";
+    markEtat();
+    if (!etatDialog.open) etatDialog.showModal();
+  };
+  if (etatDialog && window.ButtiCommande?.setEtat) {
+    board.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-etat]");
+      if (!button) return;
+      openEtat(button.dataset.etat);
+    });
+    document.getElementById("etat-close")?.addEventListener("click", () => etatDialog.close());
+    etatDialog.addEventListener("click", (event) => {
+      const choice = event.target.closest("[data-set-etat]");
+      if (choice) {
+        const etat = choice.dataset.setEtat;
+        const savedEtat = window.ButtiCommande.setEtat(etatEmail, etat);
+        if (!savedEtat.ok) {
+          if (etatStatus) etatStatus.textContent = "L’état n’a pas été enregistré.";
+          return;
+        }
+        markEtat();
+        if (etatStatus) etatStatus.textContent = `Mon compte affiche maintenant ${ETATS[etat]}.`;
+        if (listedItems.length) paint(listedItems);
+        return;
+      }
+      if (event.target === etatDialog) etatDialog.close();
+    });
+    etatDialog.addEventListener("close", () => {
+      board.querySelector(`[data-etat="${etatEmail}"]`)?.focus();
     });
   }
 

@@ -2108,7 +2108,8 @@ dialog#viewer::backdrop {
 
 dialog#rush-library-dialog,
 dialog#chat-dialog,
-dialog#gestion-chat {
+dialog#gestion-chat,
+dialog#etat-dialog {
   width: min(520px, calc(100vw - 32px));
   max-height: min(70vh, 640px);
   margin: auto;
@@ -2121,7 +2122,8 @@ dialog#gestion-chat {
 
 dialog#rush-library-dialog::backdrop,
 dialog#chat-dialog::backdrop,
-dialog#gestion-chat::backdrop {
+dialog#gestion-chat::backdrop,
+dialog#etat-dialog::backdrop {
   background: rgba(7, 6, 13, 0.78);
 }
 
@@ -2230,6 +2232,22 @@ dialog#gestion-chat::backdrop {
 }
 
 .gestion-card .btn {
+  margin-top: 14px;
+}
+
+.etat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.etat-actions .btn[aria-pressed="true"] {
+  background: var(--neon);
+  border-color: var(--neon);
+}
+
+#etat-status {
   margin-top: 14px;
 }
 

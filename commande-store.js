@@ -140,6 +140,16 @@
     return { ok: true, email, hasAccount: Boolean(db.comptes[email]) };
   };
 
+  const setEtat = (rawEmail, etat) => {
+    const email = emailOf(rawEmail);
+    if (!validEmail(email) || !ETATS.some((item) => item.id === etat)) return { ok: false };
+    const db = read();
+    const current = db.projets[email] || emptyProject();
+    db.projets[email] = { ...current, etat };
+    write(db);
+    return { ok: true, email, etat };
+  };
+
   const listProjects = () => {
     const db = read();
     return Object.keys(db.projets)
@@ -204,6 +214,7 @@
     sessionEmail,
     projectFor,
     saveProject,
+    setEtat,
     listProjects,
     atelierReady,
     setAtelierPassword,

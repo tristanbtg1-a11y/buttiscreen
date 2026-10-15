@@ -771,6 +771,12 @@
     });
   }
 
+  window.addEventListener("storage", (event) => {
+    if (event.key !== "buttiscreen.commande.v1" || board.hidden) return;
+    const email = store.sessionEmail();
+    if (email) render(email, true);
+  });
+
   const open = store.sessionEmail();
   if (open) render(open);
   else showMode("connexion");
