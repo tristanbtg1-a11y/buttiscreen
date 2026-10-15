@@ -31,6 +31,56 @@
     setError("");
   };
 
+  const HOOK = "https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3";
+
+  const stripeUrl = (value) => {
+    try {
+      const url = new URL(String(value || ""));
+      return (
+        url.protocol === "https:" &&
+        (url.hostname === "buy.stripe.com" || url.hostname === "checkout.stripe.com")
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const formatEuros = (value) => {
+    const number = Number(String(value || "").replace(",", "."));
+    if (!Number.isFinite(number) || number <= 0) return "";
+    return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(number);
+  };
+
+  const lookupPay = async (email) => {
+    const pay = document.getElementById("pay");
+    const note = document.getElementById("pay-note");
+    if (!pay) return;
+    pay.disabled = true;
+    delete pay.dataset.url;
+    try {
+      const response = await fetch(HOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "payer", email }),
+      });
+      const data = await response.json().catch(() => null);
+      const amount = formatEuros(data && data.montant);
+      if (stripeUrl(data && data.url)) {
+        pay.disabled = false;
+        pay.dataset.url = data.url;
+        if (note) note.textContent = amount ? `Devis ${amount}. Le règlement s’ouvre sur Stripe.` : "Le devis est prêt.";
+        return;
+      }
+      if (note) {
+        note.textContent = amount
+          ? `Devis ${amount}. Le lien Stripe s’active quand il est prêt.`
+          : "Le lien Stripe s’active quand le devis est prêt.";
+      }
+    } catch {
+      if (note) note.textContent = "Le lien Stripe s’active quand le devis est prêt.";
+    }
+  };
+
   const formatDelai = (iso) => {
     if (!iso) return "À confirmer";
     const [year, month, day] = iso.split("-").map(Number);
@@ -69,6 +119,7 @@
     auth.hidden = true;
     board.hidden = false;
     board.focus();
+    lookupPay(email);
   };
 
   modeButtons.forEach((button) => {
@@ -131,6 +182,11 @@
     board.hidden = true;
     auth.hidden = false;
     document.getElementById("order-title").focus();
+  });
+
+  document.getElementById("pay").addEventListener("click", () => {
+    const pay = document.getElementById("pay");
+    if (stripeUrl(pay?.dataset.url)) window.open(pay.dataset.url, "_blank", "noopener");
   });
 
   document.getElementById("invoice").addEventListener("click", () => {

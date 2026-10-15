@@ -31,6 +31,61 @@
   const panes = [...document.querySelectorAll(".tunnel-pane")];
   const tabs = [...document.querySelectorAll(".tunnel-track .clip")];
 
+  const stripeUrl = (value) => {
+    try {
+      const url = new URL(String(value || ""));
+      return (
+        url.protocol === "https:" &&
+        (url.hostname === "buy.stripe.com" || url.hostname === "checkout.stripe.com")
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const formatEuros = (value) => {
+    const number = Number(String(value || "").replace(",", "."));
+    if (!Number.isFinite(number) || number <= 0) return "";
+    return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(number);
+  };
+
+  const lookupPay = async () => {
+    const pay = document.getElementById("pay");
+    const status = document.getElementById("pay-status");
+    const email = String(store.email || sessionStorage.getItem("buttiscreen.commande.session") || "")
+      .trim()
+      .toLowerCase();
+    if (!pay) return;
+    pay.disabled = true;
+    delete pay.dataset.url;
+    if (!email) {
+      if (status) status.textContent = "Le lien Stripe arrive avec le devis chiffré.";
+      return;
+    }
+    try {
+      const response = await fetch(WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "payer", email }),
+      });
+      const data = await response.json().catch(() => null);
+      const amount = formatEuros(data && data.montant);
+      if (stripeUrl(data && data.url)) {
+        pay.disabled = false;
+        pay.dataset.url = data.url;
+        if (status) status.textContent = amount ? `Devis ${amount}. Le règlement s’ouvre sur Stripe.` : "Le devis est prêt.";
+        return;
+      }
+      if (status) {
+        status.textContent = amount
+          ? `Devis ${amount}. Le lien Stripe arrive avec le devis chiffré.`
+          : "Le lien Stripe arrive avec le devis chiffré.";
+      }
+    } catch {
+      if (status) status.textContent = "Le lien Stripe arrive avec le devis chiffré.";
+    }
+  };
+
   const show = (step) => {
     panes.forEach((pane) => {
       pane.hidden = pane.id !== `pane-${step}`;
@@ -40,6 +95,7 @@
       tab.classList.toggle("is-active", on);
       tab.setAttribute("aria-selected", on ? "true" : "false");
     });
+    if (step === "reglement") lookupPay();
   };
 
   tabs.forEach((tab) => {
@@ -178,7 +234,7 @@
   });
 
   document.getElementById("pay")?.addEventListener("click", () => {
-    const status = document.getElementById("send-status");
-    if (status) status.textContent = "Le lien Stripe arrive avec le devis chiffré.";
+    const pay = document.getElementById("pay");
+    if (stripeUrl(pay?.dataset.url)) window.open(pay.dataset.url, "_blank", "noopener");
   });
 })();

@@ -47,6 +47,8 @@
       duree: row.duree || "",
       diffusion: row.diffusion || "",
       cree: row.cree || "",
+      montant: row.montant || "",
+      lien: row.lien || "",
     };
   };
 
@@ -89,7 +91,45 @@
   const line = (label, value) =>
     value ? `<p class="gestion-meta">${esc(label)} : ${esc(value)}</p>` : "";
 
-  const cardRdv = (item) => `
+  const stripeUrl = (value) => {
+    try {
+      const url = new URL(String(value || ""));
+      return (
+        url.protocol === "https:" &&
+        (url.hostname === "buy.stripe.com" || url.hostname === "checkout.stripe.com")
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const formatEuros = (value) => {
+    const number = Number(String(value || "").replace(",", "."));
+    if (!Number.isFinite(number) || number <= 0) return "";
+    return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(number);
+  };
+
+  const payBox = (item, pay) => {
+    const known = formatEuros(pay && pay.montant);
+    const open = stripeUrl(pay && pay.lien)
+      ? `<a href="${esc(pay.lien)}" target="_blank" rel="noopener noreferrer">Ouvrir le lien</a>`
+      : "";
+    return `
+      <form class="gestion-pay">
+        ${known ? `<p class="gestion-meta">Devis : ${esc(known)}${open ? ` · ${open}` : ""}</p>` : ""}
+        <label>Montant (€)
+          <input name="montant" type="text" inputmode="decimal" autocomplete="off" placeholder="1500" />
+        </label>
+        <button class="btn" type="submit">Créer le lien Stripe</button>
+        <p class="gestion-meta" data-pay-status hidden></p>
+        <input type="hidden" name="client" value="${esc(item.email)}" />
+        <input type="hidden" name="nom" value="${esc(item.nom)}" />
+        <input type="hidden" name="projet" value="${esc(item.projet)}" />
+      </form>
+    `;
+  };
+
+  const cardRdv = (item, pay) => `
     <article class="gestion-card">
       <h3>${esc(item.nom || item.email || "Rendez-vous")}</h3>
       ${line("E-mail", item.email)}
@@ -99,10 +139,11 @@
       ${line("Créneau", String(item.creneau || "").replace(/\s*\([^)]*\)\s*$/, ""))}
       ${line("Reçu", when(item.cree))}
       ${item.message ? `<p class="gestion-note">${esc(item.message)}</p>` : ""}
+      ${payBox(item, pay)}
     </article>
   `;
 
-  const cardCommande = (item) => `
+  const cardCommande = (item, pay) => `
     <article class="gestion-card">
       <p class="gestion-pill${item.statut === "close" ? " is-close" : ""}">${item.statut === "close" ? "Close" : "En cours"}</p>
       <h3>${esc(item.projet || item.nom || item.email || "Commande")}</h3>
@@ -111,11 +152,18 @@
       ${line("État", ETATS[item.etat] || item.etat)}
       ${line("Délai", item.delai)}
       ${line("Mise à jour", when(item.cree))}
+      ${payBox(item, pay)}
     </article>
   `;
 
   const paint = (items) => {
     const byDate = (a, b) => String(b.cree).localeCompare(String(a.cree));
+    const payments = new Map(
+      items
+        .filter((item) => item.kind === "paiement" && item.email)
+        .map((item) => [item.email.toLowerCase(), item])
+    );
+    const withPay = (item) => payments.get(String(item.email || "").toLowerCase());
     const rdv = items.filter((item) => item.kind === "rdv").sort(byDate);
     const cours = items.filter((item) => item.kind === "commande" && item.statut !== "close").sort(byDate);
     const closes = items.filter((item) => item.kind === "commande" && item.statut === "close").sort(byDate);
@@ -123,9 +171,9 @@
       const node = document.getElementById(id);
       node.innerHTML = rows.length ? rows.map(html).join("") : `<p class="gestion-meta">${empty}</p>`;
     };
-    fill("rdv-list", rdv, cardRdv, "Aucun rendez-vous.");
-    fill("cours-list", cours, cardCommande, "Aucune commande en cours.");
-    fill("closes-list", closes, cardCommande, "Aucune commande close.");
+    fill("rdv-list", rdv, (item) => cardRdv(item, withPay(item)), "Aucun rendez-vous.");
+    fill("cours-list", cours, (item) => cardCommande(item, withPay(item)), "Aucune commande en cours.");
+    fill("closes-list", closes, (item) => cardCommande(item, withPay(item)), "Aucune commande close.");
   };
 
   const showError = (message) => {
@@ -174,6 +222,78 @@
     const email = String(new FormData(form).get("email") || "").trim().toLowerCase();
     const password = String(new FormData(form).get("motdepasse") || "");
     load(email, password, true);
+  });
+
+  const centsOf = (raw) => {
+    const text = String(raw || "").trim().replace(/\s/g, "").replace(",", ".");
+    if (!/^\d+(\.\d{1,2})?$/.test(text)) return 0;
+    const cents = Math.round(Number(text) * 100);
+    if (!Number.isSafeInteger(cents) || cents < 100 || cents > 10000000) return 0;
+    return cents;
+  };
+
+  board.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.classList.contains("gestion-pay")) return;
+    event.preventDefault();
+    const saved = session();
+    const status = form.querySelector("[data-pay-status]");
+    const button = form.querySelector("button");
+    const data = new FormData(form);
+    const cents = centsOf(data.get("montant"));
+    const client = String(data.get("client") || "").trim().toLowerCase();
+    const showStatus = (message) => {
+      if (!status) return;
+      status.hidden = !message;
+      status.textContent = message || "";
+    };
+    if (!saved?.email || !saved?.password) {
+      showStatus("Rouvrez la session du studio.");
+      return;
+    }
+    if (stripeUrl(form.querySelector("a")?.href)) {
+      showStatus("Le lien Stripe est déjà prêt.");
+      return;
+    }
+    if (!client.includes("@") || !cents) {
+      showStatus("Indiquez un montant en euros, au moins 1 €.");
+      return;
+    }
+    button.disabled = true;
+    showStatus("Création du lien Stripe…");
+    try {
+      const response = await fetch(HOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "lien",
+          email: saved.email,
+          password: saved.password,
+          client,
+          nom: String(data.get("nom") || ""),
+          projet: String(data.get("projet") || ""),
+          slug: client.replace(/[^a-z0-9]/g, ""),
+          centimes: String(cents),
+          montant: (cents / 100).toFixed(2),
+          cree: new Date().toISOString(),
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (response.status === 401 || !payload || payload.ok === false) {
+        showStatus("Le lien Stripe n’a pas pu être créé.");
+        return;
+      }
+      if (stripeUrl(payload.url)) {
+        await load(saved.email, saved.password, true);
+        return;
+      }
+      showStatus("Le montant est enregistré. Le lien Stripe n’est pas encore ouvert.");
+      await load(saved.email, saved.password, true);
+    } catch {
+      showStatus("Le studio ne répond pas. Réessayez dans un instant.");
+    } finally {
+      if (button.isConnected) button.disabled = false;
+    }
   });
 
   document.getElementById("refresh")?.addEventListener("click", () => {
