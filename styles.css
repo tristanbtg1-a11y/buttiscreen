@@ -2109,7 +2109,8 @@ dialog#viewer::backdrop {
 dialog#rush-library-dialog,
 dialog#chat-dialog,
 dialog#gestion-chat,
-dialog#etat-dialog {
+dialog#etat-dialog,
+dialog#final-pay-dialog {
   width: min(520px, calc(100vw - 32px));
   max-height: min(70vh, 640px);
   margin: auto;
@@ -2123,7 +2124,8 @@ dialog#etat-dialog {
 dialog#rush-library-dialog::backdrop,
 dialog#chat-dialog::backdrop,
 dialog#gestion-chat::backdrop,
-dialog#etat-dialog::backdrop {
+dialog#etat-dialog::backdrop,
+dialog#final-pay-dialog::backdrop {
   background: rgba(7, 6, 13, 0.78);
 }
 
@@ -2249,6 +2251,20 @@ dialog#etat-dialog::backdrop {
 
 #etat-status {
   margin-top: 14px;
+}
+
+.final-pay-amount {
+  margin: 8px 0 18px;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  letter-spacing: -0.04em;
+}
+
+#final-pay-dialog .order-lines {
+  margin-top: 12px;
+}
+
+#final-pay-go {
+  margin-top: 4px;
 }
 
 .order-ref {

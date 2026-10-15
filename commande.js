@@ -227,6 +227,44 @@
     if (invoice) invoice.disabled = !ready;
     if (invoiceNote) invoiceNote.hidden = ready;
     syncRushes();
+    syncFinalPay();
+  };
+
+  const finalPayUrl = () => {
+    const url = (receipt && (receipt.url || receipt.lien)) || "";
+    return stripeUrl(url) ? url : "";
+  };
+
+  const syncFinalPay = () => {
+    const button = document.getElementById("final-pay");
+    if (!button) return;
+    const project = store.projectFor(payEmail || store.sessionEmail());
+    button.hidden = project.etat !== "livraison";
+  };
+
+  const paintFinalPay = () => {
+    const lines = document.getElementById("final-pay-lines");
+    const amount = document.getElementById("final-pay-amount");
+    const go = document.getElementById("final-pay-go");
+    const wait = document.getElementById("final-pay-wait");
+    if (!lines || !amount || !go || !wait) return;
+    const project = store.projectFor(payEmail || store.sessionEmail());
+    const rows = orderLines(receipt && receipt.detail, (receipt && receipt.projet) || project.titre);
+    const price = formatEuros(receipt && receipt.montant);
+    lines.innerHTML = rows
+      .map((line) => `<li><span>${esc(line.nom)}</span><span>× ${esc(line.qte)}</span></li>`)
+      .join("");
+    amount.textContent = price ? `À régler ${price}` : "Tarif à confirmer";
+    const url = finalPayUrl();
+    if (url) {
+      go.href = url;
+      go.hidden = false;
+      wait.hidden = true;
+    } else {
+      go.removeAttribute("href");
+      go.hidden = true;
+      wait.hidden = false;
+    }
   };
 
   const rushSlug = (value) =>
@@ -769,6 +807,20 @@
     window.addEventListener("storage", (event) => {
       if (event.key === "buttiscreen.conversation.v1" && chatDialog.open) paintChat();
     });
+  }
+
+  const finalPay = document.getElementById("final-pay");
+  const finalDialog = document.getElementById("final-pay-dialog");
+  if (finalPay && finalDialog) {
+    finalPay.addEventListener("click", () => {
+      paintFinalPay();
+      if (!finalDialog.open) finalDialog.showModal();
+    });
+    document.getElementById("final-pay-close")?.addEventListener("click", () => finalDialog.close());
+    finalDialog.addEventListener("click", (event) => {
+      if (event.target === finalDialog) finalDialog.close();
+    });
+    finalDialog.addEventListener("close", () => finalPay.focus());
   }
 
   window.addEventListener("storage", (event) => {

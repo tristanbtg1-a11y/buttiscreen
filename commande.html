@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=etat-commande" />
+    <link rel="stylesheet" href="styles.css?v=paiement" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -144,6 +144,7 @@
             <p class="order-delay" id="board-delay">À confirmer</p>
             <a class="btn is-wait" id="pay" aria-disabled="true">Payer le devis</a>
             <p class="fine" id="pay-note">Le lien Stripe s’active quand le devis est prêt.</p>
+            <button class="btn" type="button" id="final-pay" hidden>Paiement</button>
             <button class="btn" type="button" id="invoice" disabled>Télécharger ma facture</button>
             <p class="fine" id="invoice-note">La facture sera déposée ici par le studio.</p>
           </aside>
@@ -157,6 +158,19 @@
     <script src="boutique.js"></script>
     <script src="conversation.js?v=conversation"></script>
     <script src="commande-store.js?v=etat-commande"></script>
+    <dialog id="final-pay-dialog" aria-labelledby="final-pay-title">
+      <div class="file-pop">
+        <div class="file-pop-bar">
+          <h2 id="final-pay-title">Paiement</h2>
+          <button class="btn ghost" type="button" id="final-pay-close">Fermer</button>
+        </div>
+        <p class="kicker">Récapitulatif</p>
+        <ul class="order-lines" id="final-pay-lines"></ul>
+        <p class="final-pay-amount" id="final-pay-amount"></p>
+        <a class="btn" id="final-pay-go" hidden>Payer</a>
+        <p class="fine" id="final-pay-wait" hidden>Le lien Stripe s’active quand le tarif est prêt.</p>
+      </div>
+    </dialog>
     <dialog id="chat-dialog" aria-labelledby="chat-title">
       <div class="file-pop chat-pop">
         <div class="file-pop-bar">
@@ -183,6 +197,6 @@
         <ul class="rush-library" id="rush-library-list"></ul>
       </div>
     </dialog>
-    <script src="commande.js?v=etat-commande"></script>
+    <script src="commande.js?v=paiement"></script>
   </body>
 </html>
