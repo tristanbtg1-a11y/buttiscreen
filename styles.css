@@ -2098,7 +2098,9 @@ dialog#viewer::backdrop {
 }
 
 .order .btn:disabled,
-.order .btn:disabled:hover {
+.order .btn:disabled:hover,
+.btn.is-wait,
+.btn.is-wait:hover {
   background: transparent;
   color: var(--muted);
   border-color: rgba(247, 244, 239, 0.28);

@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=pay" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -122,7 +122,7 @@
           <aside class="order-side">
             <p class="kicker">Délai de livraison</p>
             <p class="order-delay" id="board-delay">À confirmer</p>
-            <button class="btn" type="button" id="pay" disabled>Payer le devis</button>
+            <a class="btn is-wait" id="pay" aria-disabled="true">Payer le devis</a>
             <p class="fine" id="pay-note">Le lien Stripe s’active quand le devis est prêt.</p>
             <button class="btn" type="button" id="invoice" disabled>Télécharger ma facture</button>
             <p class="fine" id="invoice-note">La facture sera déposée ici par le studio.</p>
@@ -136,6 +136,6 @@
     </main>
     <script src="boutique.js"></script>
     <script src="commande-store.js"></script>
-    <script src="commande.js"></script>
+    <script src="commande.js?v=pay"></script>
   </body>
 </html>

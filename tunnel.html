@@ -13,7 +13,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=pay" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -169,7 +169,7 @@
           <p class="fine">Le bouton s’active quand le devis est chiffré.</p>
           <p class="fine" id="pay-status" role="status">Le lien Stripe arrive avec le devis chiffré.</p>
           <div class="form-actions">
-            <button class="btn" type="button" id="pay" disabled>Payer le devis</button>
+            <a class="btn is-wait" id="pay" aria-disabled="true">Payer le devis</a>
             <button class="btn ghost" type="button" data-goto="livraison">Voir la livraison</button>
           </div>
         </section>
@@ -190,6 +190,6 @@
       </div>
     </main>
     <script src="boutique.js"></script>
-    <script src="tunnel.js"></script>
+    <script src="tunnel.js?v=pay"></script>
   </body>
 </html>

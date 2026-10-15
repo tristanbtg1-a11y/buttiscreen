@@ -51,12 +51,19 @@
     return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(number);
   };
 
+  let payEmail = "";
+
+  const armPay = (pay, url) => {
+    pay.href = url;
+    pay.classList.remove("is-wait");
+    pay.removeAttribute("aria-disabled");
+  };
+
   const lookupPay = async (email) => {
     const pay = document.getElementById("pay");
     const note = document.getElementById("pay-note");
     if (!pay) return;
-    pay.disabled = true;
-    delete pay.dataset.url;
+    payEmail = email;
     try {
       const response = await fetch(HOOK, {
         method: "POST",
@@ -66,8 +73,7 @@
       const data = await response.json().catch(() => null);
       const amount = formatEuros(data && data.montant);
       if (stripeUrl(data && data.url)) {
-        pay.disabled = false;
-        pay.dataset.url = data.url;
+        armPay(pay, data.url);
         if (note) note.textContent = amount ? `Devis ${amount}. Le règlement s’ouvre sur Stripe.` : "Le devis est prêt.";
         return;
       }
@@ -184,9 +190,13 @@
     document.getElementById("order-title").focus();
   });
 
-  document.getElementById("pay").addEventListener("click", () => {
+  document.getElementById("pay").addEventListener("click", (event) => {
     const pay = document.getElementById("pay");
-    if (stripeUrl(pay?.dataset.url)) window.open(pay.dataset.url, "_blank", "noopener");
+    if (stripeUrl(pay?.getAttribute("href"))) return;
+    event.preventDefault();
+    const note = document.getElementById("pay-note");
+    if (note) note.textContent = "Le devis se charge. Réappuyez dans un instant.";
+    if (payEmail) lookupPay(payEmail);
   });
 
   document.getElementById("invoice").addEventListener("click", () => {

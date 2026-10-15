@@ -56,8 +56,6 @@
       .trim()
       .toLowerCase();
     if (!pay) return;
-    pay.disabled = true;
-    delete pay.dataset.url;
     if (!email) {
       if (status) status.textContent = "Le lien Stripe arrive avec le devis chiffré.";
       return;
@@ -71,8 +69,9 @@
       const data = await response.json().catch(() => null);
       const amount = formatEuros(data && data.montant);
       if (stripeUrl(data && data.url)) {
-        pay.disabled = false;
-        pay.dataset.url = data.url;
+        pay.href = data.url;
+        pay.classList.remove("is-wait");
+        pay.removeAttribute("aria-disabled");
         if (status) status.textContent = amount ? `Devis ${amount}. Le règlement s’ouvre sur Stripe.` : "Le devis est prêt.";
         return;
       }
@@ -233,8 +232,12 @@
     show("reglement");
   });
 
-  document.getElementById("pay")?.addEventListener("click", () => {
+  document.getElementById("pay")?.addEventListener("click", (event) => {
     const pay = document.getElementById("pay");
-    if (stripeUrl(pay?.dataset.url)) window.open(pay.dataset.url, "_blank", "noopener");
+    if (stripeUrl(pay?.getAttribute("href"))) return;
+    event.preventDefault();
+    const status = document.getElementById("pay-status");
+    if (status) status.textContent = "Le devis se charge. Réappuyez dans un instant.";
+    lookupPay();
   });
 })();
