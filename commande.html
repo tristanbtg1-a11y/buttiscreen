@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=pay" />
+    <link rel="stylesheet" href="styles.css?v=slip2" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -113,6 +113,12 @@
 
       <section id="board" hidden tabindex="-1" aria-labelledby="board-title">
         <p class="kicker" id="board-email"></p>
+        <article class="order-slip" id="order-slip" hidden>
+          <p class="kicker">Référence</p>
+          <p class="order-ref" id="order-ref"></p>
+          <ul class="order-lines" id="order-lines"></ul>
+          <dl class="order-facts" id="order-facts"></dl>
+        </article>
         <div class="order-grid">
           <div>
             <h2 id="board-title" tabindex="-1">Votre projet</h2>
@@ -136,6 +142,6 @@
     </main>
     <script src="boutique.js"></script>
     <script src="commande-store.js?v=etat"></script>
-    <script src="commande.js?v=etat"></script>
+    <script src="commande.js?v=slip"></script>
   </body>
 </html>

@@ -72,6 +72,7 @@
       });
       const data = await response.json().catch(() => null);
       const amount = formatEuros(data && data.montant);
+      paintSlip(data);
       if (data && data.etat) applyEtat(email, data.etat);
       if (stripeUrl(data && data.url)) {
         armPay(pay, data.url);
@@ -86,6 +87,80 @@
     } catch {
       if (note) note.textContent = "Le lien Stripe s’active quand le devis est prêt.";
     }
+  };
+
+  const esc = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  const orderLines = (detail, projet) => {
+    const source = String(detail || "").trim();
+    const parts = source
+      ? source.split(",").map((part) => part.trim()).filter(Boolean)
+      : [];
+    const lines = parts.map((part) => {
+      const match = part.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+      if (!match) return { nom: part, qte: 1 };
+      return { nom: match[1].trim(), qte: Number(match[2]) || 1 };
+    });
+    if (lines.length) return lines;
+    if (projet) return [{ nom: projet, qte: 1 }];
+    return [];
+  };
+
+  const orderReference = (nom, date) => {
+    const parsed = new Date(date);
+    const when = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    const parts = new Intl.DateTimeFormat("fr-FR", {
+      timeZone: "Europe/Paris",
+      month: "2-digit",
+      year: "2-digit",
+    }).formatToParts(when);
+    const month = (parts.find((part) => part.type === "month") || {}).value || "01";
+    const year = (parts.find((part) => part.type === "year") || {}).value || "00";
+    const name = String(nom || "client").replace(/"/g, "").trim() || "client";
+    return `01"${name}"dev1${month}${year}`;
+  };
+
+  const paintSlip = (data) => {
+    const slip = document.getElementById("order-slip");
+    const list = document.getElementById("order-lines");
+    const facts = document.getElementById("order-facts");
+    const ref = document.getElementById("order-ref");
+    if (!slip || !list || !facts || !ref) return;
+    const montant = Number(String((data && data.montant) || "").replace(",", "."));
+    const lines = orderLines(data && data.detail, data && data.projet);
+    if (!lines.length && !(montant > 0)) {
+      slip.hidden = true;
+      return;
+    }
+    const date = new Date(data && data.cree);
+    const dateLabel = Number.isNaN(date.getTime())
+      ? ""
+      : new Intl.DateTimeFormat("fr-FR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          timeZone: "Europe/Paris",
+        }).format(date);
+    const price = formatEuros(montant);
+    const rows = [];
+    if (dateLabel) rows.push(["Date", dateLabel]);
+    if (price) rows.push(["Prix unitaire", price], ["Total", price]);
+    ref.textContent = orderReference(data && data.nom, data && data.cree);
+    list.innerHTML = lines
+      .map((line) => `<li><span>${esc(line.nom)}</span><span>× ${esc(line.qte)}</span></li>`)
+      .join("");
+    facts.innerHTML = rows
+      .map(
+        ([label, value]) =>
+          `<div class="${label === "Total" ? "is-total" : ""}"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`
+      )
+      .join("");
+    slip.hidden = false;
   };
 
   const formatDelai = (iso) => {

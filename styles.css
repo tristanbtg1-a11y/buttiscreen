@@ -2021,6 +2021,76 @@ dialog#viewer::backdrop {
   margin-top: 8px;
 }
 
+.order-slip {
+  margin-top: 28px;
+  padding: 18px 18px 8px;
+  background: #100c18;
+  border: 1px solid rgba(247, 244, 239, 0.16);
+  min-width: 0;
+}
+
+.order-ref {
+  margin: 6px 0 0;
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.order-lines {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.order-lines li {
+  display: flex;
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 18px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(247, 244, 239, 0.12);
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+}
+
+.order-lines span:last-child {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.order-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 22px;
+  margin: 4px 0 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(247, 244, 239, 0.12);
+}
+
+.order-facts div {
+  min-width: 0;
+}
+
+.order-facts dt {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.order-facts dd {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.order-facts .is-total dd {
+  color: var(--ember);
+}
+
 .order-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.7fr);
@@ -2139,7 +2209,8 @@ dialog#viewer::backdrop {
 }
 
 @media (max-width: 800px) {
-  .order-grid {
+  .order-grid,
+  .order-facts {
     grid-template-columns: 1fr;
   }
 }
