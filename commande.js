@@ -226,6 +226,74 @@
     const ready = Boolean(project.facture) || paid;
     if (invoice) invoice.disabled = !ready;
     if (invoiceNote) invoiceNote.hidden = ready;
+    syncRushes();
+  };
+
+  const rushSlug = (value) =>
+    String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "")
+      .slice(0, 24);
+
+  const rushName = (slug, index, original) => {
+    const ext = (String(original).match(/(\.[a-z0-9]{1,8})$/i) || [""])[0].toLowerCase();
+    const stem =
+      String(original)
+        .replace(/\.[^.]+$/, "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 40) || "fichier";
+    return `${slug}_rush_${String(index).padStart(2, "0")}_${stem}${ext}`;
+  };
+
+  const nextRushIndex = (email, count) => {
+    const key = "buttiscreen.rushes.v1";
+    const all = JSON.parse(localStorage.getItem(key) || "{}");
+    const start = Number(all[email] || 0);
+    all[email] = start + count;
+    localStorage.setItem(key, JSON.stringify(all));
+    return start;
+  };
+
+  const syncRushes = () => {
+    const box = document.getElementById("rush-box");
+    if (!box) return;
+    const email = payEmail || store.sessionEmail();
+    const project = store.projectFor(email);
+    const etat = (receipt && receipt.etat) || project.etat;
+    box.hidden = etat !== "preparation";
+    box.dataset.email = email || "";
+    box.dataset.nom = (receipt && receipt.nom) || "";
+  };
+
+  const takeRushes = (files) => {
+    const list = document.getElementById("rush-list");
+    const note = document.getElementById("rush-note");
+    const box = document.getElementById("rush-box");
+    const incoming = [...(files || [])].filter((file) => file && file.size > 0);
+    if (!incoming.length || !list || !box) return;
+    const email = box.dataset.email || store.sessionEmail();
+    const slug = rushSlug(box.dataset.nom) || rushSlug(String(email).split("@")[0]) || "client";
+    const start = nextRushIndex(email, incoming.length);
+    incoming.forEach((file, offset) => {
+      const item = document.createElement("li");
+      const name = document.createElement("strong");
+      const state = document.createElement("span");
+      name.textContent = rushName(slug, start + offset + 1, file.name);
+      state.textContent = "Nommé";
+      item.append(name, state);
+      list.prepend(item);
+    });
+    if (note) {
+      note.textContent =
+        incoming.length > 1
+          ? `${incoming.length} fichiers nommés pour clients / ${slug} / rushes.`
+          : `Fichier nommé pour clients / ${slug} / rushes.`;
+    }
   };
 
   const render = (email, quiet) => {
@@ -467,6 +535,29 @@
     saveFile(url, `facture-${ref || "buttiscreen"}.pdf`);
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   });
+
+  const rushDrop = document.getElementById("rush-drop");
+  const rushInput = document.getElementById("rush-files");
+  if (rushDrop && rushInput) {
+    ["dragenter", "dragover"].forEach((type) => {
+      rushDrop.addEventListener(type, (event) => {
+        event.preventDefault();
+        rushDrop.classList.add("is-over");
+      });
+    });
+    rushDrop.addEventListener("dragleave", (event) => {
+      if (!rushDrop.contains(event.relatedTarget)) rushDrop.classList.remove("is-over");
+    });
+    rushDrop.addEventListener("drop", (event) => {
+      event.preventDefault();
+      rushDrop.classList.remove("is-over");
+      takeRushes(event.dataTransfer && event.dataTransfer.files);
+    });
+    rushInput.addEventListener("change", () => {
+      takeRushes(rushInput.files);
+      rushInput.value = "";
+    });
+  }
 
   const open = store.sessionEmail();
   if (open) render(open);

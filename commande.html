@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=facture" />
+    <link rel="stylesheet" href="styles.css?v=rushes" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -119,6 +119,16 @@
           <ul class="order-lines" id="order-lines"></ul>
           <dl class="order-facts" id="order-facts"></dl>
         </article>
+        <div class="rush-box" id="rush-box" hidden>
+          <p class="kicker">Rushes</p>
+          <label class="rush-drop" id="rush-drop">
+            <input id="rush-files" type="file" multiple accept="video/*,audio/*,image/*,.mxf,.mov,.mp4,.m4v,.wav,.aif,.aiff,.r3d,.braw" />
+            <span class="rush-title">Déposez vos rushes</span>
+            <span class="fine">ou cliquez pour les choisir. Chaque fichier est renommé automatiquement.</span>
+          </label>
+          <p class="fine" id="rush-note" role="status"></p>
+          <ul class="rush-list" id="rush-list"></ul>
+        </div>
         <div class="order-grid">
           <div>
             <h2 id="board-title" tabindex="-1">Votre projet</h2>
@@ -142,6 +152,6 @@
     </main>
     <script src="boutique.js"></script>
     <script src="commande-store.js?v=etat"></script>
-    <script src="commande.js?v=facture"></script>
+    <script src="commande.js?v=rushes"></script>
   </body>
 </html>
