@@ -52,6 +52,20 @@
   };
 
   let payEmail = "";
+  let receipt = null;
+
+  const isPaid = (data) => RANK.indexOf(data && data.etat) > 0;
+
+  const dateLong = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Europe/Paris",
+    }).format(date);
+  };
 
   const armPay = (pay, url) => {
     pay.href = url;
@@ -72,8 +86,13 @@
       });
       const data = await response.json().catch(() => null);
       const amount = formatEuros(data && data.montant);
+      receipt = data;
       paintSlip(data);
       if (data && data.etat) applyEtat(email, data.etat);
+      if (isPaid(data)) {
+        paintPayment();
+        return;
+      }
       if (stripeUrl(data && data.url)) {
         armPay(pay, data.url);
         if (note) note.textContent = amount ? `Devis ${amount}. Le règlement s’ouvre sur Stripe.` : "Le devis est prêt.";
@@ -184,6 +203,31 @@
     render(email, true);
   };
 
+  const paintPayment = () => {
+    const pay = document.getElementById("pay");
+    const note = document.getElementById("pay-note");
+    const invoice = document.getElementById("invoice");
+    const invoiceNote = document.getElementById("invoice-note");
+    const project = store.projectFor(payEmail || store.sessionEmail());
+    const paid = isPaid(receipt);
+    if (pay) {
+      pay.hidden = paid;
+      if (paid) {
+        pay.removeAttribute("href");
+        pay.setAttribute("aria-disabled", "true");
+        pay.classList.add("is-wait");
+      }
+    }
+    if (note && paid) {
+      const when = dateLong(receipt.regle) || dateLong(receipt.cree);
+      note.textContent = when ? `Devis réglé le ${when}.` : "Devis réglé.";
+      note.classList.add("is-paid");
+    }
+    const ready = Boolean(project.facture) || paid;
+    if (invoice) invoice.disabled = !ready;
+    if (invoiceNote) invoiceNote.hidden = ready;
+  };
+
   const render = (email, quiet) => {
     const project = store.projectFor(email);
     const index = Math.max(
@@ -203,11 +247,7 @@
       if (i === index) item.setAttribute("aria-current", "step");
       rail.append(item);
     });
-    const invoice = document.getElementById("invoice");
-    const note = document.getElementById("invoice-note");
-    const ready = Boolean(project.facture);
-    invoice.disabled = !ready;
-    note.hidden = ready;
+    paintPayment();
     auth.hidden = true;
     board.hidden = false;
     if (!quiet) {
@@ -302,16 +342,130 @@
     if (payEmail) lookupPay(payEmail);
   });
 
-  document.getElementById("invoice").addEventListener("click", () => {
-    const email = store.sessionEmail();
-    const project = store.projectFor(email);
-    if (!project.facture) return;
+  const pdfLiteral = (value) => {
+    const text = String(value ?? "")
+      .replace(/\u202f|\u00a0/g, " ")
+      .replace(/€/g, "EUR")
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+      .replace(/—/g, "-")
+      .replace(/×/g, "x");
+    let out = "";
+    for (const char of text) {
+      const code = char.charCodeAt(0);
+      if (char === "\\") out += "\\\\";
+      else if (char === "(" || char === ")") out += `\\${char}`;
+      else if (code >= 32 && code <= 126) out += char;
+      else if (code >= 160 && code <= 255) out += `\\${code.toString(8).padStart(3, "0")}`;
+      else out += " ";
+    }
+    return out;
+  };
+
+  const buildInvoicePdf = (data, email) => {
+    const when = dateLong(data.regle) || dateLong(data.cree);
+    const ref = orderReference(data.nom, data.regle || data.cree);
+    const lines = orderLines(data.detail, data.projet);
+    const price = formatEuros(data.montant) || "0,00 EUR";
+    const ops = ["0 826 595 8 re 1 0.478 0.102 rg f"];
+    let y = 786;
+    const write = (font, size, x, value, color = "0 0 0") => {
+      ops.push(`BT ${color} rg /${font} ${size} Tf 1 0 0 1 ${x} ${y} Tm (${pdfLiteral(value)}) Tj ET`);
+    };
+    const down = (amount) => {
+      y -= amount;
+    };
+    write("F2", 22, 48, "BUTTISCREEN");
+    down(28);
+    write("F1", 11, 48, "Studio de montage vid\u00e9o");
+    down(16);
+    write("F1", 11, 48, "contact@buttiscreen.fr");
+    down(28);
+    write("F2", 16, 48, "FACTURE");
+    down(24);
+    write("F2", 14, 48, ref);
+    down(22);
+    write("F1", 12, 48, when ? `Devis r\u00e9gl\u00e9 le ${when}` : "Devis r\u00e9gl\u00e9");
+    down(32);
+    write("F1", 10, 48, "CLIENT", "0.4 0.4 0.4");
+    down(16);
+    write("F2", 13, 48, data.nom || "Client");
+    down(18);
+    write("F1", 12, 48, email);
+    down(28);
+    if (data.projet) {
+      write("F1", 10, 48, "PROJET", "0.4 0.4 0.4");
+      down(16);
+      write("F1", 12, 48, data.projet);
+      down(28);
+    }
+    ops.push(`48 ${y + 8} 499 0.4 re 0.85 0.85 0.85 rg f`);
+    write("F1", 10, 48, "D\u00c9SIGNATION", "0.4 0.4 0.4");
+    write("F1", 10, 470, "QT\u00c9", "0.4 0.4 0.4");
+    down(22);
+    lines.forEach((line) => {
+      write("F1", 12, 48, line.nom);
+      write("F1", 12, 470, String(line.qte));
+      down(20);
+    });
+    down(8);
+    ops.push(`48 ${y + 10} 499 0.4 re 0.85 0.85 0.85 rg f`);
+    write("F1", 12, 48, "Prix unitaire");
+    write("F1", 12, 430, price);
+    down(22);
+    write("F2", 14, 48, "Total", "1 0.478 0.102");
+    write("F2", 14, 430, price, "1 0.478 0.102");
+    down(36);
+    write("F1", 12, 48, "Facture acquitt\u00e9e.");
+    down(28);
+    write("F1", 9, 48, "Document \u00e9mis par buttiscreen.fr apr\u00e8s r\u00e8glement du devis.", "0.4 0.4 0.4");
+    const stream = ops.join("\n");
+    const objects = [
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+    ];
+    let body = "%PDF-1.4\n";
+    const offsets = [0];
+    objects.forEach((object, index) => {
+      offsets.push(body.length);
+      body += `${index + 1} 0 obj\n${object}\nendobj\n`;
+    });
+    const xref = body.length;
+    body += `xref\n0 ${objects.length + 1}\n`;
+    body += "0000000000 65535 f \n";
+    offsets.slice(1).forEach((offset) => {
+      body += `${String(offset).padStart(10, "0")} 00000 n \n`;
+    });
+    body += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    return body;
+  };
+
+  const saveFile = (href, name) => {
     const link = document.createElement("a");
-    link.href = project.facture;
-    link.download = project.factureNom || "facture-buttiscreen.pdf";
+    link.href = href;
+    link.download = name;
     document.body.append(link);
     link.click();
     link.remove();
+  };
+
+  document.getElementById("invoice").addEventListener("click", () => {
+    const email = store.sessionEmail();
+    const project = store.projectFor(email);
+    if (project.facture) {
+      saveFile(project.facture, project.factureNom || "facture-buttiscreen.pdf");
+      return;
+    }
+    if (!isPaid(receipt)) return;
+    const ref = orderReference(receipt.nom, receipt.regle || receipt.cree).replace(/[^\w.-]+/g, "");
+    const pdf = buildInvoicePdf(receipt, email);
+    const url = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" }));
+    saveFile(url, `facture-${ref || "buttiscreen"}.pdf`);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
   });
 
   const open = store.sessionEmail();

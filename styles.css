@@ -2157,9 +2157,21 @@ dialog#viewer::backdrop {
   padding: 12px 16px;
 }
 
+.order-side .btn[hidden] {
+  display: none;
+}
+
 .order-side .btn + .fine,
 .order-side .fine + .btn {
   margin-top: 10px;
+}
+
+#pay-note.is-paid {
+  color: var(--paper-2);
+  font-family: var(--font-d);
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+  line-height: 1.35;
 }
 
 .order h2,
