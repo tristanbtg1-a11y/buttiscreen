@@ -72,6 +72,7 @@
       });
       const data = await response.json().catch(() => null);
       const amount = formatEuros(data && data.montant);
+      if (data && data.etat) applyEtat(email, data.etat);
       if (stripeUrl(data && data.url)) {
         armPay(pay, data.url);
         if (note) note.textContent = amount ? `Devis ${amount}. Le règlement s’ouvre sur Stripe.` : "Le devis est prêt.";
@@ -98,7 +99,17 @@
     }).format(new Date(year, month - 1, day));
   };
 
-  const render = (email) => {
+  const RANK = ["brief", "preparation", "montage", "etalonnage", "livraison"];
+
+  const applyEtat = (email, etat) => {
+    if (!RANK.includes(etat)) return;
+    const project = store.projectFor(email);
+    if (RANK.indexOf(etat) <= RANK.indexOf(project.etat || "brief")) return;
+    store.saveProject(email, { ...project, etat });
+    render(email, true);
+  };
+
+  const render = (email, quiet) => {
     const project = store.projectFor(email);
     const index = Math.max(
       0,
@@ -124,8 +135,25 @@
     note.hidden = ready;
     auth.hidden = true;
     board.hidden = false;
-    board.focus();
-    lookupPay(email);
+    if (!quiet) {
+      board.focus();
+      lookupPay(email);
+      watchPayment(email);
+    }
+  };
+
+  const watchPayment = (email) => {
+    let tries = 0;
+    const fromStripe = document.referrer.includes("stripe.com");
+    const timer = setInterval(() => {
+      tries += 1;
+      const project = store.projectFor(email);
+      if ((project.etat && project.etat !== "brief") || tries > (fromStripe ? 8 : 2)) {
+        clearInterval(timer);
+        return;
+      }
+      lookupPay(email);
+    }, 2000);
   };
 
   modeButtons.forEach((button) => {

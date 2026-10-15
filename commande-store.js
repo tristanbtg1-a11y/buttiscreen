@@ -6,7 +6,7 @@
 
   const ETATS = [
     { id: "brief", label: "Brief reçu" },
-    { id: "preparation", label: "Préparation" },
+    { id: "preparation", label: "En préparation" },
     { id: "montage", label: "Montage" },
     { id: "etalonnage", label: "Étalonnage" },
     { id: "livraison", label: "Livraison" },

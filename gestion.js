@@ -3,7 +3,7 @@
   const SESSION = "buttiscreen.gestion.v1";
   const ETATS = {
     brief: "Brief reçu",
-    preparation: "Préparation",
+    preparation: "En préparation",
     montage: "Montage",
     etalonnage: "Étalonnage",
     livraison: "Livraison",
@@ -116,6 +116,7 @@
       : "";
     return `
       <form class="gestion-pay">
+        ${pay && pay.etat ? line("État", ETATS[pay.etat] || pay.etat) : ""}
         ${known ? `<p class="gestion-meta">Devis : ${esc(known)}${open ? ` · ${open}` : ""}</p>` : ""}
         <label>Montant (€)
           <input name="montant" type="text" inputmode="decimal" autocomplete="off" placeholder="1500" />
