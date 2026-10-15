@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=chemin" />
+    <link rel="stylesheet" href="styles.css?v=fichiers" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -126,6 +126,7 @@
             <span class="rush-title">Déposez vos rushes</span>
             <span class="fine">ou cliquez pour les choisir. Chaque fichier est nommé, puis envoyé.</span>
           </label>
+          <button class="btn ghost" type="button" id="rush-library">Mes fichiers</button>
           <p class="fine" id="rush-note" role="status"></p>
           <ul class="rush-list" id="rush-list"></ul>
         </div>
@@ -152,6 +153,16 @@
     </main>
     <script src="boutique.js"></script>
     <script src="commande-store.js?v=etat"></script>
-    <script src="commande.js?v=chemin"></script>
+    <dialog id="rush-library-dialog" aria-labelledby="rush-library-title">
+      <div class="file-pop">
+        <div class="file-pop-bar">
+          <h2 id="rush-library-title">Mes fichiers</h2>
+          <button class="btn ghost" type="button" id="rush-library-close">Fermer</button>
+        </div>
+        <p class="fine" id="rush-library-empty" hidden>Aucun fichier déposé.</p>
+        <ul class="rush-library" id="rush-library-list"></ul>
+      </div>
+    </dialog>
+    <script src="commande.js?v=fichiers"></script>
   </body>
 </html>

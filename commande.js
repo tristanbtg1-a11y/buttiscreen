@@ -271,6 +271,54 @@
     return known[ext] || "application/octet-stream";
   };
 
+  const FILES_KEY = "buttiscreen.fichiers.v1";
+
+  const fileKey = (email) => String(email || "").trim().toLowerCase();
+
+  const readFiles = (email) => {
+    try {
+      const all = JSON.parse(localStorage.getItem(FILES_KEY) || "{}");
+      const list = all[fileKey(email)];
+      return Array.isArray(list)
+        ? list.filter((name) => typeof name === "string" && name.trim() && !/^https?:/i.test(name))
+        : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const rememberFile = (email, name) => {
+    const clean = String(name || "").trim();
+    const key = fileKey(email);
+    if (!key || !clean || /^https?:/i.test(clean)) return;
+    let all = {};
+    try {
+      all = JSON.parse(localStorage.getItem(FILES_KEY) || "{}");
+    } catch {
+      all = {};
+    }
+    const list = Array.isArray(all[key]) ? all[key].filter((item) => item !== clean) : [];
+    list.push(clean);
+    all[key] = list.slice(-200);
+    localStorage.setItem(FILES_KEY, JSON.stringify(all));
+  };
+
+  const paintLibrary = () => {
+    const list = document.getElementById("rush-library-list");
+    const empty = document.getElementById("rush-library-empty");
+    const box = document.getElementById("rush-box");
+    if (!list || !empty || !box) return;
+    const files = readFiles(box.dataset.email || store.sessionEmail());
+    list.innerHTML = "";
+    files.forEach((name) => {
+      const item = document.createElement("li");
+      item.textContent = name;
+      list.append(item);
+    });
+    empty.hidden = files.length > 0;
+    list.hidden = files.length === 0;
+  };
+
   const syncRushes = () => {
     const box = document.getElementById("rush-box");
     if (!box) return;
@@ -341,6 +389,8 @@
       }
     }
     state.textContent = "Envoyé";
+    rememberFile(email, name.textContent);
+    if (document.getElementById("rush-library-dialog")?.open) paintLibrary();
     return true;
   };
 
@@ -636,6 +686,21 @@
       takeRushes(rushInput.files);
       rushInput.value = "";
     });
+  }
+
+  const rushLibrary = document.getElementById("rush-library");
+  const rushDialog = document.getElementById("rush-library-dialog");
+  const rushLibraryClose = document.getElementById("rush-library-close");
+  if (rushLibrary && rushDialog) {
+    rushLibrary.addEventListener("click", () => {
+      paintLibrary();
+      if (!rushDialog.open) rushDialog.showModal();
+    });
+    rushLibraryClose?.addEventListener("click", () => rushDialog.close());
+    rushDialog.addEventListener("click", (event) => {
+      if (event.target === rushDialog) rushDialog.close();
+    });
+    rushDialog.addEventListener("close", () => rushLibrary.focus());
   }
 
   const open = store.sessionEmail();

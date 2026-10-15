@@ -2098,6 +2098,64 @@ dialog#viewer::backdrop {
   text-transform: uppercase;
 }
 
+#rush-library {
+  margin-top: 14px;
+}
+
+dialog#rush-library-dialog {
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(70vh, 640px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid rgba(247, 244, 239, 0.16);
+  background: #100c18;
+  color: var(--paper-2);
+  color-scheme: dark;
+}
+
+dialog#rush-library-dialog::backdrop {
+  background: rgba(7, 6, 13, 0.78);
+}
+
+.file-pop {
+  padding: 22px 22px 18px;
+}
+
+.file-pop-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.file-pop h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.4vw, 1.8rem);
+  letter-spacing: -0.04em;
+}
+
+.file-pop .btn {
+  min-height: 40px;
+}
+
+#rush-library-empty {
+  margin: 18px 0 4px;
+}
+
+.rush-library {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  max-height: 46vh;
+  overflow: auto;
+}
+
+.rush-library li {
+  padding: 12px 0;
+  border-top: 1px solid rgba(247, 244, 239, 0.12);
+  overflow-wrap: anywhere;
+}
+
 .order-ref {
   margin: 6px 0 0;
   font-size: clamp(1.35rem, 2.4vw, 2rem);
