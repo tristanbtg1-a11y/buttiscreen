@@ -2399,6 +2399,30 @@ dialog#final-pay-dialog::backdrop {
   display: none;
 }
 
+.order-side #final-pay + #invoice {
+  margin-top: 22px;
+}
+
+#invoice {
+  background: #100c18;
+  border-color: rgba(255, 122, 26, 0.7);
+  color: var(--paper-2);
+}
+
+#invoice:hover:not(:disabled) {
+  background: #100c18;
+  border-color: var(--ember);
+  color: var(--paper-2);
+}
+
+#invoice:disabled,
+#invoice:disabled:hover {
+  background: #100c18;
+  border-color: rgba(255, 122, 26, 0.35);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
 .order-side .btn + .fine,
 .order-side .fine + .btn {
   margin-top: 10px;
