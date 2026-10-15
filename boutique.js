@@ -2,6 +2,7 @@
   const KEY = "buttiscreen.panier.v1";
   const NOTE = "buttiscreen.panier.note";
 
+  // Extraits Mixkit, Stock Video Free License : usage commercial, sans attribution.
   const PRODUCTS = [
     {
       id: "spot",
@@ -10,6 +11,7 @@
       cadre: "16:9 et 9:16",
       accroche: "Une idée, une durée courte, une chute qui reste.",
       tone: "ember",
+      video: "media/produits/spot.mp4",
       paragraphes: [
         "Le spot part d’un message et d’un temps de lecture. On cherche le plan qui porte l’idée, puis on retire tout ce qui la retarde.",
         "Le montage se fait en une ou deux versions utiles. Quand les rushes le permettent, l’image, les titres et le niveau sonore suivent dans la même passe.",
@@ -24,6 +26,7 @@
       cadre: "16:9, scope, 9:16",
       accroche: "Le montage suit la musique, pas l’inverse.",
       tone: "neon",
+      video: "media/produits/clip.mp4",
       paragraphes: [
         "Le clip se coupe sur le morceau. On cherche les accents, les respirations, et les plans qui méritent de revenir.",
         "Plusieurs lectures sont possibles : une version principale, puis les cadres utiles pour la sortie. On ne multiplie pas les versions pour le plaisir.",
@@ -38,6 +41,7 @@
       cadre: "16:9 et déclinaisons",
       accroche: "Le récit d’une société, tenu du début à la fin.",
       tone: "paper",
+      video: "media/produits/marque.mp4",
       paragraphes: [
         "Un film de marque a besoin d’une voix, d’un rythme, et d’une fin. On construit la structure avant de peaufiner les plans.",
         "Interviews, images de lieu, archives : tout passe par le même dérushage. On garde ce qui dit quelque chose, on laisse le reste.",
@@ -52,6 +56,7 @@
       cadre: "9:16, 1:1, 4:5",
       accroche: "Le même film, recadré pour là où il sera vu.",
       tone: "ember",
+      video: "media/produits/reseaux.mp4",
       paragraphes: [
         "Un format réseau n’est pas un 16:9 rogné au hasard. On recompose le cadre, le rythme, et parfois le début, pour une lecture verticale.",
         "Le travail peut partir d’un film déjà monté, ou de rushes prévus pour le téléphone. Chaque cadre est une sortie nommée.",
@@ -66,6 +71,7 @@
       cadre: "Cadre du tournage",
       accroche: "Structure, rythme, et seulement les versions qui aident à choisir.",
       tone: "neon",
+      video: "media/produits/montage.mp4",
       paragraphes: [
         "Le montage seul, quand l’image et le son finaux sont prévus ailleurs. On livre une timeline qui tient, avec les versions utiles.",
         "Les retours se font sur un lien de revue. On intègre ce qui change le film, pas une liste de micro-coupes sans fin.",
@@ -80,6 +86,7 @@
       cadre: "Le cadre du master",
       accroche: "Peau, nuit, jour : une image continue d’un plan à l’autre.",
       tone: "paper",
+      video: "media/produits/etalonnage.mp4",
       paragraphes: [
         "L’étalonnage part d’un montage verrouillé. On aligne les plans, puis on cherche le contraste et la couleur qui appartiennent au film.",
         "Scène par scène, sans effet qui date dans six mois. Les références se discutent au début, pas à la dernière passe.",
@@ -94,6 +101,7 @@
       cadre: "Le cadre du film",
       accroche: "Titres, cartons, sync et un niveau prêt à diffuser.",
       tone: "ember",
+      video: "media/produits/habillage.mp4",
       paragraphes: [
         "L’habillage reste au service du film. Titres, cartons, noms : lisibles, placés, et retirés dès qu’ils gênent.",
         "Côté son : sync, niveaux, et un mix simple de diffusion. Pas un studio sonore complet, une passe qui rend le film publiable.",
@@ -108,6 +116,7 @@
       cadre: "16:9, 9:16, 1:1, 4:5, 2.39",
       accroche: "Plusieurs cadres, des fichiers nommés, prêts à partir.",
       tone: "neon",
+      video: "media/produits/declinaisons.mp4",
       paragraphes: [
         "Les déclinaisons partent d’un master validé. Chaque format est recomposé : on ne se contente pas d’un crop automatique.",
         "Masters ProRes ou H.264, fichiers nommés, prêts à poster ou à envoyer à un diffuseur.",
@@ -122,6 +131,7 @@
       cadre: "16:9 ou scope",
       accroche: "Garder la durée quand elle dit quelque chose.",
       tone: "paper",
+      video: "media/produits/longue.mp4",
       paragraphes: [
         "Documentaire, récit, captation : la durée longue demande une structure avant les finitions. On regarde tout, puis on décide de ce qui reste.",
         "Le travail se découpe en étapes visibles : dérushage, première structure, montage, image et son, sorties. On peut s’arrêter plus tôt si le film est déjà là.",
@@ -207,16 +217,89 @@
     live.textContent = message;
   };
 
+  const motionOk = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const still = (product, large) => {
     const frame = document.createElement(large ? "div" : "a");
     frame.className = `product-still tone-${product.tone}${large ? " is-large" : ""}`;
-    if (!large) frame.href = `produit.html?id=${product.id}`;
+    if (!large) {
+      frame.href = `produit.html?id=${product.id}`;
+      frame.setAttribute("aria-label", product.nom);
+    }
+    if (product.video) {
+      const video = document.createElement("video");
+      video.className = "product-film";
+      video.src = product.video;
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.setAttribute("muted", "");
+      video.setAttribute("playsinline", "");
+      video.preload = large ? "auto" : "metadata";
+      video.tabIndex = -1;
+      if (large) video.setAttribute("aria-label", product.nom);
+      else video.setAttribute("aria-hidden", "true");
+      frame.append(video);
+      if (large) bindFilm(frame, video);
+      else bindHover(frame, video);
+    }
     const index = document.createElement("span");
     index.textContent = String(PRODUCTS.indexOf(product) + 1).padStart(2, "0");
     const ratio = document.createElement("span");
     ratio.textContent = product.cadre;
     frame.append(index, ratio);
     return frame;
+  };
+
+  const bindHover = (frame, video) => {
+    if (!motionOk) return;
+    const loop = () => {
+      if (video.currentTime >= 2) video.currentTime = 0;
+    };
+    const near = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      video.preload = "auto";
+      near.disconnect();
+    }, { rootMargin: "240px" });
+    near.observe(frame);
+    frame.addEventListener("pointerenter", (event) => {
+      if (event.pointerType && event.pointerType !== "mouse") return;
+      video.addEventListener("timeupdate", loop);
+      const start = () => {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+      };
+      if (video.readyState >= 1) start();
+      else video.addEventListener("loadedmetadata", start, { once: true });
+    });
+    frame.addEventListener("pointerleave", () => {
+      video.removeEventListener("timeupdate", loop);
+      video.pause();
+      video.currentTime = 0;
+    });
+  };
+
+  const bindFilm = (frame, video) => {
+    video.controls = true;
+    if (!motionOk) return;
+    video.autoplay = true;
+    let held = false;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const visible = entry.intersectionRatio >= 0.45;
+        if (visible) {
+          if (!held) return;
+          held = false;
+          video.play().catch(() => {});
+          return;
+        }
+        if (video.paused) return;
+        held = true;
+        video.pause();
+      });
+    }, { threshold: [0, 0.45, 1] });
+    observer.observe(frame);
+    video.play().catch(() => {});
   };
 
   const addButton = (id) => {
