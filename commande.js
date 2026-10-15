@@ -237,7 +237,7 @@
       .replace(/[^a-z0-9]+/g, "")
       .slice(0, 24);
 
-  const rushName = (slug, index, original) => {
+  const rushParts = (original) => {
     const ext = (String(original).match(/(\.[a-z0-9]{1,8})$/i) || [""])[0].toLowerCase();
     const stem =
       String(original)
@@ -247,16 +247,28 @@
         .replace(/[^a-zA-Z0-9]+/g, "-")
         .replace(/^-|-$/g, "")
         .slice(0, 40) || "fichier";
-    return `${slug}_rush_${String(index).padStart(2, "0")}_${stem}${ext}`;
+    return { stem, ext };
   };
 
-  const nextRushIndex = (email, count) => {
-    const key = "buttiscreen.rushes.v1";
-    const all = JSON.parse(localStorage.getItem(key) || "{}");
-    const start = Number(all[email] || 0);
-    all[email] = start + count;
-    localStorage.setItem(key, JSON.stringify(all));
-    return start;
+  const rushType = (file, ext) => {
+    const given = String(file.type || "").split(";")[0].trim().toLowerCase();
+    if (/^[\w.+-]+\/[\w.+-]+$/.test(given)) return given;
+    const known = {
+      ".mov": "video/quicktime",
+      ".mp4": "video/mp4",
+      ".m4v": "video/mp4",
+      ".mxf": "application/mxf",
+      ".wav": "audio/wav",
+      ".aif": "audio/aiff",
+      ".aiff": "audio/aiff",
+      ".mp3": "audio/mpeg",
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".png": "image/png",
+      ".webp": "image/webp",
+      ".txt": "text/plain",
+    };
+    return known[ext] || "application/octet-stream";
   };
 
   const syncRushes = () => {
@@ -270,7 +282,69 @@
     box.dataset.nom = (receipt && receipt.nom) || "";
   };
 
-  const takeRushes = (files) => {
+  const sendRush = async (file, name, state, slug) => {
+    const email = document.getElementById("rush-box").dataset.email || store.sessionEmail();
+    const { stem, ext } = rushParts(file.name);
+    const type = rushType(file, ext);
+    state.textContent = "Envoi";
+    let data = null;
+    try {
+      const response = await fetch(HOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "rushes",
+          email,
+          nom: document.getElementById("rush-box").dataset.nom || "",
+          slug,
+          stem,
+          ext,
+          size: file.size,
+          type,
+        }),
+      });
+      data = await response.json();
+    } catch {
+      state.textContent = "Échec";
+      return false;
+    }
+    const fileInfo = data && (data.file && (data.file.data || data.file));
+    const parts = (fileInfo && fileInfo.upload_urls) || (data && data.parts) || [];
+    if (!data || !data.ok || !parts.length) {
+      state.textContent = "Échec";
+      return false;
+    }
+    if (fileInfo && fileInfo.name) name.textContent = fileInfo.name;
+    else if (data.name) name.textContent = data.name;
+    const contentType = (fileInfo && fileInfo.media_type) || data.type || type;
+    let offset = 0;
+    for (const part of parts) {
+      const length = Number(part.size) || file.size - offset;
+      const chunk = file.slice(offset, offset + length);
+      offset += length;
+      try {
+        const put = await fetch(part.url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": contentType,
+            "x-amz-acl": "private",
+          },
+          body: chunk,
+        });
+        if (!put.ok) {
+          state.textContent = "Échec";
+          return false;
+        }
+      } catch {
+        state.textContent = "Échec";
+        return false;
+      }
+    }
+    state.textContent = "Envoyé";
+    return true;
+  };
+
+  const takeRushes = async (files) => {
     const list = document.getElementById("rush-list");
     const note = document.getElementById("rush-note");
     const box = document.getElementById("rush-box");
@@ -278,21 +352,26 @@
     if (!incoming.length || !list || !box) return;
     const email = box.dataset.email || store.sessionEmail();
     const slug = rushSlug(box.dataset.nom) || rushSlug(String(email).split("@")[0]) || "client";
-    const start = nextRushIndex(email, incoming.length);
-    incoming.forEach((file, offset) => {
+    if (note) note.textContent = "Envoi en cours.";
+    let sent = 0;
+    for (const file of incoming) {
       const item = document.createElement("li");
       const name = document.createElement("strong");
       const state = document.createElement("span");
-      name.textContent = rushName(slug, start + offset + 1, file.name);
-      state.textContent = "Nommé";
+      const { stem, ext } = rushParts(file.name);
+      name.textContent = `${slug}_rush_${stem}${ext}`;
+      state.textContent = "Envoi";
       item.append(name, state);
       list.prepend(item);
-    });
+      if (await sendRush(file, name, state, slug)) sent += 1;
+    }
     if (note) {
       note.textContent =
-        incoming.length > 1
-          ? `${incoming.length} fichiers nommés pour clients / ${slug} / rushes.`
-          : `Fichier nommé pour clients / ${slug} / rushes.`;
+        sent === incoming.length
+          ? sent > 1
+            ? `${sent} fichiers envoyés dans clients / ${slug} / rushes.`
+            : `Fichier envoyé dans clients / ${slug} / rushes.`
+          : "Une partie des fichiers n'a pas été envoyée. Réessayez.";
     }
   };
 
