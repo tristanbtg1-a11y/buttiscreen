@@ -2102,7 +2102,13 @@ dialog#viewer::backdrop {
   margin-top: 14px;
 }
 
-dialog#rush-library-dialog {
+.account-actions {
+  margin-top: 18px;
+}
+
+dialog#rush-library-dialog,
+dialog#chat-dialog,
+dialog#gestion-chat {
   width: min(520px, calc(100vw - 32px));
   max-height: min(70vh, 640px);
   margin: auto;
@@ -2113,7 +2119,9 @@ dialog#rush-library-dialog {
   color-scheme: dark;
 }
 
-dialog#rush-library-dialog::backdrop {
+dialog#rush-library-dialog::backdrop,
+dialog#chat-dialog::backdrop,
+dialog#gestion-chat::backdrop {
   background: rgba(7, 6, 13, 0.78);
 }
 
@@ -2154,6 +2162,75 @@ dialog#rush-library-dialog::backdrop {
   padding: 12px 0;
   border-top: 1px solid rgba(247, 244, 239, 0.12);
   overflow-wrap: anywhere;
+}
+
+.chat-pop {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chat-log {
+  list-style: none;
+  margin: 16px 0;
+  padding: 0;
+  max-height: 36vh;
+  overflow: auto;
+}
+
+.chat-log li {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(247, 244, 239, 0.12);
+}
+
+.chat-log strong {
+  font-weight: 500;
+}
+
+.chat-log time {
+  color: var(--muted);
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.chat-log .is-studio strong {
+  color: var(--ember);
+}
+
+.chat-log p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.chat-form {
+  display: grid;
+  gap: 10px;
+}
+
+.chat-form textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(247, 244, 239, 0.35);
+  padding: 12px 0;
+  color: inherit;
+}
+
+.chat-form textarea:focus {
+  outline: none;
+  border-bottom-color: var(--paper-2);
+}
+
+.gestion-card .btn {
+  margin-top: 14px;
 }
 
 .order-ref {

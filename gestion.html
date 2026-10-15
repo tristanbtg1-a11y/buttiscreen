@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=stripe" />
+    <link rel="stylesheet" href="styles.css?v=conversation" />
   </head>
   <body data-shop>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -118,7 +118,25 @@
         </div>
       </section>
     </main>
+    <dialog id="gestion-chat" aria-labelledby="gestion-chat-title">
+      <div class="file-pop chat-pop">
+        <div class="file-pop-bar">
+          <h2 id="gestion-chat-title">Conversation</h2>
+          <button class="btn ghost" type="button" id="gestion-chat-close">Fermer</button>
+        </div>
+        <p class="fine" id="gestion-chat-who"></p>
+        <p class="fine" id="gestion-chat-empty" hidden>Aucun message.</p>
+        <ol class="chat-log" id="gestion-chat-log"></ol>
+        <form class="chat-form" id="gestion-chat-form">
+          <label class="sr-only" for="gestion-chat-text">Message</label>
+          <textarea id="gestion-chat-text" name="texte" rows="3" maxlength="2000" required placeholder="Répondre"></textarea>
+          <button class="btn" type="submit">Envoyer</button>
+        </form>
+        <p class="fine" id="gestion-chat-status" role="status"></p>
+      </div>
+    </dialog>
+    <script src="conversation.js?v=conversation"></script>
     <script src="boutique.js"></script>
-    <script src="gestion.js?v=etat"></script>
+    <script src="gestion.js?v=conversation"></script>
   </body>
 </html>

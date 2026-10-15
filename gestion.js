@@ -88,6 +88,11 @@
     return { ok: true, items: readItems(data) };
   };
 
+  const chatButton = (email) =>
+    String(email || "").includes("@")
+      ? `<button class="btn ghost" type="button" data-chat="${esc(email)}">Conversation</button>`
+      : "";
+
   const line = (label, value) =>
     value ? `<p class="gestion-meta">${esc(label)} : ${esc(value)}</p>` : "";
 
@@ -141,6 +146,7 @@
       ${line("Reçu", when(item.cree))}
       ${item.message ? `<p class="gestion-note">${esc(item.message)}</p>` : ""}
       ${payBox(item, pay)}
+      ${chatButton(item.email)}
     </article>
   `;
 
@@ -154,6 +160,7 @@
       ${line("Délai", item.delai)}
       ${line("Mise à jour", when(item.cree))}
       ${payBox(item, pay)}
+      ${chatButton(item.email)}
     </article>
   `;
 
@@ -308,7 +315,88 @@
     gate.hidden = false;
     board.hidden = true;
     showError("");
+    document.getElementById("gestion-chat")?.close();
   });
+
+  const archive = window.ButtiConversation;
+  const chatDialog = document.getElementById("gestion-chat");
+  const chatLog = document.getElementById("gestion-chat-log");
+  const chatEmpty = document.getElementById("gestion-chat-empty");
+  const chatWho = document.getElementById("gestion-chat-who");
+  const chatStatus = document.getElementById("gestion-chat-status");
+  const chatForm = document.getElementById("gestion-chat-form");
+  let chatEmail = "";
+  const chatWhen = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Paris",
+    }).format(date);
+  };
+  const paintChat = () => {
+    if (!chatLog || !chatEmpty || !archive) return;
+    const rows = archive.readThread(chatEmail);
+    chatLog.innerHTML = "";
+    rows.forEach((row) => {
+      const item = document.createElement("li");
+      if (row.from === "studio") item.classList.add("is-studio");
+      const who = document.createElement("strong");
+      const time = document.createElement("time");
+      const text = document.createElement("p");
+      who.textContent = row.from === "studio" ? "Studio" : "Client";
+      time.dateTime = row.cree;
+      time.textContent = chatWhen(row.cree);
+      text.textContent = row.texte;
+      item.append(who, time, text);
+      chatLog.append(item);
+    });
+    chatEmpty.hidden = rows.length > 0;
+    chatLog.hidden = rows.length === 0;
+    if (chatWho) chatWho.textContent = chatEmail;
+    chatLog.scrollTop = chatLog.scrollHeight;
+  };
+  const openChat = (email) => {
+    chatEmail = String(email || "").trim().toLowerCase();
+    if (!chatEmail || !chatDialog) return;
+    if (chatStatus) chatStatus.textContent = "";
+    paintChat();
+    if (!chatDialog.open) chatDialog.showModal();
+    document.getElementById("gestion-chat-text")?.focus();
+  };
+  if (archive && chatDialog) {
+    board.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-chat]");
+      if (!button) return;
+      openChat(button.dataset.chat);
+    });
+    document.getElementById("gestion-chat-close")?.addEventListener("click", () => chatDialog.close());
+    chatDialog.addEventListener("click", (event) => {
+      if (event.target === chatDialog) chatDialog.close();
+    });
+    chatDialog.addEventListener("close", () => {
+      const opener = board.querySelector(`[data-chat="${chatEmail}"]`);
+      opener?.focus();
+    });
+    chatForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const field = document.getElementById("gestion-chat-text");
+      const savedRow = archive.append(chatEmail, "studio", field.value);
+      if (!savedRow) {
+        if (chatStatus) chatStatus.textContent = "Écrivez un message.";
+        return;
+      }
+      field.value = "";
+      if (chatStatus) chatStatus.textContent = "Message envoyé.";
+      paintChat();
+    });
+    window.addEventListener("storage", (event) => {
+      if (event.key === "buttiscreen.conversation.v1" && chatDialog.open) paintChat();
+    });
+  }
 
   const saved = session();
   if (saved?.email && saved?.password) load(saved.email, saved.password, false);

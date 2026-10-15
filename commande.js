@@ -703,6 +703,74 @@
     rushDialog.addEventListener("close", () => rushLibrary.focus());
   }
 
+  const archive = window.ButtiConversation;
+  const chatOpen = document.getElementById("chat-open");
+  const chatDialog = document.getElementById("chat-dialog");
+  const chatClose = document.getElementById("chat-close");
+  const chatForm = document.getElementById("chat-form");
+  const chatLog = document.getElementById("chat-log");
+  const chatEmpty = document.getElementById("chat-empty");
+  const chatStatus = document.getElementById("chat-status");
+  const chatWhen = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Paris",
+    }).format(date);
+  };
+  const paintChat = () => {
+    if (!chatLog || !chatEmpty) return;
+    const rows = archive ? archive.readThread(store.sessionEmail()) : [];
+    chatLog.innerHTML = "";
+    rows.forEach((row) => {
+      const item = document.createElement("li");
+      if (row.from === "studio") item.classList.add("is-studio");
+      const who = document.createElement("strong");
+      const time = document.createElement("time");
+      const text = document.createElement("p");
+      who.textContent = row.from === "studio" ? "Studio" : "Vous";
+      time.dateTime = row.cree;
+      time.textContent = chatWhen(row.cree);
+      text.textContent = row.texte;
+      item.append(who, time, text);
+      chatLog.append(item);
+    });
+    chatEmpty.hidden = rows.length > 0;
+    chatLog.hidden = rows.length === 0;
+    chatLog.scrollTop = chatLog.scrollHeight;
+  };
+  if (chatOpen && chatDialog && archive) {
+    chatOpen.addEventListener("click", () => {
+      if (chatStatus) chatStatus.textContent = "";
+      paintChat();
+      if (!chatDialog.open) chatDialog.showModal();
+    });
+    chatClose?.addEventListener("click", () => chatDialog.close());
+    chatDialog.addEventListener("click", (event) => {
+      if (event.target === chatDialog) chatDialog.close();
+    });
+    chatDialog.addEventListener("close", () => chatOpen.focus());
+    chatForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const field = document.getElementById("chat-text");
+      const saved = archive.append(store.sessionEmail(), "client", field.value);
+      if (!saved) {
+        if (chatStatus) chatStatus.textContent = "Écrivez un message.";
+        return;
+      }
+      field.value = "";
+      if (chatStatus) chatStatus.textContent = "Message envoyé.";
+      paintChat();
+    });
+    window.addEventListener("storage", (event) => {
+      if (event.key === "buttiscreen.conversation.v1" && chatDialog.open) paintChat();
+    });
+  }
+
   const open = store.sessionEmail();
   if (open) render(open);
   else showMode("connexion");

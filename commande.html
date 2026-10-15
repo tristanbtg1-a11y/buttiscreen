@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=fichiers" />
+    <link rel="stylesheet" href="styles.css?v=conversation" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -130,6 +130,9 @@
           <p class="fine" id="rush-note" role="status"></p>
           <ul class="rush-list" id="rush-list"></ul>
         </div>
+        <p class="account-actions">
+          <button class="btn ghost" type="button" id="chat-open">Conversation</button>
+        </p>
         <div class="order-grid">
           <div>
             <h2 id="board-title" tabindex="-1">Votre projet</h2>
@@ -152,7 +155,24 @@
       </section>
     </main>
     <script src="boutique.js"></script>
+    <script src="conversation.js?v=conversation"></script>
     <script src="commande-store.js?v=etat"></script>
+    <dialog id="chat-dialog" aria-labelledby="chat-title">
+      <div class="file-pop chat-pop">
+        <div class="file-pop-bar">
+          <h2 id="chat-title">Conversation</h2>
+          <button class="btn ghost" type="button" id="chat-close">Fermer</button>
+        </div>
+        <p class="fine" id="chat-empty" hidden>Aucun message.</p>
+        <ol class="chat-log" id="chat-log"></ol>
+        <form class="chat-form" id="chat-form">
+          <label class="sr-only" for="chat-text">Message</label>
+          <textarea id="chat-text" name="texte" rows="3" maxlength="2000" required placeholder="Écrire un message"></textarea>
+          <button class="btn" type="submit">Envoyer</button>
+        </form>
+        <p class="fine" id="chat-status" role="status"></p>
+      </div>
+    </dialog>
     <dialog id="rush-library-dialog" aria-labelledby="rush-library-title">
       <div class="file-pop">
         <div class="file-pop-bar">
@@ -163,6 +183,6 @@
         <ul class="rush-library" id="rush-library-list"></ul>
       </div>
     </dialog>
-    <script src="commande.js?v=fichiers"></script>
+    <script src="commande.js?v=conversation"></script>
   </body>
 </html>
