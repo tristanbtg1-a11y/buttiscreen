@@ -166,7 +166,7 @@
     const etat = shownEtat(item.email, item.etat);
     return `
     <article class="gestion-card">
-      <p class="gestion-pill${item.statut === "close" ? " is-close" : ""}">${item.statut === "close" ? "Close" : "En cours"}</p>
+      <p class="gestion-pill${etat === "livraison" || item.statut === "close" ? " is-close" : ""}">${etat === "livraison" || item.statut === "close" ? "Close" : "En cours"}</p>
       <h3>${esc(item.projet || item.nom || item.email || "Commande")}</h3>
       ${line("Client", item.nom && item.nom !== item.projet ? item.nom : "")}
       ${line("E-mail", item.email)}
@@ -192,8 +192,10 @@
     );
     const withPay = (item) => payments.get(String(item.email || "").toLowerCase());
     const rdv = items.filter((item) => item.kind === "rdv").sort(byDate);
-    const cours = items.filter((item) => item.kind === "commande" && item.statut !== "close").sort(byDate);
-    const closes = items.filter((item) => item.kind === "commande" && item.statut === "close").sort(byDate);
+    const isClose = (item) => item.statut === "close" || shownEtat(item.email, item.etat) === "livraison";
+    const commandes = items.filter((item) => item.kind === "commande");
+    const cours = commandes.filter((item) => !isClose(item)).sort(byDate);
+    const closes = commandes.filter(isClose).sort(byDate);
     const fill = (id, rows, html, empty) => {
       const node = document.getElementById(id);
       node.innerHTML = rows.length ? rows.map(html).join("") : `<p class="gestion-meta">${empty}</p>`;
