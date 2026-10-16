@@ -245,6 +245,11 @@
       video.loop = !large;
       video.setAttribute("muted", "");
       video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      if (!large && motionOk && window.matchMedia("(pointer: coarse)").matches) {
+        video.autoplay = true;
+        video.setAttribute("autoplay", "");
+      }
       video.preload = large || motionOk ? "auto" : "none";
       video.tabIndex = -1;
       if (large) video.setAttribute("aria-label", product.nom);
@@ -263,11 +268,9 @@
 
   const bindHover = (frame, video) => {
     if (!motionOk) return;
-    const reveal = () => video.classList.add("is-ready");
-    video.addEventListener("playing", reveal);
     const play = () => {
       const attempt = video.play();
-      if (attempt) attempt.then(reveal).catch(() => {});
+      if (attempt) attempt.catch(() => {});
     };
     const touch = window.matchMedia("(pointer: coarse)").matches;
     if (touch) {
@@ -280,7 +283,7 @@
           if (video.readyState >= 2) play();
           else video.addEventListener("canplay", play, { once: true });
         });
-      }, { threshold: 0.55 });
+      }, { threshold: 0.2 });
       observer.observe(frame);
       return;
     }

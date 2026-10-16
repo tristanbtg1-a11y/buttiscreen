@@ -2734,16 +2734,6 @@ dialog#final-pay-dialog::backdrop {
   pointer-events: none;
 }
 
-@media (pointer: coarse) {
-  .product-still:not(.is-large) .product-film {
-    opacity: 0;
-  }
-
-  .product-still:not(.is-large) .product-film.is-ready {
-    opacity: 1;
-  }
-}
-
 .product-still.is-large .product-film {
   pointer-events: auto;
 }
