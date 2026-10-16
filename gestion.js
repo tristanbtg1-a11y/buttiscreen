@@ -66,11 +66,27 @@
     return (Array.isArray(raw) ? raw : []).map(normalize);
   };
 
-  const ask = async (email, password) => {
+  const signIn = async (email, password) => {
     const response = await fetch(HOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "list", email, password }),
+      body: JSON.stringify({ action: "login", email, password }),
+    });
+    const data = await response.json().catch(() => null);
+    if (response.status === 401 || data?.ok === false) {
+      return { ok: false, error: "E-mail ou mot de passe incorrect." };
+    }
+    if (!response.ok || !data?.token) {
+      return { ok: false, error: "Le studio ne répond pas. Réessayez dans un instant." };
+    }
+    return { ok: true, token: String(data.token) };
+  };
+
+  const ask = async (token) => {
+    const response = await fetch(HOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "list", token }),
     });
     const text = await response.text();
     let data = null;
@@ -80,7 +96,7 @@
       data = null;
     }
     if (response.status === 401 || data?.ok === false) {
-      return { ok: false, error: "E-mail ou mot de passe incorrect." };
+      return { ok: false, error: "Session expirée. Reconnectez-vous." };
     }
     if (!response.ok || !data) {
       return { ok: false, error: "Le studio ne répond pas. Réessayez dans un instant." };
@@ -225,11 +241,11 @@
     }
   };
 
-  const load = async (email, password, remember) => {
+  const load = async (current, remember) => {
     submit.disabled = true;
     showError("");
     try {
-      const result = await ask(email, password);
+      const result = await ask(current.token);
       if (!result.ok) {
         sessionStorage.removeItem(SESSION);
         showError(result.error);
@@ -237,7 +253,7 @@
         board.hidden = true;
         return;
       }
-      if (remember) sessionStorage.setItem(SESSION, JSON.stringify({ email, password }));
+      if (remember) sessionStorage.setItem(SESSION, JSON.stringify(current));
       openBoard(result.items);
     } catch {
       showError("Le studio ne répond pas. Réessayez dans un instant.");
@@ -250,7 +266,23 @@
     event.preventDefault();
     const email = String(new FormData(form).get("email") || "").trim().toLowerCase();
     const password = String(new FormData(form).get("motdepasse") || "");
-    load(email, password, true);
+    submit.disabled = true;
+    showError("");
+    signIn(email, password)
+      .then((result) => {
+        form.reset();
+        if (!result.ok) {
+          showError(result.error);
+          submit.disabled = false;
+          return;
+        }
+        submit.disabled = false;
+        return load({ email, token: result.token }, true);
+      })
+      .catch(() => {
+        showError("Le studio ne répond pas. Réessayez dans un instant.");
+        submit.disabled = false;
+      });
   });
 
   const centsOf = (raw) => {
@@ -276,7 +308,7 @@
       status.hidden = !message;
       status.textContent = message || "";
     };
-    if (!saved?.email || !saved?.password) {
+    if (!saved?.token) {
       showStatus("Rouvrez la session du studio.");
       return;
     }
@@ -296,8 +328,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "lien",
-          email: saved.email,
-          password: saved.password,
+          token: saved.token,
           client,
           nom: String(data.get("nom") || ""),
           projet: String(data.get("projet") || ""),
@@ -313,11 +344,11 @@
         return;
       }
       if (stripeUrl(payload.url)) {
-        await load(saved.email, saved.password, true);
+        await load(saved, true);
         return;
       }
       showStatus("Le montant est enregistré. Le lien Stripe n’est pas encore ouvert.");
-      await load(saved.email, saved.password, true);
+      await load(saved, true);
     } catch {
       showStatus("Le studio ne répond pas. Réessayez dans un instant.");
     } finally {
@@ -327,10 +358,18 @@
 
   document.getElementById("refresh")?.addEventListener("click", () => {
     const saved = session();
-    if (saved?.email && saved?.password) load(saved.email, saved.password, true);
+    if (saved?.token) load(saved, true);
   });
 
   document.getElementById("logout")?.addEventListener("click", () => {
+    const saved = session();
+    if (saved?.token) {
+      fetch(HOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logout", token: saved.token }),
+      }).catch(() => {});
+    }
     sessionStorage.removeItem(SESSION);
     form.reset();
     gate.hidden = false;
@@ -466,5 +505,5 @@
   }
 
   const saved = session();
-  if (saved?.email && saved?.password) load(saved.email, saved.password, false);
+  if (saved?.token) load(saved, false);
 })();

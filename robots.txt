@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /gestion.html
 
 Sitemap: https://buttiscreen.fr/sitemap.xml
