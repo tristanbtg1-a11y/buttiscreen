@@ -23,6 +23,7 @@
     .map((clip) => document.querySelector(clip.getAttribute("href")))
     .filter(Boolean);
   const dialog = document.getElementById("viewer");
+  const showreel = document.getElementById("showreel");
   const cards = [...document.querySelectorAll(".card")];
   const form = document.getElementById("brief");
   const success = document.getElementById("form-success");
@@ -53,6 +54,7 @@
         (onScreen || pinned) &&
         !document.hidden &&
         !(dialog && dialog.open) &&
+        !(showreel && showreel.open) &&
         !motion.matches
     );
   }
@@ -231,14 +233,26 @@
     const title = card.querySelector("h3")?.textContent.trim() || "";
     const meta = card.querySelector(".meta span")?.textContent.trim() || "";
     const text = card.querySelector(".card-copy")?.textContent.trim() || "";
-    const svg = card.querySelector("svg");
+    const thumb = card.querySelector(".still video");
     document.getElementById("viewer-title").textContent = title;
     document.getElementById("viewer-meta").textContent = meta;
     document.getElementById("viewer-text").textContent = text;
     document.getElementById("viewer-count").textContent = `${pad(index + 1)} / ${pad(cards.length)}`;
     const still = document.getElementById("viewer-still");
     still.replaceChildren();
-    if (svg) still.appendChild(svg.cloneNode(true));
+    if (thumb) {
+      const video = document.createElement("video");
+      video.poster = thumb.poster;
+      video.muted = true;
+      video.loop = true;
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.setAttribute("aria-label", thumb.dataset.alt || title);
+      video.src = thumb.dataset.full;
+      still.appendChild(video);
+      if (!motion.matches) video.play().catch(() => {});
+    }
   }
 
   function openViewer(index) {
@@ -249,6 +263,19 @@
 
   cards.forEach((card, index) => {
     card.querySelector(".card-open")?.addEventListener("click", () => openViewer(index));
+    const preview = card.querySelector(".still video");
+    if (!preview) return;
+    const start = () => {
+      if (!motion.matches) preview.play().catch(() => {});
+    };
+    const stop = () => {
+      preview.pause();
+      preview.currentTime = 0;
+    };
+    card.addEventListener("mouseenter", start);
+    card.addEventListener("mouseleave", stop);
+    card.addEventListener("focusin", start);
+    card.addEventListener("focusout", stop);
   });
 
   document.getElementById("viewer-close")?.addEventListener("click", () => dialog.close());
@@ -260,6 +287,7 @@
   });
 
   dialog?.addEventListener("close", () => {
+    document.getElementById("viewer-still")?.replaceChildren();
     renderMonitor();
     cards[currentCard]?.querySelector(".card-open")?.focus();
   });
@@ -272,6 +300,27 @@
       event.preventDefault();
       fillViewer((currentCard - 1 + cards.length) % cards.length);
     }
+  });
+
+  document.getElementById("showreel-open")?.addEventListener("click", () => {
+    const still = document.getElementById("showreel-still");
+    const video = document.createElement("video");
+    video.poster = "media/sequences/showreel-poster.jpg";
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.setAttribute("aria-label", "Showreel BUTTISCREEN, vingt-quatre secondes");
+    video.src = "media/sequences/showreel.mp4";
+    still.replaceChildren(video);
+    showreel.showModal();
+    renderMonitor();
+    video.play().catch(() => {});
+  });
+  document.getElementById("showreel-close")?.addEventListener("click", () => showreel.close());
+  showreel?.addEventListener("close", () => {
+    document.getElementById("showreel-still")?.replaceChildren();
+    renderMonitor();
+    document.getElementById("showreel-open")?.focus();
   });
 
   function setError(id, message) {
@@ -328,10 +377,18 @@
   form?.addEventListener("input", clearFieldError);
   form?.addEventListener("change", clearFieldError);
 
-  form?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const data = new FormData(form);
-    if (!validate(data)) return;
+  const formStart = Date.now();
+  const sendBtn = document.getElementById("send");
+  const formFail = document.getElementById("form-fail");
+  const successParts = {
+    kicker: document.getElementById("success-kicker"),
+    title: document.getElementById("success-title"),
+    text: document.getElementById("success-text"),
+  };
+  const successMailto = successParts.text ? successParts.text.innerHTML : "";
+  const successMailtoCopy = [successParts.kicker?.textContent, successParts.title?.textContent];
+
+  function mailtoHref(data) {
     const body = [
       `Nom : ${String(data.get("nom")).trim()}`,
       `E-mail : ${String(data.get("email")).trim()}`,
@@ -339,23 +396,128 @@
       "",
       String(data.get("message")).trim(),
     ].join("\n");
-    const href = `mailto:contact@buttiscreen.fr?subject=${encodeURIComponent("Brief — BUTTISCREEN")}&body=${encodeURIComponent(body)}`;
+    return `mailto:contact@buttiscreen.fr?subject=${encodeURIComponent("Brief — BUTTISCREEN")}&body=${encodeURIComponent(body)}`;
+  }
+
+  let lastSent = false;
+
+  function showSuccess(sent, href) {
+    lastSent = sent;
+    const edit = document.getElementById("edit-brief");
+    if (edit) edit.textContent = sent ? "Envoyer un autre brief" : "Modifier";
     const reopen = document.getElementById("reopen-mail");
-    if (reopen) reopen.href = href;
+    if (successParts.kicker) {
+      successParts.kicker.textContent = sent ? "Brief envoyé" : successMailtoCopy[0];
+      successParts.title.textContent = sent ? "Merci, le brief est bien parti." : successMailtoCopy[1];
+      successParts.text.innerHTML = sent
+        ? "Il est arrivé chez nous. La réponse vous parvient par e-mail, à l’adresse indiquée."
+        : successMailto;
+    }
+    if (reopen) {
+      reopen.hidden = sent;
+      if (href) reopen.href = href;
+    }
     form.hidden = true;
     const note = document.querySelector(".brief-note");
     if (note) note.hidden = true;
     if (success) success.hidden = false;
-    if (formStatus) formStatus.textContent = "Le brief est prêt. La messagerie va s’ouvrir.";
-    window.location.href = href;
+    success?.scrollIntoView({ block: "center", behavior: motion.matches ? "auto" : "smooth" });
+    if (formStatus) {
+      formStatus.textContent = sent
+        ? "Le brief est envoyé."
+        : "Le brief est prêt. La messagerie va s’ouvrir.";
+    }
+  }
+
+  async function sendBrief(endpoint, data) {
+    const payload = {
+      nom: String(data.get("nom") || ""),
+      email: String(data.get("email") || ""),
+      projet: String(data.get("projet") || ""),
+      message: String(data.get("message") || ""),
+      website: String(data.get("website") || ""),
+      t: formStart,
+    };
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), 15000);
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal,
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    if (formFail) formFail.hidden = true;
+    if (!validate(data)) return;
+    const href = mailtoHref(data);
+    const endpoint = (form.dataset.endpoint || "").trim();
+
+    if (!endpoint) {
+      showSuccess(false, href);
+      window.location.href = href;
+      return;
+    }
+
+    const label = sendBtn ? sendBtn.textContent : "";
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Envoi en cours";
+    }
+    if (formStatus) formStatus.textContent = "Envoi du brief en cours.";
+    const ok = await sendBrief(endpoint, data);
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = label;
+    }
+    if (ok) {
+      showSuccess(true);
+    } else {
+      const fail = document.getElementById("fail-mail");
+      if (fail) fail.href = href;
+      if (formFail) formFail.hidden = false;
+      if (formStatus) formStatus.textContent = "L’envoi n’a pas abouti.";
+    }
   });
 
   document.getElementById("edit-brief")?.addEventListener("click", () => {
     if (success) success.hidden = true;
     document.querySelector(".brief-note")?.removeAttribute("hidden");
     if (form) {
+      if (lastSent) form.reset();
       form.hidden = false;
       form.elements.nom?.focus();
     }
   });
+  /* ===== ACCUEIL : apparition des blocs au défilement ===== */
+  (function reveal() {
+    const items = [...document.querySelectorAll("[data-reveal]")];
+    if (!items.length || motion.matches || !("IntersectionObserver" in window)) return;
+    document.documentElement.classList.add("has-reveal");
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-in");
+          io.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }
+    );
+    items.forEach((el) => {
+      const sibs = el.parentElement ? [...el.parentElement.children].filter((c) => c.hasAttribute("data-reveal")) : [];
+      el.style.setProperty("--d", `${Math.min(sibs.indexOf(el), 5) * 70}ms`);
+      io.observe(el);
+    });
+  })();
 })();

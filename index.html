@@ -90,12 +90,12 @@
           <a href="#studio">Studio</a>
           <a href="#methode">Méthode</a>
           <a href="#contact">Contact</a>
-          <a href="produits.html" target="_blank" rel="noopener noreferrer">Produits</a>
+          <a href="produits.html">Produits</a>
         </nav>
         <a class="btn header-cta" href="tunnel.html">Démarrer</a>
         <div class="header-tools">
           <a class="account-link" href="commande.html">Mon compte</a>
-          <a class="cart-link" href="panier.html" aria-label="Mon panier">
+          <a class="cart-link" href="panier.html" aria-label="Ma demande">
             <span class="cart-face">
               <svg class="cart-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
                 <g class="cart-body">
@@ -132,21 +132,23 @@
       <a href="#methode">Méthode</a>
       <a href="tunnel.html">Démarrer un projet</a>
       <a href="commande.html">Mon compte</a>
-      <a class="menu-produits" href="produits.html" target="_blank" rel="noopener noreferrer">Produits</a>
+      <a class="menu-produits" href="produits.html">Produits</a>
     </div>
 
     <main id="contenu" tabindex="-1">
       <section class="hero" id="titre" tabindex="-1">
+        <div class="hero-aura" aria-hidden="true"></div>
+        <div class="hero-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         <div class="hero-top">
-          <p class="kicker">Studio de montage vidéo</p>
+          <p class="kicker">Studio de montage vidéo · Paris</p>
           <p class="kicker">FR · 25 fps</p>
         </div>
         <h1>
-          <span>Butti</span>
-          <span>screen<span class="dot">.</span></span>
+          <span class="ln"><span>Butti</span></span>
+          <span class="ln"><span>screen<span class="dot">.</span></span></span>
         </h1>
         <div class="hero-foot">
-          <div>
+          <div class="hero-copy">
             <p class="voice">On cherche le cut qui tient.</p>
             <p class="lede">
               Montage, étalonnage, habillage et déclinaisons. Du spot de vingt
@@ -158,10 +160,11 @@
             <a class="btn ghost" href="tunnel.html">Démarrer un film</a>
           </div>
         </div>
+        <a class="hero-scroll" href="#bande" aria-label="Descendre vers la bande"><span>Défiler</span><i aria-hidden="true"></i></a>
       </section>
 
       <section class="section" id="bande" tabindex="-1" aria-labelledby="bande-title">
-        <div class="wrap section-head">
+        <div class="wrap section-head" data-reveal>
           <div>
             <p class="kicker">Bande 01</p>
             <h2 id="bande-title">Huit plans, coupés sec.</h2>
@@ -171,7 +174,7 @@
             image. Rien ne boucle tout seul si vous préférez tenir la tête de lecture.
           </p>
         </div>
-        <div class="monitor" id="monitor" tabindex="0" aria-label="Moniteur de lecture">
+        <div class="monitor" data-reveal id="monitor" tabindex="0" aria-label="Moniteur de lecture">
           <div class="monitor-bar">
             <span class="rec-state"><i></i> <span id="rec-label">STBY</span></span>
             <span id="shot-label">01 Barres</span>
@@ -237,29 +240,29 @@
 
       <section class="section" id="travail" tabindex="-1" aria-labelledby="travail-title">
         <div class="wrap">
-          <div class="section-head">
+          <div class="section-head" data-reveal>
             <div>
               <p class="kicker">Bande 02</p>
               <h2 id="travail-title">Séquences</h2>
             </div>
+            <div>
             <p>
               Six façons de couper. Ce sont des études de montage&nbsp;: la manière
               de tenir un film, pas une liste de clients.
             </p>
+            <button class="btn showreel-open" type="button" id="showreel-open">
+              Lancer le showreel <span aria-hidden="true">▶</span>
+            </button>
+            </div>
           </div>
           <div class="work-grid">
-            <article class="card card-premier">
+            <article class="card card-premier" data-reveal>
               <div class="still" aria-hidden="true">
-                <svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
-                  <rect width="640" height="360" fill="#7eafd4" />
-                  <rect y="248" width="640" height="112" fill="#241c16" />
-                  <circle cx="168" cy="214" r="48" fill="#f0c93d" />
-                  <rect x="36" y="28" width="18" height="18" fill="#ff7a1a" />
-                </svg>
+                <video muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="media/sequences/premier-poster.jpg" src="media/sequences/premier-extrait.mp4" data-full="media/sequences/premier.mp4" data-alt="Coucher de soleil sur la mer" width="480" height="270"></video>
               </div>
               <div class="card-body">
                 <p class="meta" id="meta-premier">
-                  <span>Film de marque · 01:24 · 16:9</span><span class="voir">Voir</span>
+                  <span>Film de marque</span><span class="voir">Voir</span>
                 </p>
                 <h3>
                   <button class="card-open" type="button" aria-describedby="meta-premier copy-premier">
@@ -267,23 +270,18 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-premier">
-                  Ouvrir sans tout expliquer. Un plan, un titre, et le sujet arrive par le rythme.
+                  Un plan large, un horizon, et le film commence sans un mot. Le sujet arrive par le rythme.
                 </p>
               </div>
             </article>
 
-            <article class="card card-vertical">
+            <article class="card card-vertical" data-reveal>
               <div class="still" aria-hidden="true">
-                <svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
-                  <rect width="640" height="360" fill="#123029" />
-                  <rect x="228" y="18" width="184" height="324" fill="#f0f0f0" />
-                  <circle cx="320" cy="132" r="36" fill="#ff7a1a" />
-                  <text x="262" y="292" fill="#123029" font-size="48" font-family="Bricolage Grotesque, sans-serif" font-weight="800">9:16</text>
-                </svg>
+                <video muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="media/sequences/vertical-poster.jpg" src="media/sequences/vertical-extrait.mp4" data-full="media/sequences/vertical.mp4" data-alt="Mains sur un téléphone" width="480" height="270"></video>
               </div>
               <div class="card-body">
                 <p class="meta" id="meta-vertical">
-                  <span>Réseaux · 00:15 · 9:16</span><span class="voir">Voir</span>
+                  <span>Réseaux</span><span class="voir">Voir</span>
                 </p>
                 <h3>
                   <button class="card-open" type="button" aria-describedby="meta-vertical copy-vertical">
@@ -291,26 +289,18 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-vertical">
-                  Le même sujet, cadré pour le pouce. Sous-titres tenus, dernière image qui boucle.
+                  Le même plan recadré en 9:16 pour le pouce. Le sujet reste au centre, le fond respire sur les côtés.
                 </p>
               </div>
             </article>
 
-            <article class="card card-trente">
+            <article class="card card-trente" data-reveal>
               <div class="still" aria-hidden="true">
-                <svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
-                  <rect width="640" height="360" fill="#f0f0f0" />
-                  <rect x="16" y="16" width="196" height="328" fill="#f0c93d" />
-                  <rect x="222" y="16" width="196" height="328" fill="#123029" />
-                  <rect x="428" y="16" width="196" height="328" fill="#ff7a1a" />
-                  <text x="32" y="310" fill="#123029" font-size="28" font-family="IBM Plex Mono, monospace">01</text>
-                  <text x="238" y="64" fill="#f0f0f0" font-size="28" font-family="IBM Plex Mono, monospace">02</text>
-                  <text x="444" y="310" fill="#f0f0f0" font-size="28" font-family="IBM Plex Mono, monospace">03</text>
-                </svg>
+                <video muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="media/sequences/trente-poster.jpg" src="media/sequences/trente-extrait.mp4" data-full="media/sequences/trente.mp4" data-alt="Arrosage d’un pot de fleurs" width="480" height="270"></video>
               </div>
               <div class="card-body">
                 <p class="meta" id="meta-trente">
-                  <span>Publicité · 00:30 · 16:9</span><span class="voir">Voir</span>
+                  <span>Publicité</span><span class="voir">Voir</span>
                 </p>
                 <h3>
                   <button class="card-open" type="button" aria-describedby="meta-trente copy-trente">
@@ -318,23 +308,18 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-trente">
-                  Accroche, preuve, signature. Trois fins, pour choisir sans remonter le film.
+                  Un plan produit tenu à contre-jour. Accroche, preuve, signature&nbsp;: trente secondes qui se déclinent.
                 </p>
               </div>
             </article>
 
-            <article class="card card-contre">
+            <article class="card card-contre" data-reveal>
               <div class="still" aria-hidden="true">
-                <svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
-                  <rect width="640" height="360" fill="#123029" />
-                  <circle cx="320" cy="20" r="170" fill="#f0f0f0" />
-                  <rect y="250" width="640" height="6" fill="#ff7a1a" />
-                  <rect y="256" width="640" height="104" fill="#1c1a17" />
-                </svg>
+                <video muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="media/sequences/contre-poster.jpg" src="media/sequences/contre-extrait.mp4" data-full="media/sequences/contre.mp4" data-alt="Coucher de soleil dans un rétroviseur" width="480" height="270"></video>
               </div>
               <div class="card-body">
                 <p class="meta" id="meta-contre">
-                  <span>Clip · 03:02 · 2.39</span><span class="voir">Voir</span>
+                  <span>Clip</span><span class="voir">Voir</span>
                 </p>
                 <h3>
                   <button class="card-open" type="button" aria-describedby="meta-contre copy-contre">
@@ -342,23 +327,18 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-contre">
-                  Le refrain tombe sur le kick. Les couplets gardent de l’air.
+                  La lumière rasante dans un rétroviseur. On garde le halo, on coupe avant qu’il brûle.
                 </p>
               </div>
             </article>
 
-            <article class="card card-chambre">
+            <article class="card card-chambre" data-reveal>
               <div class="still" aria-hidden="true">
-                <svg viewBox="0 0 640 640" preserveAspectRatio="xMidYMid slice">
-                  <rect width="640" height="640" fill="#123029" />
-                  <circle cx="250" cy="270" r="190" fill="#ff7a1a" opacity="0.9" />
-                  <circle cx="410" cy="300" r="180" fill="#123029" opacity="0.78" />
-                  <circle cx="320" cy="420" r="160" fill="#f0c93d" opacity="0.72" />
-                </svg>
+                <video muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="media/sequences/chambre-poster.jpg" src="media/sequences/chambre-extrait.mp4" data-full="media/sequences/chambre.mp4" data-alt="Rue animée au crépuscule" width="480" height="270"></video>
               </div>
               <div class="card-body">
                 <p class="meta" id="meta-chambre">
-                  <span>Étalonnage · 02:10 · 4:3</span><span class="voir">Voir</span>
+                  <span>Étalonnage</span><span class="voir">Voir</span>
                 </p>
                 <h3>
                   <button class="card-open" type="button" aria-describedby="meta-chambre copy-chambre">
@@ -366,36 +346,18 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-chambre">
-                  Une lumière continue. Peau juste, noirs tenus, nuit et jour dans la même chambre.
+                  Une lumière qui tombe. Les noirs restent tenus, les couleurs gardent leur justesse du jour jusqu’à la nuit.
                 </p>
               </div>
             </article>
 
-            <article class="card card-longue">
+            <article class="card card-longue" data-reveal>
               <div class="still" aria-hidden="true">
-                <svg viewBox="0 0 960 400" preserveAspectRatio="xMidYMid slice">
-                  <rect width="960" height="400" fill="#f0f0f0" />
-                  <g fill="#123029">
-                    <rect x="40" y="40" width="2" height="320" />
-                    <rect x="72" y="40" width="2" height="320" />
-                    <rect x="104" y="40" width="2" height="320" />
-                    <rect x="136" y="40" width="2" height="320" />
-                    <rect x="168" y="40" width="2" height="320" />
-                    <rect x="200" y="40" width="2" height="320" />
-                    <rect x="760" y="40" width="2" height="320" />
-                    <rect x="792" y="40" width="2" height="320" />
-                    <rect x="824" y="40" width="2" height="320" />
-                    <rect x="856" y="40" width="2" height="320" />
-                    <rect x="888" y="40" width="2" height="320" />
-                    <rect x="920" y="40" width="2" height="320" />
-                  </g>
-                  <rect x="200" y="168" width="560" height="64" fill="#123029" />
-                  <rect x="200" y="168" width="4" height="64" fill="#ff7a1a" />
-                </svg>
+                <video muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="media/sequences/longue-poster.jpg" src="media/sequences/longue-extrait.mp4" data-full="media/sequences/longue.mp4" data-alt="Radeau sur une rivière" width="480" height="270"></video>
               </div>
               <div class="card-body">
                 <p class="meta" id="meta-longue">
-                  <span>Documentaire · 18:40 · 16:9</span><span class="voir">Voir</span>
+                  <span>Documentaire</span><span class="voir">Voir</span>
                 </p>
                 <h3>
                   <button class="card-open" type="button" aria-describedby="meta-longue copy-longue">
@@ -403,19 +365,22 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-longue">
-                  Garder la durée quand elle dit quelque chose. Couper dès qu’elle traîne.
+                  Un radeau, un courant lent. Garder la durée quand elle dit quelque chose, couper dès qu’elle traîne.
                 </p>
               </div>
             </article>
 
-            
           </div>
+          <p class="work-note" data-reveal>
+            Images d’illustration&nbsp;: extraits vidéo Mixkit (licence Mixkit Stock Video Free).
+            Les films réalisés pour des clients ne sont pas publiés ici.
+          </p>
         </div>
       </section>
 
       <section class="section" id="studio" tabindex="-1" aria-labelledby="studio-title">
         <div class="wrap studio-grid">
-          <div>
+          <div data-reveal>
             <p class="kicker">La salle</p>
             <h2 id="studio-title">Vous parlez à la personne qui coupe.</h2>
             <p class="studio-copy">
@@ -426,25 +391,25 @@
             </p>
           </div>
           <div>
-            <article class="service">
+            <article class="service" data-reveal>
               <h3>Montage</h3>
               <p>Structure et rythme. On coupe jusqu’à ce que le film tienne, avec les versions utiles.</p>
             </article>
-            <article class="service">
+            <article class="service" data-reveal>
               <h3>Étalonnage</h3>
               <p>Peau, contrastes, nuit, jour. Une image qui reste la même d’un plan à l’autre.</p>
             </article>
-            <article class="service">
+            <article class="service" data-reveal>
               <h3>Habillage &amp; son</h3>
               <p>Titres, cartons, sync, niveau de diffusion. Juste ce qu’il faut pour que le film se lise.</p>
             </article>
-            <article class="service">
+            <article class="service" data-reveal>
               <h3>Sorties</h3>
               <p>16:9, 9:16, 1:1, 4:5, scope. Masters et fichiers nommés, prêts à poster ou à diffuser.</p>
             </article>
           </div>
         </div>
-        <div class="wrap fiche-block">
+        <div class="wrap fiche-block" data-reveal>
           <p class="kicker">Fiche technique</p>
           <dl class="fiche">
             <div>
@@ -477,7 +442,7 @@
 
       <section class="section" id="methode" tabindex="-1" aria-labelledby="methode-title">
         <div class="wrap">
-          <div class="section-head">
+          <div class="section-head" data-reveal>
             <div>
               <p class="kicker">Du rush au master</p>
               <h2 id="methode-title">Cinq étapes, une timeline.</h2>
@@ -488,27 +453,27 @@
         <div class="reel">
           <div class="sprocket" aria-hidden="true"></div>
           <div class="strip">
-            <article class="frame">
+            <article class="frame" data-reveal>
               <p class="frame-no"><i></i> 01</p>
               <h3>Écoute</h3>
               <p>Le besoin, la durée, le ton, là où le film sera vu.</p>
             </article>
-            <article class="frame">
+            <article class="frame" data-reveal>
               <p class="frame-no"><i></i> 02</p>
               <h3>Dérushage</h3>
               <p>On regarde tout. On garde ce qui a une énergie.</p>
             </article>
-            <article class="frame">
+            <article class="frame" data-reveal>
               <p class="frame-no"><i></i> 03</p>
               <h3>Montage</h3>
               <p>Structure, rythme, et seulement les versions qui servent à choisir.</p>
             </article>
-            <article class="frame">
+            <article class="frame" data-reveal>
               <p class="frame-no"><i></i> 04</p>
               <h3>Image &amp; son</h3>
               <p>Étalonnage, titres, sync, un niveau prêt à diffuser.</p>
             </article>
-            <article class="frame">
+            <article class="frame" data-reveal>
               <p class="frame-no"><i></i> 05</p>
               <h3>Sorties</h3>
               <p>Masters et déclinaisons. Fichiers nommés, prêts à partir.</p>
@@ -521,16 +486,24 @@
       <section class="fin" id="contact" tabindex="-1" aria-labelledby="contact-title">
         <div class="wrap">
           <p class="fin-mark" aria-hidden="true">Fin<span class="hot">.</span></p>
-          <p class="kicker">Contact</p>
-          <h2 id="contact-title">Un projet à monter&nbsp;?</h2>
-          <p class="lede">
-            Écrivez le brief. Votre messagerie s’ouvre avec le message, adressé à
-            <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
-            Ou suivez <a href="tunnel.html">le tunnel</a>, du brief à la livraison.
-            Rien n’est enregistré sur le site.
-          </p>
-          <div class="contact-layout">
-          <form class="brief" id="brief" action="mailto:contact@buttiscreen.fr" method="post" enctype="text/plain" novalidate>
+          <div class="fin-head" data-reveal>
+            <div>
+              <p class="kicker">Contact</p>
+              <h2 id="contact-title">Un projet à monter&nbsp;?</h2>
+              <p class="lede">
+                Écrivez le brief, il arrive directement à
+                <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
+                Ou suivez <a href="tunnel.html">le tunnel</a>, du brief à la livraison.
+              </p>
+            </div>
+            <aside class="fin-direct" aria-label="Écrire directement">
+              <p class="kicker">Écrire directement</p>
+              <a class="fin-mail" href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
+              <a class="fin-tunnel" href="tunnel.html">Démarrer par le tunnel</a>
+            </aside>
+          </div>
+          <div class="contact-layout" data-reveal>
+          <form class="brief" id="brief" action="mailto:contact@buttiscreen.fr" method="post" enctype="text/plain" data-endpoint="" novalidate>
             <label class="field">
               <span>Nom</span>
               <input name="nom" type="text" autocomplete="name" required />
@@ -559,11 +532,16 @@
               <textarea name="message" required></textarea>
               <span class="field-error" id="err-message" hidden></span>
             </label>
+            <label class="hp" aria-hidden="true">Ne pas remplir<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
+            <p class="form-fail full" id="form-fail" role="alert" hidden>
+              L’envoi n’a pas abouti. Réessayez, ou écrivez à
+              <a id="fail-mail" href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
+            </p>
             <div class="field full form-actions">
-              <button class="btn" type="submit">Envoyer le brief</button>
+              <button class="btn btn-send" type="submit" id="send">Envoyer le brief</button>
             </div>
             <p class="fine full">
-              Le message part depuis votre messagerie.
+              Vos informations servent uniquement à répondre à ce brief.
               <a href="politique.html">Politique de confidentialité</a>.
             </p>
           </form>
@@ -579,9 +557,9 @@
           </aside>
           </div>
           <div class="form-success" id="form-success" hidden>
-            <p class="kicker">Brief prêt</p>
-            <h3>Votre messagerie s’ouvre avec le message.</h3>
-            <p>
+            <p class="kicker" id="success-kicker">Brief prêt</p>
+            <h3 id="success-title">Votre messagerie s’ouvre avec le message.</h3>
+            <p id="success-text">
               Il part vers
               <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
               Si rien ne s’ouvre, écrivez à cette adresse.
@@ -593,10 +571,13 @@
           </div>
           <p class="sr-only" role="status" id="form-status"></p>
           <footer class="footer">
-            <p>© 2026 BUTTISCREEN</p>
-            <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
-            <a href="mentions.html">Mentions légales</a>
-            <a href="politique.html">Confidentialité</a>
+            <p class="footer-brand"><strong>BUTTISCREEN</strong><span>Studio de montage vidéo · Paris</span></p>
+            <nav class="footer-links" aria-label="Pied de page">
+              <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
+              <a href="mentions.html">Mentions légales</a>
+              <a href="politique.html">Confidentialité</a>
+            </nav>
+            <p class="footer-copy">© 2026 BUTTISCREEN <a class="footer-top" href="#titre">Haut de page ↑</a></p>
           </footer>
         </div>
       </section>
@@ -631,6 +612,23 @@
           <p class="kicker" id="viewer-meta"></p>
           <h2 id="viewer-title"></h2>
           <p id="viewer-text"></p>
+        </div>
+      </div>
+    </dialog>
+    <dialog id="showreel" aria-labelledby="showreel-title">
+      <div class="viewer">
+        <div class="viewer-bar">
+          <p class="kicker" id="showreel-title">Showreel · 00:24</p>
+          <div class="viewer-nav">
+            <button class="btn" type="button" id="showreel-close">Fermer</button>
+          </div>
+        </div>
+        <div class="viewer-still" id="showreel-still"></div>
+        <div class="viewer-copy">
+          <p>
+            Six plans, un seul rythme. Images d’illustration&nbsp;: extraits vidéo Mixkit.
+            Musique&nbsp;: «&nbsp;Serene View&nbsp;», Arulo, Mixkit.
+          </p>
         </div>
       </div>
     </dialog>

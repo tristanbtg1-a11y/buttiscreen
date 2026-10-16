@@ -1,0 +1,9 @@
+name = "buttiscreen-contact"
+main = "contact.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+MAIL_TO = "contact@buttiscreen.fr"
+MAIL_FROM = "Buttiscreen <brief@buttiscreen.fr>"
+
+# Secret à définir hors du dépôt : npx wrangler secret put RESEND_API_KEY
