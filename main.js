@@ -231,14 +231,26 @@
     const title = card.querySelector("h3")?.textContent.trim() || "";
     const meta = card.querySelector(".meta span")?.textContent.trim() || "";
     const text = card.querySelector(".card-copy")?.textContent.trim() || "";
-    const svg = card.querySelector("svg");
+    const thumb = card.querySelector(".still video");
     document.getElementById("viewer-title").textContent = title;
     document.getElementById("viewer-meta").textContent = meta;
     document.getElementById("viewer-text").textContent = text;
     document.getElementById("viewer-count").textContent = `${pad(index + 1)} / ${pad(cards.length)}`;
     const still = document.getElementById("viewer-still");
     still.replaceChildren();
-    if (svg) still.appendChild(svg.cloneNode(true));
+    if (thumb) {
+      const video = document.createElement("video");
+      video.poster = thumb.poster;
+      video.muted = true;
+      video.loop = true;
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.setAttribute("aria-label", thumb.dataset.alt || title);
+      video.src = thumb.dataset.full;
+      still.appendChild(video);
+      if (!motion.matches) video.play().catch(() => {});
+    }
   }
 
   function openViewer(index) {
@@ -249,6 +261,19 @@
 
   cards.forEach((card, index) => {
     card.querySelector(".card-open")?.addEventListener("click", () => openViewer(index));
+    const preview = card.querySelector(".still video");
+    if (!preview) return;
+    const start = () => {
+      if (!motion.matches) preview.play().catch(() => {});
+    };
+    const stop = () => {
+      preview.pause();
+      preview.currentTime = 0;
+    };
+    card.addEventListener("mouseenter", start);
+    card.addEventListener("mouseleave", stop);
+    card.addEventListener("focusin", start);
+    card.addEventListener("focusout", stop);
   });
 
   document.getElementById("viewer-close")?.addEventListener("click", () => dialog.close());
@@ -260,6 +285,7 @@
   });
 
   dialog?.addEventListener("close", () => {
+    document.getElementById("viewer-still")?.replaceChildren();
     renderMonitor();
     cards[currentCard]?.querySelector(".card-open")?.focus();
   });
