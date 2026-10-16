@@ -2668,7 +2668,7 @@ dialog#final-pay-dialog::backdrop {
 
 .shop,
 .product-page {
-  padding: 42px 0 88px;
+  padding-block: 42px 88px;
 }
 
 .shop-lede {

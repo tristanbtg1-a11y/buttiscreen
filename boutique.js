@@ -170,7 +170,7 @@
       })
       .filter(Boolean)
       .join(", ");
-    if (note) sessionStorage.setItem(NOTE, `Produits dans le panier : ${note}. Tarifs sur devis.`);
+    if (note) sessionStorage.setItem(NOTE, `Produits de ma demande : ${note}. Tarifs sur devis.`);
     else sessionStorage.removeItem(NOTE);
   };
 
@@ -205,7 +205,7 @@
       node.hidden = total === 0;
     });
     document.querySelectorAll(".cart-link").forEach((link) => {
-      link.setAttribute("aria-label", total ? `Mon panier, ${total}` : "Mon panier");
+      link.setAttribute("aria-label", total ? `Ma demande, ${total}` : "Ma demande");
       if (!bump) return;
       link.classList.remove("is-bump");
       void link.offsetWidth;
@@ -330,7 +330,7 @@
     button.className = "btn";
     button.type = "button";
     button.dataset.add = id;
-    button.textContent = "Ajouter au panier";
+    button.textContent = "Ajouter à ma demande";
     return button;
   };
 
@@ -459,7 +459,7 @@
     if (!items.length) {
       const empty = document.createElement("p");
       empty.className = "lede";
-      empty.textContent = "Le panier est vide.";
+      empty.textContent = "Votre demande est vide.";
       const link = document.createElement("a");
       link.className = "btn";
       link.href = "produits.html";
@@ -510,7 +510,7 @@
     const foot = document.createElement("div");
     foot.className = "cart-foot";
     const note = document.createElement("p");
-    note.textContent = "Tarifs sur devis. Le panier reste dans ce navigateur.";
+    note.textContent = "Tarifs sur devis. Votre sélection reste dans ce navigateur.";
     const devis = document.createElement("a");
     devis.className = "btn";
     devis.href = "tunnel.html";
@@ -525,10 +525,11 @@
       const product = byId(addTarget.dataset.add);
       add(addTarget.dataset.add);
       addTarget.textContent = "Ajouté";
-      window.setTimeout(() => {
-        addTarget.textContent = "Ajouter au panier";
-      }, 1200);
-      if (product) announce(`${product.nom} ajouté au panier.`);
+      window.clearTimeout(Number(addTarget.dataset.timer));
+      addTarget.dataset.timer = String(window.setTimeout(() => {
+        addTarget.textContent = "Ajouter à ma demande";
+      }, 1200));
+      if (product) announce(`${product.nom} ajouté à votre demande.`);
       renderCart();
       return;
     }
