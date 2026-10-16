@@ -3285,7 +3285,7 @@ body.home .hero-aura {
   background:
     radial-gradient(42% 46% at 70% 38%, rgba(255, 122, 26, 0.22), transparent 70%),
     radial-gradient(38% 42% at 42% 66%, rgba(208, 107, 255, 0.16), transparent 72%);
-  filter: blur(18px);
+  will-change: transform;
   -webkit-mask-image: linear-gradient(transparent 0, #000 28%);
   mask-image: linear-gradient(transparent 0, #000 28%);
   animation: home-aura 14s ease-in-out infinite alternate;
@@ -3594,6 +3594,13 @@ body.home .fin {
 
 @media (max-width: 980px) {
   body.home .hero-scroll { display: none; }
+}
+
+@media (min-width: 721px) and (max-width: 1060px) {
+  body.home .header-inner { gap: 12px; }
+  body.home .nav-desktop { gap: 14px; }
+  body.home .nav-desktop a { font-size: 0.92rem; }
+  body.home .logo-word { display: none; }
 }
 
 @media (max-width: 720px) {
@@ -3905,4 +3912,9 @@ body.home .footer a:hover {
   body.home .form-success {
     padding: 20px 18px;
   }
+}
+
+/* ===== ACCUEIL : poids des médias ===== */
+body.home .mark {
+  background-image: url("logo-header.jpg");
 }
