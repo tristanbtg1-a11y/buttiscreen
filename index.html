@@ -529,10 +529,9 @@
               <p class="kicker">Contact</p>
               <h2 id="contact-title">Un projet à monter&nbsp;?</h2>
               <p class="lede">
-                Écrivez le brief. Votre messagerie s’ouvre avec le message, adressé à
+                Écrivez le brief, il arrive directement à
                 <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
                 Ou suivez <a href="tunnel.html">le tunnel</a>, du brief à la livraison.
-                Rien n’est enregistré sur le site.
               </p>
             </div>
             <aside class="fin-direct" aria-label="Écrire directement">
@@ -542,7 +541,7 @@
             </aside>
           </div>
           <div class="contact-layout" data-reveal>
-          <form class="brief" id="brief" action="mailto:contact@buttiscreen.fr" method="post" enctype="text/plain" novalidate>
+          <form class="brief" id="brief" action="mailto:contact@buttiscreen.fr" method="post" enctype="text/plain" data-endpoint="" novalidate>
             <label class="field">
               <span>Nom</span>
               <input name="nom" type="text" autocomplete="name" required />
@@ -571,11 +570,16 @@
               <textarea name="message" required></textarea>
               <span class="field-error" id="err-message" hidden></span>
             </label>
+            <label class="hp" aria-hidden="true">Ne pas remplir<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
+            <p class="form-fail full" id="form-fail" role="alert" hidden>
+              L’envoi n’a pas abouti. Réessayez, ou écrivez à
+              <a id="fail-mail" href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
+            </p>
             <div class="field full form-actions">
-              <button class="btn btn-send" type="submit">Envoyer le brief</button>
+              <button class="btn btn-send" type="submit" id="send">Envoyer le brief</button>
             </div>
             <p class="fine full">
-              Le message part depuis votre messagerie.
+              Vos informations servent uniquement à répondre à ce brief.
               <a href="politique.html">Politique de confidentialité</a>.
             </p>
           </form>
@@ -591,9 +595,9 @@
           </aside>
           </div>
           <div class="form-success" id="form-success" hidden>
-            <p class="kicker">Brief prêt</p>
-            <h3>Votre messagerie s’ouvre avec le message.</h3>
-            <p>
+            <p class="kicker" id="success-kicker">Brief prêt</p>
+            <h3 id="success-title">Votre messagerie s’ouvre avec le message.</h3>
+            <p id="success-text">
               Il part vers
               <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
               Si rien ne s’ouvre, écrivez à cette adresse.
