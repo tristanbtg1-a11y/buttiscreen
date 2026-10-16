@@ -23,6 +23,7 @@
     .map((clip) => document.querySelector(clip.getAttribute("href")))
     .filter(Boolean);
   const dialog = document.getElementById("viewer");
+  const showreel = document.getElementById("showreel");
   const cards = [...document.querySelectorAll(".card")];
   const form = document.getElementById("brief");
   const success = document.getElementById("form-success");
@@ -53,6 +54,7 @@
         (onScreen || pinned) &&
         !document.hidden &&
         !(dialog && dialog.open) &&
+        !(showreel && showreel.open) &&
         !motion.matches
     );
   }
@@ -298,6 +300,27 @@
       event.preventDefault();
       fillViewer((currentCard - 1 + cards.length) % cards.length);
     }
+  });
+
+  document.getElementById("showreel-open")?.addEventListener("click", () => {
+    const still = document.getElementById("showreel-still");
+    const video = document.createElement("video");
+    video.poster = "media/sequences/showreel-poster.jpg";
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.setAttribute("aria-label", "Showreel BUTTISCREEN, vingt-quatre secondes");
+    video.src = "media/sequences/showreel.mp4";
+    still.replaceChildren(video);
+    showreel.showModal();
+    renderMonitor();
+    video.play().catch(() => {});
+  });
+  document.getElementById("showreel-close")?.addEventListener("click", () => showreel.close());
+  showreel?.addEventListener("close", () => {
+    document.getElementById("showreel-still")?.replaceChildren();
+    renderMonitor();
+    document.getElementById("showreel-open")?.focus();
   });
 
   function setError(id, message) {

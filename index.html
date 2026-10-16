@@ -245,10 +245,15 @@
               <p class="kicker">Bande 02</p>
               <h2 id="travail-title">Séquences</h2>
             </div>
+            <div>
             <p>
               Six façons de couper. Ce sont des études de montage&nbsp;: la manière
               de tenir un film, pas une liste de clients.
             </p>
+            <button class="btn showreel-open" type="button" id="showreel-open">
+              Lancer le showreel <span aria-hidden="true">▶</span>
+            </button>
+            </div>
           </div>
           <div class="work-grid">
             <article class="card card-premier" data-reveal>
@@ -265,7 +270,7 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-premier">
-                  Ouvrir sans tout expliquer. Un plan, un titre, et le sujet arrive par le rythme.
+                  Un plan large, un horizon, et le film commence sans un mot. Le sujet arrive par le rythme.
                 </p>
               </div>
             </article>
@@ -284,7 +289,7 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-vertical">
-                  Le même sujet, cadré pour le pouce. Sous-titres tenus, dernière image qui boucle.
+                  Le même plan recadré en 9:16 pour le pouce. Le sujet reste au centre, le fond respire sur les côtés.
                 </p>
               </div>
             </article>
@@ -303,7 +308,7 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-trente">
-                  Accroche, preuve, signature. Trois fins, pour choisir sans remonter le film.
+                  Un plan produit tenu à contre-jour. Accroche, preuve, signature&nbsp;: trente secondes qui se déclinent.
                 </p>
               </div>
             </article>
@@ -322,7 +327,7 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-contre">
-                  Le refrain tombe sur le kick. Les couplets gardent de l’air.
+                  La lumière rasante dans un rétroviseur. On garde le halo, on coupe avant qu’il brûle.
                 </p>
               </div>
             </article>
@@ -341,7 +346,7 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-chambre">
-                  Une lumière continue. Peau juste, noirs tenus, nuit et jour dans la même chambre.
+                  Une lumière qui tombe. Les noirs restent tenus, les couleurs gardent leur justesse du jour jusqu’à la nuit.
                 </p>
               </div>
             </article>
@@ -360,7 +365,7 @@
                   </button>
                 </h3>
                 <p class="card-copy" id="copy-longue">
-                  Garder la durée quand elle dit quelque chose. Couper dès qu’elle traîne.
+                  Un radeau, un courant lent. Garder la durée quand elle dit quelque chose, couper dès qu’elle traîne.
                 </p>
               </div>
             </article>
@@ -607,6 +612,23 @@
           <p class="kicker" id="viewer-meta"></p>
           <h2 id="viewer-title"></h2>
           <p id="viewer-text"></p>
+        </div>
+      </div>
+    </dialog>
+    <dialog id="showreel" aria-labelledby="showreel-title">
+      <div class="viewer">
+        <div class="viewer-bar">
+          <p class="kicker" id="showreel-title">Showreel · 00:24</p>
+          <div class="viewer-nav">
+            <button class="btn" type="button" id="showreel-close">Fermer</button>
+          </div>
+        </div>
+        <div class="viewer-still" id="showreel-still"></div>
+        <div class="viewer-copy">
+          <p>
+            Six plans, un seul rythme. Images d’illustration&nbsp;: extraits vidéo Mixkit.
+            Musique&nbsp;: «&nbsp;Serene View&nbsp;», Arulo, Mixkit.
+          </p>
         </div>
       </div>
     </dialog>
