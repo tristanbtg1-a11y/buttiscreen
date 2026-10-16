@@ -3149,6 +3149,12 @@ dialog#final-pay-dialog::backdrop {
   }
 }
 
+@media (max-width: 560px) {
+  body:not(.home) .account-link {
+    display: none;
+  }
+}
+
 .gestion-board {
   margin-top: 36px;
 }
