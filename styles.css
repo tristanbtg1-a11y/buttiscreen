@@ -2676,6 +2676,70 @@ dialog#final-pay-dialog::backdrop {
   margin: 8px 0 28px;
 }
 
+/* ===== BOUTIQUE ===== */
+.shop-family + .shop-family {
+  margin-top: 56px;
+}
+
+.shop-family-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 18px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-family-head h2 {
+  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  letter-spacing: -0.04em;
+}
+
+.shop-family-head p {
+  color: var(--muted);
+}
+
+.shop-grid.is-post {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.shop-grid.is-post .product-still {
+  aspect-ratio: 16 / 9;
+}
+
+.product.is-phare {
+  grid-column: span 2;
+  flex-direction: row;
+}
+
+.product.is-phare .product-still {
+  flex: 1.55 1 0;
+  aspect-ratio: auto;
+  min-height: 320px;
+}
+
+.product.is-phare .product-body {
+  flex: 1 1 0;
+  justify-content: flex-end;
+  padding: 24px;
+}
+
+.product.is-phare h3 {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+}
+
+.product-still.has-poster {
+  background-size: cover;
+  background-position: center;
+}
+
+.product-body .product-meta {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2767,12 +2831,14 @@ dialog#final-pay-dialog::backdrop {
   padding: 16px 16px 18px;
 }
 
-.product-body h2 {
+.product-body h2,
+.product-body h3 {
   font-size: clamp(1.6rem, 2vw, 2.1rem);
   letter-spacing: -0.045em;
   line-height: 0.95;
 }
 
+.product-body h3 a,
 .product-body h2 a,
 .cart-row h2 a,
 .product-back {
@@ -2934,6 +3000,16 @@ dialog#final-pay-dialog::backdrop {
   .shop-grid {
     grid-template-columns: 1fr 1fr;
   }
+
+  .product.is-phare {
+    flex-direction: column;
+  }
+
+  .product.is-phare .product-still {
+    flex: none;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 720px) {
@@ -2943,8 +3019,13 @@ dialog#final-pay-dialog::backdrop {
   }
 
   .shop-grid,
+  .shop-grid.is-post,
   .cart-row {
     grid-template-columns: 1fr;
+  }
+
+  .product.is-phare {
+    grid-column: auto;
   }
 
   .cart-row {

@@ -6,6 +6,8 @@
   const PRODUCTS = [
     {
       id: "spot",
+      famille: "films",
+      phare: true,
       nom: "Spot",
       duree: "15 à 30 secondes",
       cadre: "16:9 et 9:16",
@@ -22,6 +24,7 @@
     },
     {
       id: "clip",
+      famille: "films",
       nom: "Clip",
       duree: "Durée du morceau",
       cadre: "16:9, scope, 9:16",
@@ -38,6 +41,7 @@
     },
     {
       id: "marque",
+      famille: "films",
       nom: "Film de marque",
       duree: "45 secondes à 3 minutes",
       cadre: "16:9 et déclinaisons",
@@ -54,6 +58,7 @@
     },
     {
       id: "reseaux",
+      famille: "films",
       nom: "Formats réseaux",
       duree: "6 à 60 secondes",
       cadre: "9:16, 1:1, 4:5",
@@ -70,6 +75,7 @@
     },
     {
       id: "montage",
+      famille: "post",
       nom: "Montage",
       duree: "Selon le film",
       cadre: "Cadre du tournage",
@@ -86,6 +92,7 @@
     },
     {
       id: "etalonnage",
+      famille: "post",
       nom: "Étalonnage",
       duree: "Selon le montage",
       cadre: "Le cadre du master",
@@ -102,6 +109,7 @@
     },
     {
       id: "habillage",
+      famille: "post",
       nom: "Habillage et son",
       duree: "Selon le montage",
       cadre: "Le cadre du film",
@@ -118,6 +126,7 @@
     },
     {
       id: "declinaisons",
+      famille: "post",
       nom: "Déclinaisons",
       duree: "Le film déjà monté",
       cadre: "16:9, 9:16, 1:1, 4:5, 2.39",
@@ -134,6 +143,7 @@
     },
     {
       id: "longue",
+      famille: "films",
       nom: "Durée longue",
       duree: "Au-delà de 10 minutes",
       cadre: "16:9 ou scope",
@@ -148,6 +158,11 @@
       ],
       inclus: ["Dérushage complet", "Structure en chapitres", "Montage et retours", "Master de la durée retenue"],
     },
+  ];
+
+  const FAMILLES = [
+    { id: "films", titre: "Films", texte: "Du spot au film de marque, la durée et le récit." },
+    { id: "post", titre: "Post-production", texte: "Montage, étalonnage, habillage et déclinaisons, à la carte." },
   ];
 
   const byId = (id) => PRODUCTS.find((product) => product.id === id);
@@ -231,6 +246,9 @@
   const still = (product, large) => {
     const frame = document.createElement(large ? "div" : "a");
     frame.className = `product-still tone-${product.tone}${large ? " is-large" : ""}`;
+    const poster = `media/produits/posters/${product.id}.jpg`;
+    frame.classList.add("has-poster");
+    frame.style.backgroundImage = `url(${poster})`;
     if (!large) {
       frame.href = `produit.html?id=${product.id}`;
       frame.setAttribute("aria-label", product.nom);
@@ -239,6 +257,7 @@
       const video = document.createElement("video");
       video.className = "product-film";
       video.src = large ? product.video : product.extrait || product.video;
+      video.poster = poster;
       video.muted = true;
       video.defaultMuted = true;
       video.playsInline = true;
@@ -335,34 +354,52 @@
   };
 
   const renderShop = () => {
-    const grid = document.getElementById("shop-grid");
-    if (!grid) return;
-    grid.replaceChildren();
-    PRODUCTS.forEach((product) => {
-      const card = document.createElement("article");
-      card.className = "product";
-      const body = document.createElement("div");
-      body.className = "product-body";
-      const title = document.createElement("h2");
-      const titleLink = document.createElement("a");
-      titleLink.href = `produit.html?id=${product.id}`;
-      titleLink.textContent = product.nom;
-      title.append(titleLink);
-      const copy = document.createElement("p");
-      copy.textContent = product.accroche;
-      const price = document.createElement("p");
-      price.className = "product-price";
-      price.textContent = "Sur devis";
-      const actions = document.createElement("div");
-      actions.className = "product-actions";
-      const view = document.createElement("a");
-      view.className = "btn ghost";
-      view.href = `produit.html?id=${product.id}`;
-      view.textContent = "Voir le produit";
-      actions.append(addButton(product.id), view);
-      body.append(title, copy, price, actions);
-      card.append(still(product), body);
-      grid.append(card);
+    const root = document.getElementById("shop-grid");
+    if (!root) return;
+    root.replaceChildren();
+    FAMILLES.forEach((famille) => {
+      const section = document.createElement("section");
+      section.className = "shop-family";
+      const head = document.createElement("header");
+      head.className = "shop-family-head";
+      const heading = document.createElement("h2");
+      heading.textContent = famille.titre;
+      const lede = document.createElement("p");
+      lede.textContent = famille.texte;
+      head.append(heading, lede);
+      const grid = document.createElement("div");
+      grid.className = `shop-grid is-${famille.id}`;
+      PRODUCTS.filter((product) => product.famille === famille.id).forEach((product) => {
+        const card = document.createElement("article");
+        card.className = `product${product.phare ? " is-phare" : ""}`;
+        const body = document.createElement("div");
+        body.className = "product-body";
+        const title = document.createElement("h3");
+        const titleLink = document.createElement("a");
+        titleLink.href = `produit.html?id=${product.id}`;
+        titleLink.textContent = product.nom;
+        title.append(titleLink);
+        const meta = document.createElement("p");
+        meta.className = "product-meta";
+        meta.textContent = `${product.duree} · ${product.cadre}`;
+        const copy = document.createElement("p");
+        copy.textContent = product.accroche;
+        const price = document.createElement("p");
+        price.className = "product-price";
+        price.textContent = "Sur devis";
+        const actions = document.createElement("div");
+        actions.className = "product-actions";
+        const view = document.createElement("a");
+        view.className = "btn ghost";
+        view.href = `produit.html?id=${product.id}`;
+        view.textContent = "Voir le produit";
+        actions.append(addButton(product.id), view);
+        body.append(title, meta, copy, price, actions);
+        card.append(still(product), body);
+        grid.append(card);
+      });
+      section.append(head, grid);
+      root.append(section);
     });
   };
 
