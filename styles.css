@@ -2668,12 +2668,76 @@ dialog#final-pay-dialog::backdrop {
 
 .shop,
 .product-page {
-  padding: 42px 0 88px;
+  padding-block: 42px 88px;
 }
 
 .shop-lede {
   max-width: 40rem;
   margin: 8px 0 28px;
+}
+
+/* ===== BOUTIQUE ===== */
+.shop-family + .shop-family {
+  margin-top: 56px;
+}
+
+.shop-family-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 18px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-family-head h2 {
+  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  letter-spacing: -0.04em;
+}
+
+.shop-family-head p {
+  color: var(--muted);
+}
+
+.shop-grid.is-post {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.shop-grid.is-post .product-still {
+  aspect-ratio: 16 / 9;
+}
+
+.product.is-phare {
+  grid-column: span 2;
+  flex-direction: row;
+}
+
+.product.is-phare .product-still {
+  flex: 1.55 1 0;
+  aspect-ratio: auto;
+  min-height: 320px;
+}
+
+.product.is-phare .product-body {
+  flex: 1 1 0;
+  justify-content: flex-end;
+  padding: 24px;
+}
+
+.product.is-phare h3 {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+}
+
+.product-still.has-poster {
+  background-size: cover;
+  background-position: center;
+}
+
+.product-body .product-meta {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
 }
 
 .shop-grid {
@@ -2767,12 +2831,14 @@ dialog#final-pay-dialog::backdrop {
   padding: 16px 16px 18px;
 }
 
-.product-body h2 {
+.product-body h2,
+.product-body h3 {
   font-size: clamp(1.6rem, 2vw, 2.1rem);
   letter-spacing: -0.045em;
   line-height: 0.95;
 }
 
+.product-body h3 a,
 .product-body h2 a,
 .cart-row h2 a,
 .product-back {
@@ -2849,6 +2915,78 @@ dialog#final-pay-dialog::backdrop {
   margin-top: 8px;
   padding-top: 22px;
   border-top: 1px solid var(--line);
+}
+
+.product-steps,
+.product-related {
+  margin-top: 36px;
+  max-width: 40rem;
+}
+
+.product-subtitle,
+.product-steps h2,
+.product-related h2 {
+  margin-top: 28px;
+  margin-bottom: 8px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.product-steps ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.product-steps li {
+  display: grid;
+  grid-template-columns: 2.4rem 7rem minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  counter-increment: step;
+}
+
+.product-steps li::before {
+  content: counter(step, decimal-leading-zero);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--ember);
+}
+
+.product-steps li span {
+  color: var(--muted);
+}
+
+.product-related {
+  display: grid;
+  gap: 0;
+  margin-bottom: 8px;
+}
+
+.product-related a {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  text-decoration: none;
+}
+
+.product-related a span {
+  color: var(--muted);
+}
+
+.product-related a:hover strong,
+.product-related a:focus-visible strong {
+  color: var(--ember);
 }
 
 .product-buy p {
@@ -2934,17 +3072,40 @@ dialog#final-pay-dialog::backdrop {
   .shop-grid {
     grid-template-columns: 1fr 1fr;
   }
+
+  .product.is-phare {
+    flex-direction: column;
+  }
+
+  .product.is-phare .product-still {
+    flex: none;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 720px) {
+  .product-steps li {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+
+  .product-steps li span {
+    grid-column: 2;
+  }
+
   .header-tools {
     margin-left: 12px;
     gap: 10px;
   }
 
   .shop-grid,
+  .shop-grid.is-post,
   .cart-row {
     grid-template-columns: 1fr;
+  }
+
+  .product.is-phare {
+    grid-column: auto;
   }
 
   .cart-row {
@@ -2985,6 +3146,12 @@ dialog#final-pay-dialog::backdrop {
 
   .menu-btn {
     padding: 0 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  body:not(.home) .account-link {
+    display: none;
   }
 }
 
