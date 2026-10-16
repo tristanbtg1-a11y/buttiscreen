@@ -285,7 +285,7 @@
         video.autoplay = true;
         video.setAttribute("autoplay", "");
       }
-      video.preload = large || motionOk ? "auto" : "none";
+      video.preload = motionOk ? "metadata" : "none";
       video.tabIndex = -1;
       if (large) video.setAttribute("aria-label", product.nom);
       else video.setAttribute("aria-hidden", "true");
