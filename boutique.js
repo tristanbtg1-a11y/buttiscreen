@@ -263,9 +263,30 @@
 
   const bindHover = (frame, video) => {
     if (!motionOk) return;
+    const reveal = () => video.classList.add("is-ready");
+    video.addEventListener("playing", reveal);
+    const play = () => {
+      const attempt = video.play();
+      if (attempt) attempt.then(reveal).catch(() => {});
+    };
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+    if (touch) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            video.pause();
+            return;
+          }
+          if (video.readyState >= 2) play();
+          else video.addEventListener("canplay", play, { once: true });
+        });
+      }, { threshold: 0.55 });
+      observer.observe(frame);
+      return;
+    }
     const start = () => {
       video.currentTime = 0;
-      video.play().catch(() => {});
+      play();
     };
     frame.addEventListener("pointerenter", (event) => {
       if (event.pointerType && event.pointerType !== "mouse") return;
