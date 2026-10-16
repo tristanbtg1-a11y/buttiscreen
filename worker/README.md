@@ -35,7 +35,7 @@ Ils ne contactent jamais le vrai Resend.
 
 ## Activation, dans l'ordre
 
-1. Resend : ajouter `buttiscreen.fr`, copier les enregistrements DNS (SPF, DKIM) chez le registrar, attendre « Verified ».
+1. Resend : le domaine `buttiscreen.fr` est créé en région `eu-west-1` (Irlande), suivi des ouvertures et des clics désactivé. Copier les enregistrements DNS (SPF, DKIM) chez le registrar, attendre « Verified ».
 2. Resend : créer une clé d'API, accès « Sending access », restreinte au domaine.
 3. Depuis `worker/` : `npx wrangler deploy`, puis `npx wrangler secret put RESEND_API_KEY`.
 4. Test réel : `curl -X POST <adresse du Worker> -H "origin: https://buttiscreen.fr" -H "content-type: application/json" -d '{"nom":"Test","email":"toi@example.com","projet":"Clip","message":"Message de test du formulaire.","website":"","t":1}'`
