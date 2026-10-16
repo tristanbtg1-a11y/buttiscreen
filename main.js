@@ -358,4 +358,25 @@
       form.elements.nom?.focus();
     }
   });
+  /* ===== ACCUEIL : apparition des blocs au défilement ===== */
+  (function reveal() {
+    const items = [...document.querySelectorAll("[data-reveal]")];
+    if (!items.length || motion.matches || !("IntersectionObserver" in window)) return;
+    document.documentElement.classList.add("has-reveal");
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-in");
+          io.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }
+    );
+    items.forEach((el) => {
+      const sibs = el.parentElement ? [...el.parentElement.children].filter((c) => c.hasAttribute("data-reveal")) : [];
+      el.style.setProperty("--d", `${Math.min(sibs.indexOf(el), 5) * 70}ms`);
+      io.observe(el);
+    });
+  })();
 })();
