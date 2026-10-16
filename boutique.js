@@ -366,6 +366,35 @@
     });
   };
 
+  const setMeta = (selector, attr, value) => {
+    const node = document.head.querySelector(selector);
+    if (node) node.setAttribute(attr, value);
+  };
+
+  const seo = (product) => {
+    const url = `https://buttiscreen.fr/produit.html?id=${product.id}`;
+    const title = `${product.nom} — BUTTISCREEN`;
+    const description = `${product.nom} : ${product.accroche} ${product.duree}, ${product.cadre}. Tarif sur devis.`;
+    document.title = title;
+    setMeta('meta[name="description"]', "content", description);
+    setMeta('link[rel="canonical"]', "href", url);
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[property="og:description"]', "content", description);
+    setMeta('meta[property="og:url"]', "content", url);
+    const ld = document.createElement("script");
+    ld.type = "application/ld+json";
+    ld.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: product.nom,
+      description: product.accroche,
+      url,
+      provider: { "@type": "Organization", name: "BUTTISCREEN", url: "https://buttiscreen.fr/" },
+      areaServed: "FR",
+    });
+    document.head.append(ld);
+  };
+
   const renderProduct = () => {
     const root = document.getElementById("product-root");
     if (!root) return;
@@ -383,10 +412,14 @@
       const copy = document.createElement("p");
       copy.className = "lede";
       copy.textContent = "Ce film n’est pas dans la boutique.";
+      const robots = document.createElement("meta");
+      robots.name = "robots";
+      robots.content = "noindex";
+      document.head.append(robots);
       root.append(back, title, copy);
       return;
     }
-    document.title = `${product.nom} — BUTTISCREEN`;
+    seo(product);
     const kicker = document.createElement("p");
     kicker.className = "kicker";
     kicker.textContent = `${product.duree} · ${product.cadre}`;
