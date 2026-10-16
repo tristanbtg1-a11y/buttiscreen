@@ -6,6 +6,9 @@
   const PRODUCTS = [
     {
       id: "spot",
+      associes: ["reseaux", "declinaisons"],
+      famille: "films",
+      phare: true,
       nom: "Spot",
       duree: "15 à 30 secondes",
       cadre: "16:9 et 9:16",
@@ -22,6 +25,8 @@
     },
     {
       id: "clip",
+      associes: ["reseaux", "etalonnage"],
+      famille: "films",
       nom: "Clip",
       duree: "Durée du morceau",
       cadre: "16:9, scope, 9:16",
@@ -38,6 +43,8 @@
     },
     {
       id: "marque",
+      associes: ["declinaisons", "habillage"],
+      famille: "films",
       nom: "Film de marque",
       duree: "45 secondes à 3 minutes",
       cadre: "16:9 et déclinaisons",
@@ -54,6 +61,8 @@
     },
     {
       id: "reseaux",
+      associes: ["declinaisons", "montage"],
+      famille: "films",
       nom: "Formats réseaux",
       duree: "6 à 60 secondes",
       cadre: "9:16, 1:1, 4:5",
@@ -70,6 +79,8 @@
     },
     {
       id: "montage",
+      associes: ["etalonnage", "habillage"],
+      famille: "post",
       nom: "Montage",
       duree: "Selon le film",
       cadre: "Cadre du tournage",
@@ -86,6 +97,8 @@
     },
     {
       id: "etalonnage",
+      associes: ["montage", "habillage"],
+      famille: "post",
       nom: "Étalonnage",
       duree: "Selon le montage",
       cadre: "Le cadre du master",
@@ -102,6 +115,8 @@
     },
     {
       id: "habillage",
+      associes: ["montage", "declinaisons"],
+      famille: "post",
       nom: "Habillage et son",
       duree: "Selon le montage",
       cadre: "Le cadre du film",
@@ -118,6 +133,8 @@
     },
     {
       id: "declinaisons",
+      associes: ["reseaux", "marque"],
+      famille: "post",
       nom: "Déclinaisons",
       duree: "Le film déjà monté",
       cadre: "16:9, 9:16, 1:1, 4:5, 2.39",
@@ -134,6 +151,8 @@
     },
     {
       id: "longue",
+      associes: ["montage", "etalonnage"],
+      famille: "films",
       nom: "Durée longue",
       duree: "Au-delà de 10 minutes",
       cadre: "16:9 ou scope",
@@ -148,6 +167,18 @@
       ],
       inclus: ["Dérushage complet", "Structure en chapitres", "Montage et retours", "Master de la durée retenue"],
     },
+  ];
+
+  const FAMILLES = [
+    { id: "films", titre: "Films", texte: "Du spot au film de marque, la durée et le récit." },
+    { id: "post", titre: "Post-production", texte: "Montage, étalonnage, habillage et déclinaisons, à la carte." },
+  ];
+
+  const ETAPES = [
+    ["Brief", "Vous décrivez le projet : durée, usage, état des rushes."],
+    ["Devis", "Le tarif s’écrit après lecture du brief, avec le calendrier."],
+    ["Montage", "Une première version, puis les retours que vous voulez intégrer."],
+    ["Livraison", "Fichiers nommés, prêts à diffuser."],
   ];
 
   const byId = (id) => PRODUCTS.find((product) => product.id === id);
@@ -170,7 +201,7 @@
       })
       .filter(Boolean)
       .join(", ");
-    if (note) sessionStorage.setItem(NOTE, `Produits dans le panier : ${note}. Tarifs sur devis.`);
+    if (note) sessionStorage.setItem(NOTE, `Produits de ma demande : ${note}. Tarifs sur devis.`);
     else sessionStorage.removeItem(NOTE);
   };
 
@@ -205,7 +236,7 @@
       node.hidden = total === 0;
     });
     document.querySelectorAll(".cart-link").forEach((link) => {
-      link.setAttribute("aria-label", total ? `Mon panier, ${total}` : "Mon panier");
+      link.setAttribute("aria-label", total ? `Ma demande, ${total}` : "Ma demande");
       if (!bump) return;
       link.classList.remove("is-bump");
       void link.offsetWidth;
@@ -231,6 +262,9 @@
   const still = (product, large) => {
     const frame = document.createElement(large ? "div" : "a");
     frame.className = `product-still tone-${product.tone}${large ? " is-large" : ""}`;
+    const poster = `media/produits/posters/${product.id}.jpg`;
+    frame.classList.add("has-poster");
+    frame.style.backgroundImage = `url(${poster})`;
     if (!large) {
       frame.href = `produit.html?id=${product.id}`;
       frame.setAttribute("aria-label", product.nom);
@@ -239,6 +273,7 @@
       const video = document.createElement("video");
       video.className = "product-film";
       video.src = large ? product.video : product.extrait || product.video;
+      video.poster = poster;
       video.muted = true;
       video.defaultMuted = true;
       video.playsInline = true;
@@ -250,7 +285,7 @@
         video.autoplay = true;
         video.setAttribute("autoplay", "");
       }
-      video.preload = large || motionOk ? "auto" : "none";
+      video.preload = motionOk ? "metadata" : "none";
       video.tabIndex = -1;
       if (large) video.setAttribute("aria-label", product.nom);
       else video.setAttribute("aria-hidden", "true");
@@ -330,40 +365,87 @@
     button.className = "btn";
     button.type = "button";
     button.dataset.add = id;
-    button.textContent = "Ajouter au panier";
+    button.textContent = "Ajouter à ma demande";
     return button;
   };
 
   const renderShop = () => {
-    const grid = document.getElementById("shop-grid");
-    if (!grid) return;
-    grid.replaceChildren();
-    PRODUCTS.forEach((product) => {
-      const card = document.createElement("article");
-      card.className = "product";
-      const body = document.createElement("div");
-      body.className = "product-body";
-      const title = document.createElement("h2");
-      const titleLink = document.createElement("a");
-      titleLink.href = `produit.html?id=${product.id}`;
-      titleLink.textContent = product.nom;
-      title.append(titleLink);
-      const copy = document.createElement("p");
-      copy.textContent = product.accroche;
-      const price = document.createElement("p");
-      price.className = "product-price";
-      price.textContent = "Sur devis";
-      const actions = document.createElement("div");
-      actions.className = "product-actions";
-      const view = document.createElement("a");
-      view.className = "btn ghost";
-      view.href = `produit.html?id=${product.id}`;
-      view.textContent = "Voir le produit";
-      actions.append(addButton(product.id), view);
-      body.append(title, copy, price, actions);
-      card.append(still(product), body);
-      grid.append(card);
+    const root = document.getElementById("shop-grid");
+    if (!root) return;
+    root.replaceChildren();
+    FAMILLES.forEach((famille) => {
+      const section = document.createElement("section");
+      section.className = "shop-family";
+      const head = document.createElement("header");
+      head.className = "shop-family-head";
+      const heading = document.createElement("h2");
+      heading.textContent = famille.titre;
+      const lede = document.createElement("p");
+      lede.textContent = famille.texte;
+      head.append(heading, lede);
+      const grid = document.createElement("div");
+      grid.className = `shop-grid is-${famille.id}`;
+      PRODUCTS.filter((product) => product.famille === famille.id).forEach((product) => {
+        const card = document.createElement("article");
+        card.className = `product${product.phare ? " is-phare" : ""}`;
+        const body = document.createElement("div");
+        body.className = "product-body";
+        const title = document.createElement("h3");
+        const titleLink = document.createElement("a");
+        titleLink.href = `produit.html?id=${product.id}`;
+        titleLink.textContent = product.nom;
+        title.append(titleLink);
+        const meta = document.createElement("p");
+        meta.className = "product-meta";
+        meta.textContent = `${product.duree} · ${product.cadre}`;
+        const copy = document.createElement("p");
+        copy.textContent = product.accroche;
+        const price = document.createElement("p");
+        price.className = "product-price";
+        price.textContent = "Sur devis";
+        const actions = document.createElement("div");
+        actions.className = "product-actions";
+        const view = document.createElement("a");
+        view.className = "btn ghost";
+        view.href = `produit.html?id=${product.id}`;
+        view.textContent = "Voir le produit";
+        actions.append(addButton(product.id), view);
+        body.append(title, meta, copy, price, actions);
+        card.append(still(product), body);
+        grid.append(card);
+      });
+      section.append(head, grid);
+      root.append(section);
     });
+  };
+
+  const setMeta = (selector, attr, value) => {
+    const node = document.head.querySelector(selector);
+    if (node) node.setAttribute(attr, value);
+  };
+
+  const seo = (product) => {
+    const url = `https://buttiscreen.fr/produit.html?id=${product.id}`;
+    const title = `${product.nom} — BUTTISCREEN`;
+    const description = `${product.nom} : ${product.accroche} ${product.duree}, ${product.cadre}. Tarif sur devis.`;
+    document.title = title;
+    setMeta('meta[name="description"]', "content", description);
+    setMeta('link[rel="canonical"]', "href", url);
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[property="og:description"]', "content", description);
+    setMeta('meta[property="og:url"]', "content", url);
+    const ld = document.createElement("script");
+    ld.type = "application/ld+json";
+    ld.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: product.nom,
+      description: product.accroche,
+      url,
+      provider: { "@type": "Organization", name: "BUTTISCREEN", url: "https://buttiscreen.fr/" },
+      areaServed: "FR",
+    });
+    document.head.append(ld);
   };
 
   const renderProduct = () => {
@@ -383,10 +465,14 @@
       const copy = document.createElement("p");
       copy.className = "lede";
       copy.textContent = "Ce film n’est pas dans la boutique.";
+      const robots = document.createElement("meta");
+      robots.name = "robots";
+      robots.content = "noindex";
+      document.head.append(robots);
       root.append(back, title, copy);
       return;
     }
-    document.title = `${product.nom} — BUTTISCREEN`;
+    seo(product);
     const kicker = document.createElement("p");
     kicker.className = "kicker";
     kicker.textContent = `${product.duree} · ${product.cadre}`;
@@ -403,6 +489,9 @@
       p.textContent = paragraph;
       copy.append(p);
     });
+    const includedTitle = document.createElement("h2");
+    includedTitle.className = "product-subtitle";
+    includedTitle.textContent = "Inclus";
     const list = document.createElement("ul");
     list.className = "product-inclus";
     product.inclus.forEach((item) => {
@@ -410,12 +499,53 @@
       li.textContent = item;
       list.append(li);
     });
+    const steps = document.createElement("section");
+    steps.className = "product-steps";
+    const stepsTitle = document.createElement("h2");
+    stepsTitle.textContent = "Comment ça se passe";
+    const stepsList = document.createElement("ol");
+    ETAPES.forEach(([label, text]) => {
+      const li = document.createElement("li");
+      const strong = document.createElement("strong");
+      strong.textContent = label;
+      const span = document.createElement("span");
+      span.textContent = text;
+      li.append(strong, span);
+      stepsList.append(li);
+    });
+    steps.append(stepsTitle, stepsList);
     const buy = document.createElement("div");
     buy.className = "product-buy";
     const buyNote = document.createElement("p");
     buyNote.textContent = "Tarif sur devis, après lecture du projet.";
-    buy.append(buyNote, addButton(product.id));
-    root.append(back, still(product, true), kicker, title, price, copy, list, buy);
+    const buyActions = document.createElement("div");
+    buyActions.className = "product-actions";
+    const quote = document.createElement("a");
+    quote.className = "btn";
+    quote.href = "tunnel.html";
+    quote.dataset.quote = product.id;
+    quote.textContent = "Demander un devis";
+    const add = addButton(product.id);
+    add.classList.add("ghost");
+    buyActions.append(quote, add);
+    buy.append(buyNote, buyActions);
+    const related = document.createElement("nav");
+    related.className = "product-related";
+    related.setAttribute("aria-label", "À associer");
+    const relatedTitle = document.createElement("h2");
+    relatedTitle.textContent = "À associer";
+    related.append(relatedTitle);
+    (product.associes || []).map(byId).filter(Boolean).forEach((other) => {
+      const link = document.createElement("a");
+      link.href = `produit.html?id=${other.id}`;
+      const name = document.createElement("strong");
+      name.textContent = other.nom;
+      const hook = document.createElement("span");
+      hook.textContent = other.accroche;
+      link.append(name, hook);
+      related.append(link);
+    });
+    root.append(back, still(product, true), kicker, title, price, copy, includedTitle, list, steps, buy, related);
   };
 
   const renderCart = () => {
@@ -426,7 +556,7 @@
     if (!items.length) {
       const empty = document.createElement("p");
       empty.className = "lede";
-      empty.textContent = "Le panier est vide.";
+      empty.textContent = "Votre demande est vide.";
       const link = document.createElement("a");
       link.className = "btn";
       link.href = "produits.html";
@@ -477,7 +607,7 @@
     const foot = document.createElement("div");
     foot.className = "cart-foot";
     const note = document.createElement("p");
-    note.textContent = "Tarifs sur devis. Le panier reste dans ce navigateur.";
+    note.textContent = "Tarifs sur devis. Votre sélection reste dans ce navigateur.";
     const devis = document.createElement("a");
     devis.className = "btn";
     devis.href = "tunnel.html";
@@ -492,11 +622,17 @@
       const product = byId(addTarget.dataset.add);
       add(addTarget.dataset.add);
       addTarget.textContent = "Ajouté";
-      window.setTimeout(() => {
-        addTarget.textContent = "Ajouter au panier";
-      }, 1200);
-      if (product) announce(`${product.nom} ajouté au panier.`);
+      window.clearTimeout(Number(addTarget.dataset.timer));
+      addTarget.dataset.timer = String(window.setTimeout(() => {
+        addTarget.textContent = "Ajouter à ma demande";
+      }, 1200));
+      if (product) announce(`${product.nom} ajouté à votre demande.`);
       renderCart();
+      return;
+    }
+    const quoteTarget = event.target.closest("[data-quote]");
+    if (quoteTarget) {
+      if (!read().some((item) => item.id === quoteTarget.dataset.quote)) add(quoteTarget.dataset.quote);
       return;
     }
     const qtyTarget = event.target.closest("[data-qty]");
