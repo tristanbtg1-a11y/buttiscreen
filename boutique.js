@@ -12,6 +12,7 @@
       accroche: "Une idée, une durée courte, une chute qui reste.",
       tone: "ember",
       video: "media/produits/spot.mp4",
+      extrait: "media/produits/extraits/spot.mov",
       paragraphes: [
         "Le spot part d’un message et d’un temps de lecture. On cherche le plan qui porte l’idée, puis on retire tout ce qui la retarde.",
         "Le montage se fait en une ou deux versions utiles. Quand les rushes le permettent, l’image, les titres et le niveau sonore suivent dans la même passe.",
@@ -27,6 +28,7 @@
       accroche: "Le montage suit la musique, pas l’inverse.",
       tone: "neon",
       video: "media/produits/clip.mp4",
+      extrait: "media/produits/extraits/clip.mov",
       paragraphes: [
         "Le clip se coupe sur le morceau. On cherche les accents, les respirations, et les plans qui méritent de revenir.",
         "Plusieurs lectures sont possibles : une version principale, puis les cadres utiles pour la sortie. On ne multiplie pas les versions pour le plaisir.",
@@ -42,6 +44,7 @@
       accroche: "Le récit d’une société, tenu du début à la fin.",
       tone: "paper",
       video: "media/produits/marque.mp4",
+      extrait: "media/produits/extraits/marque.mov",
       paragraphes: [
         "Un film de marque a besoin d’une voix, d’un rythme, et d’une fin. On construit la structure avant de peaufiner les plans.",
         "Interviews, images de lieu, archives : tout passe par le même dérushage. On garde ce qui dit quelque chose, on laisse le reste.",
@@ -57,6 +60,7 @@
       accroche: "Le même film, recadré pour là où il sera vu.",
       tone: "ember",
       video: "media/produits/reseaux.mp4",
+      extrait: "media/produits/extraits/reseaux.mov",
       paragraphes: [
         "Un format réseau n’est pas un 16:9 rogné au hasard. On recompose le cadre, le rythme, et parfois le début, pour une lecture verticale.",
         "Le travail peut partir d’un film déjà monté, ou de rushes prévus pour le téléphone. Chaque cadre est une sortie nommée.",
@@ -72,6 +76,7 @@
       accroche: "Structure, rythme, et seulement les versions qui aident à choisir.",
       tone: "neon",
       video: "media/produits/montage.mp4",
+      extrait: "media/produits/extraits/montage.mov",
       paragraphes: [
         "Le montage seul, quand l’image et le son finaux sont prévus ailleurs. On livre une timeline qui tient, avec les versions utiles.",
         "Les retours se font sur un lien de revue. On intègre ce qui change le film, pas une liste de micro-coupes sans fin.",
@@ -87,6 +92,7 @@
       accroche: "Peau, nuit, jour : une image continue d’un plan à l’autre.",
       tone: "paper",
       video: "media/produits/etalonnage.mp4",
+      extrait: "media/produits/extraits/etalonnage.mov",
       paragraphes: [
         "L’étalonnage part d’un montage verrouillé. On aligne les plans, puis on cherche le contraste et la couleur qui appartiennent au film.",
         "Scène par scène, sans effet qui date dans six mois. Les références se discutent au début, pas à la dernière passe.",
@@ -102,6 +108,7 @@
       accroche: "Titres, cartons, sync et un niveau prêt à diffuser.",
       tone: "ember",
       video: "media/produits/habillage.mp4",
+      extrait: "media/produits/extraits/habillage.mov",
       paragraphes: [
         "L’habillage reste au service du film. Titres, cartons, noms : lisibles, placés, et retirés dès qu’ils gênent.",
         "Côté son : sync, niveaux, et un mix simple de diffusion. Pas un studio sonore complet, une passe qui rend le film publiable.",
@@ -117,6 +124,7 @@
       accroche: "Plusieurs cadres, des fichiers nommés, prêts à partir.",
       tone: "neon",
       video: "media/produits/declinaisons.mp4",
+      extrait: "media/produits/extraits/declinaisons.mov",
       paragraphes: [
         "Les déclinaisons partent d’un master validé. Chaque format est recomposé : on ne se contente pas d’un crop automatique.",
         "Masters ProRes ou H.264, fichiers nommés, prêts à poster ou à envoyer à un diffuseur.",
@@ -132,6 +140,7 @@
       accroche: "Garder la durée quand elle dit quelque chose.",
       tone: "paper",
       video: "media/produits/longue.mp4",
+      extrait: "media/produits/extraits/longue.mov",
       paragraphes: [
         "Documentaire, récit, captation : la durée longue demande une structure avant les finitions. On regarde tout, puis on décide de ce qui reste.",
         "Le travail se découpe en étapes visibles : dérushage, première structure, montage, image et son, sorties. On peut s’arrêter plus tôt si le film est déjà là.",
@@ -229,13 +238,14 @@
     if (product.video) {
       const video = document.createElement("video");
       video.className = "product-film";
-      video.src = product.video;
+      video.src = large ? product.video : product.extrait || product.video;
       video.muted = true;
       video.defaultMuted = true;
       video.playsInline = true;
+      video.loop = !large;
       video.setAttribute("muted", "");
       video.setAttribute("playsinline", "");
-      video.preload = large ? "auto" : "metadata";
+      video.preload = large || motionOk ? "auto" : "none";
       video.tabIndex = -1;
       if (large) video.setAttribute("aria-label", product.nom);
       else video.setAttribute("aria-hidden", "true");
@@ -253,27 +263,16 @@
 
   const bindHover = (frame, video) => {
     if (!motionOk) return;
-    const loop = () => {
-      if (video.currentTime >= 2) video.currentTime = 0;
+    const start = () => {
+      video.currentTime = 0;
+      video.play().catch(() => {});
     };
-    const near = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      video.preload = "auto";
-      near.disconnect();
-    }, { rootMargin: "240px" });
-    near.observe(frame);
     frame.addEventListener("pointerenter", (event) => {
       if (event.pointerType && event.pointerType !== "mouse") return;
-      video.addEventListener("timeupdate", loop);
-      const start = () => {
-        video.currentTime = 0;
-        video.play().catch(() => {});
-      };
-      if (video.readyState >= 1) start();
-      else video.addEventListener("loadedmetadata", start, { once: true });
+      if (video.readyState >= 2) start();
+      else video.addEventListener("canplay", start, { once: true });
     });
     frame.addEventListener("pointerleave", () => {
-      video.removeEventListener("timeupdate", loop);
       video.pause();
       video.currentTime = 0;
     });
