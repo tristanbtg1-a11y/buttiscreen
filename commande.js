@@ -527,11 +527,14 @@
         const response = await fetch("https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "list", email, password }),
+          body: JSON.stringify({ action: "login", email, password }),
         });
         const payload = await response.json().catch(() => null);
-        if (response.ok && payload && payload.ok !== false) {
-          sessionStorage.setItem("buttiscreen.gestion.v1", JSON.stringify({ email, password }));
+        if (response.ok && payload && payload.ok !== false && payload.token) {
+          sessionStorage.setItem(
+            "buttiscreen.gestion.v1",
+            JSON.stringify({ email, token: String(payload.token) }),
+          );
           window.location.href = "gestion.html";
           return;
         }
