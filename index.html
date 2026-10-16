@@ -524,14 +524,23 @@
       <section class="fin" id="contact" tabindex="-1" aria-labelledby="contact-title">
         <div class="wrap">
           <p class="fin-mark" aria-hidden="true">Fin<span class="hot">.</span></p>
-          <p class="kicker">Contact</p>
-          <h2 id="contact-title">Un projet à monter&nbsp;?</h2>
-          <p class="lede">
-            Écrivez le brief. Votre messagerie s’ouvre avec le message, adressé à
-            <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
-            Ou suivez <a href="tunnel.html">le tunnel</a>, du brief à la livraison.
-            Rien n’est enregistré sur le site.
-          </p>
+          <div class="fin-head" data-reveal>
+            <div>
+              <p class="kicker">Contact</p>
+              <h2 id="contact-title">Un projet à monter&nbsp;?</h2>
+              <p class="lede">
+                Écrivez le brief. Votre messagerie s’ouvre avec le message, adressé à
+                <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
+                Ou suivez <a href="tunnel.html">le tunnel</a>, du brief à la livraison.
+                Rien n’est enregistré sur le site.
+              </p>
+            </div>
+            <aside class="fin-direct" aria-label="Écrire directement">
+              <p class="kicker">Écrire directement</p>
+              <a class="fin-mail" href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
+              <a class="fin-tunnel" href="tunnel.html">Démarrer par le tunnel</a>
+            </aside>
+          </div>
           <div class="contact-layout" data-reveal>
           <form class="brief" id="brief" action="mailto:contact@buttiscreen.fr" method="post" enctype="text/plain" novalidate>
             <label class="field">
@@ -563,7 +572,7 @@
               <span class="field-error" id="err-message" hidden></span>
             </label>
             <div class="field full form-actions">
-              <button class="btn" type="submit">Envoyer le brief</button>
+              <button class="btn btn-send" type="submit">Envoyer le brief</button>
             </div>
             <p class="fine full">
               Le message part depuis votre messagerie.
@@ -596,10 +605,13 @@
           </div>
           <p class="sr-only" role="status" id="form-status"></p>
           <footer class="footer">
-            <p>© 2026 BUTTISCREEN</p>
-            <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
-            <a href="mentions.html">Mentions légales</a>
-            <a href="politique.html">Confidentialité</a>
+            <p class="footer-brand"><strong>BUTTISCREEN</strong><span>Studio de montage vidéo · Paris</span></p>
+            <nav class="footer-links" aria-label="Pied de page">
+              <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
+              <a href="mentions.html">Mentions légales</a>
+              <a href="politique.html">Confidentialité</a>
+            </nav>
+            <p class="footer-copy">© 2026 BUTTISCREEN <a class="footer-top" href="#titre">Haut de page ↑</a></p>
           </footer>
         </div>
       </section>
