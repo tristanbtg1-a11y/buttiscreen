@@ -6,6 +6,7 @@
   const PRODUCTS = [
     {
       id: "spot",
+      associes: ["reseaux", "declinaisons"],
       famille: "films",
       phare: true,
       nom: "Spot",
@@ -24,6 +25,7 @@
     },
     {
       id: "clip",
+      associes: ["reseaux", "etalonnage"],
       famille: "films",
       nom: "Clip",
       duree: "Durée du morceau",
@@ -41,6 +43,7 @@
     },
     {
       id: "marque",
+      associes: ["declinaisons", "habillage"],
       famille: "films",
       nom: "Film de marque",
       duree: "45 secondes à 3 minutes",
@@ -58,6 +61,7 @@
     },
     {
       id: "reseaux",
+      associes: ["declinaisons", "montage"],
       famille: "films",
       nom: "Formats réseaux",
       duree: "6 à 60 secondes",
@@ -75,6 +79,7 @@
     },
     {
       id: "montage",
+      associes: ["etalonnage", "habillage"],
       famille: "post",
       nom: "Montage",
       duree: "Selon le film",
@@ -92,6 +97,7 @@
     },
     {
       id: "etalonnage",
+      associes: ["montage", "habillage"],
       famille: "post",
       nom: "Étalonnage",
       duree: "Selon le montage",
@@ -109,6 +115,7 @@
     },
     {
       id: "habillage",
+      associes: ["montage", "declinaisons"],
       famille: "post",
       nom: "Habillage et son",
       duree: "Selon le montage",
@@ -126,6 +133,7 @@
     },
     {
       id: "declinaisons",
+      associes: ["reseaux", "marque"],
       famille: "post",
       nom: "Déclinaisons",
       duree: "Le film déjà monté",
@@ -143,6 +151,7 @@
     },
     {
       id: "longue",
+      associes: ["montage", "etalonnage"],
       famille: "films",
       nom: "Durée longue",
       duree: "Au-delà de 10 minutes",
@@ -163,6 +172,13 @@
   const FAMILLES = [
     { id: "films", titre: "Films", texte: "Du spot au film de marque, la durée et le récit." },
     { id: "post", titre: "Post-production", texte: "Montage, étalonnage, habillage et déclinaisons, à la carte." },
+  ];
+
+  const ETAPES = [
+    ["Brief", "Vous décrivez le projet : durée, usage, état des rushes."],
+    ["Devis", "Le tarif s’écrit après lecture du brief, avec le calendrier."],
+    ["Montage", "Une première version, puis les retours que vous voulez intégrer."],
+    ["Livraison", "Fichiers nommés, prêts à diffuser."],
   ];
 
   const byId = (id) => PRODUCTS.find((product) => product.id === id);
@@ -473,6 +489,9 @@
       p.textContent = paragraph;
       copy.append(p);
     });
+    const includedTitle = document.createElement("h2");
+    includedTitle.className = "product-subtitle";
+    includedTitle.textContent = "Inclus";
     const list = document.createElement("ul");
     list.className = "product-inclus";
     product.inclus.forEach((item) => {
@@ -480,12 +499,53 @@
       li.textContent = item;
       list.append(li);
     });
+    const steps = document.createElement("section");
+    steps.className = "product-steps";
+    const stepsTitle = document.createElement("h2");
+    stepsTitle.textContent = "Comment ça se passe";
+    const stepsList = document.createElement("ol");
+    ETAPES.forEach(([label, text]) => {
+      const li = document.createElement("li");
+      const strong = document.createElement("strong");
+      strong.textContent = label;
+      const span = document.createElement("span");
+      span.textContent = text;
+      li.append(strong, span);
+      stepsList.append(li);
+    });
+    steps.append(stepsTitle, stepsList);
     const buy = document.createElement("div");
     buy.className = "product-buy";
     const buyNote = document.createElement("p");
     buyNote.textContent = "Tarif sur devis, après lecture du projet.";
-    buy.append(buyNote, addButton(product.id));
-    root.append(back, still(product, true), kicker, title, price, copy, list, buy);
+    const buyActions = document.createElement("div");
+    buyActions.className = "product-actions";
+    const quote = document.createElement("a");
+    quote.className = "btn";
+    quote.href = "tunnel.html";
+    quote.dataset.quote = product.id;
+    quote.textContent = "Demander un devis";
+    const add = addButton(product.id);
+    add.classList.add("ghost");
+    buyActions.append(quote, add);
+    buy.append(buyNote, buyActions);
+    const related = document.createElement("nav");
+    related.className = "product-related";
+    related.setAttribute("aria-label", "À associer");
+    const relatedTitle = document.createElement("h2");
+    relatedTitle.textContent = "À associer";
+    related.append(relatedTitle);
+    (product.associes || []).map(byId).filter(Boolean).forEach((other) => {
+      const link = document.createElement("a");
+      link.href = `produit.html?id=${other.id}`;
+      const name = document.createElement("strong");
+      name.textContent = other.nom;
+      const hook = document.createElement("span");
+      hook.textContent = other.accroche;
+      link.append(name, hook);
+      related.append(link);
+    });
+    root.append(back, still(product, true), kicker, title, price, copy, includedTitle, list, steps, buy, related);
   };
 
   const renderCart = () => {
@@ -568,6 +628,11 @@
       }, 1200));
       if (product) announce(`${product.nom} ajouté à votre demande.`);
       renderCart();
+      return;
+    }
+    const quoteTarget = event.target.closest("[data-quote]");
+    if (quoteTarget) {
+      if (!read().some((item) => item.id === quoteTarget.dataset.quote)) add(quoteTarget.dataset.quote);
       return;
     }
     const qtyTarget = event.target.closest("[data-qty]");

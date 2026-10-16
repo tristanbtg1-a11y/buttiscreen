@@ -2917,6 +2917,78 @@ dialog#final-pay-dialog::backdrop {
   border-top: 1px solid var(--line);
 }
 
+.product-steps,
+.product-related {
+  margin-top: 36px;
+  max-width: 40rem;
+}
+
+.product-subtitle,
+.product-steps h2,
+.product-related h2 {
+  margin-top: 28px;
+  margin-bottom: 8px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.product-steps ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.product-steps li {
+  display: grid;
+  grid-template-columns: 2.4rem 7rem minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  counter-increment: step;
+}
+
+.product-steps li::before {
+  content: counter(step, decimal-leading-zero);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--ember);
+}
+
+.product-steps li span {
+  color: var(--muted);
+}
+
+.product-related {
+  display: grid;
+  gap: 0;
+  margin-bottom: 8px;
+}
+
+.product-related a {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  text-decoration: none;
+}
+
+.product-related a span {
+  color: var(--muted);
+}
+
+.product-related a:hover strong,
+.product-related a:focus-visible strong {
+  color: var(--ember);
+}
+
 .product-buy p {
   max-width: 24rem;
 }
@@ -3013,6 +3085,14 @@ dialog#final-pay-dialog::backdrop {
 }
 
 @media (max-width: 720px) {
+  .product-steps li {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+
+  .product-steps li span {
+    grid-column: 2;
+  }
+
   .header-tools {
     margin-left: 12px;
     gap: 10px;
