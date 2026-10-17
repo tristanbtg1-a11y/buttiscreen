@@ -55,6 +55,7 @@
         !document.hidden &&
         !(dialog && dialog.open) &&
         !(showreel && showreel.open) &&
+        !document.querySelector("dialog.welcome[open]") &&
         !motion.matches
     );
   }
@@ -322,6 +323,70 @@
     renderMonitor();
     document.getElementById("showreel-open")?.focus();
   });
+
+  const welcome = document.getElementById("welcome");
+  if (welcome) {
+    const WELCOME_KEY = "buttiscreen-welcome";
+    const wVideo = document.getElementById("welcome-video");
+    const wTc = document.getElementById("welcome-tc");
+    const wSound = document.getElementById("welcome-sound");
+    const reopen = document.getElementById("welcome-reopen");
+    const seen = () => {
+      try {
+        return Boolean(localStorage.getItem(WELCOME_KEY));
+      } catch (e) {
+        return false;
+      }
+    };
+    const remember = () => {
+      try {
+        localStorage.setItem(WELCOME_KEY, String(Date.now()));
+      } catch (e) {}
+    };
+    const closeWelcome = () => welcome.close();
+
+    wVideo.addEventListener("timeupdate", () => {
+      wTc.textContent = formatTimecode(Math.floor(wVideo.currentTime * FPS));
+    });
+    wSound.addEventListener("click", () => {
+      wVideo.muted = !wVideo.muted;
+      wSound.textContent = wVideo.muted ? "Activer le son" : "Couper le son";
+      wSound.setAttribute("aria-pressed", String(!wVideo.muted));
+    });
+    document.getElementById("welcome-x").addEventListener("click", closeWelcome);
+    document.getElementById("welcome-close").addEventListener("click", closeWelcome);
+    document.getElementById("welcome-cta").addEventListener("click", closeWelcome);
+    welcome.addEventListener("click", (event) => {
+      if (event.target === welcome) closeWelcome();
+    });
+    welcome.addEventListener("close", () => {
+      wVideo.pause();
+      wVideo.removeAttribute("src");
+      wVideo.load();
+      if (!welcome.dataset.fromButton) {
+        reopen.classList.add("is-pulse");
+        reopen.addEventListener("animationend", () => reopen.classList.remove("is-pulse"), { once: true });
+      } else {
+        reopen.focus();
+      }
+      delete welcome.dataset.fromButton;
+    });
+    reopen.addEventListener("click", () => {
+      welcome.dataset.fromButton = "1";
+      openWelcome();
+    });
+
+    const openWelcome = () => {
+      if (welcome.open || dialog?.open || showreel?.open) return;
+      wVideo.src = "media/sequences/showreel.mp4";
+      welcome.showModal();
+      remember();
+      if (!motion.matches) wVideo.play().catch(() => {});
+    };
+
+    const slow = navigator.connection && (navigator.connection.saveData || /(^|-)2g$/.test(navigator.connection.effectiveType || ""));
+    if (!seen() && !slow && !location.hash) setTimeout(openWelcome, 1800);
+  }
 
   function setError(id, message) {
     const el = document.getElementById(id);
