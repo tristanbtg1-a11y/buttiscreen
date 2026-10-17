@@ -4236,18 +4236,24 @@ dialog.welcome[open]::backdrop {
 }
 
 .welcome-reopen {
+  --play: 50px;
+  --inset: 7px;
+  --stripe: 22.5px;
+  --stripe-x: 24.84px;
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  min-height: 52px;
+  gap: 17px;
+  min-height: 65px;
   max-width: 100%;
-  padding: 0 20px 0 6px;
+  padding: 0 31px 0 var(--inset);
   border: 1px solid rgba(247, 244, 239, 0.28);
   border-radius: 999px;
   background: rgba(247, 244, 239, 0.04);
   color: var(--ink);
   font-family: var(--font-d);
-  font-size: 1rem;
+  font-size: 1.25rem;
   letter-spacing: -0.02em;
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease;
@@ -4258,24 +4264,68 @@ dialog.welcome[open]::backdrop {
   background: rgba(255, 122, 26, 0.1);
 }
 
+/* Barre de chargement hachurée : tout le bouton sauf la zone du play */
+.welcome-reopen-bar {
+  position: absolute;
+  z-index: -1;
+  top: var(--inset);
+  bottom: var(--inset);
+  left: calc(var(--inset) + var(--play) + 10px);
+  right: var(--inset);
+  overflow: hidden;
+  border-radius: 999px;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 72%, rgba(0, 0, 0, 0.35) 72% 100%);
+  mask-image: linear-gradient(90deg, #000 0 72%, rgba(0, 0, 0, 0.35) 72% 100%);
+  pointer-events: none;
+}
+
+.welcome-reopen-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(var(--stripe-x) * -1) 0 calc(var(--stripe-x) * -1);
+  background: repeating-linear-gradient(
+    115deg,
+    rgba(255, 122, 26, 0.5) 0 calc(var(--stripe) / 2),
+    transparent calc(var(--stripe) / 2) var(--stripe)
+  );
+  animation: welcome-stripes 0.9s linear infinite;
+}
+
+.welcome-reopen:hover .welcome-reopen-bar::before {
+  background: repeating-linear-gradient(
+    115deg,
+    rgba(208, 107, 255, 0.5) 0 calc(var(--stripe) / 2),
+    transparent calc(var(--stripe) / 2) var(--stripe)
+  );
+}
+
+@keyframes welcome-stripes {
+  to { transform: translateX(var(--stripe-x)); }
+}
+
+.welcome-reopen-label {
+  text-shadow: 0 1px 6px rgba(7, 6, 13, 0.85);
+}
+
 .welcome-reopen-play {
   display: grid;
   place-items: center;
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: var(--play);
+  height: var(--play);
   border-radius: 50%;
   background: var(--ember);
   color: #140b08;
-  font-size: 0.7rem;
-  padding-left: 2px;
+  font-size: 0.875rem;
+  padding-left: 3px;
 }
 
 .welcome-reopen-meta {
   font-family: var(--font-m);
-  font-size: 11px;
+  font-size: 13.75px;
   letter-spacing: 0.14em;
-  color: var(--muted);
+  color: var(--ink);
+  text-shadow: 0 1px 6px rgba(7, 6, 13, 0.85);
 }
 
 .welcome-reopen.is-pulse {
@@ -4288,10 +4338,11 @@ dialog.welcome[open]::backdrop {
 }
 
 @media (max-width: 560px) {
-  .welcome-reopen { font-size: 0.92rem; }
+  .welcome-reopen { font-size: 1.1rem; padding-right: 22px; }
   .welcome-reopen-meta { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .welcome-reopen.is-pulse { animation: none; }
+  .welcome-reopen.is-pulse,
+  .welcome-reopen-bar::before { animation: none; }
 }
