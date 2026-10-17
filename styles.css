@@ -4280,8 +4280,7 @@ dialog.welcome[open]::backdrop {
 }
 
 .welcome-reopen:hover {
-  --bracket: rgba(208, 107, 255, 0.95);
-  border-color: var(--neon);
+  border-color: var(--ember);
 }
 
 /* Barre hachurée : tout le bouton sauf la zone du play */
@@ -4293,7 +4292,7 @@ dialog.welcome[open]::backdrop {
   left: calc(var(--inset) + var(--play) + 8px);
   right: var(--inset);
   overflow: hidden;
-  background: #1a1228;
+  background: var(--ember);
   pointer-events: none;
 }
 
@@ -4303,18 +4302,10 @@ dialog.welcome[open]::backdrop {
   inset: 0 calc(var(--stripe-x) * -1) 0 calc(var(--stripe-x) * -1);
   background: repeating-linear-gradient(
     115deg,
-    rgba(255, 122, 26, 0.8) 0 calc(var(--stripe) * 0.62),
-    transparent calc(var(--stripe) * 0.62) var(--stripe)
+    rgba(150, 52, 0, 0.5) 0 calc(var(--stripe) * 0.5),
+    transparent calc(var(--stripe) * 0.5) var(--stripe)
   );
   animation: welcome-stripes 0.55s linear infinite;
-}
-
-.welcome-reopen:hover .welcome-reopen-bar::before {
-  background: repeating-linear-gradient(
-    115deg,
-    rgba(208, 107, 255, 0.8) 0 calc(var(--stripe) * 0.62),
-    transparent calc(var(--stripe) * 0.62) var(--stripe)
-  );
 }
 
 @keyframes welcome-stripes {
@@ -4322,7 +4313,11 @@ dialog.welcome[open]::backdrop {
 }
 
 .welcome-reopen-label {
-  text-shadow: 0 1px 6px rgba(7, 6, 13, 0.9);
+  color: #140b08;
+  text-decoration: underline;
+  text-decoration-color: #fff;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
 }
 
 .welcome-reopen-play {
@@ -4337,18 +4332,6 @@ dialog.welcome[open]::backdrop {
   padding-left: 3px;
 }
 
-.welcome-reopen:hover .welcome-reopen-play {
-  background: var(--neon);
-}
-
-.welcome-reopen-meta {
-  font-family: var(--font-m);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  color: var(--ink);
-  text-shadow: 0 1px 6px rgba(7, 6, 13, 0.9);
-}
-
 .welcome-reopen.is-pulse {
   animation: welcome-pulse 1.4s ease-out 2;
 }
@@ -4360,10 +4343,7 @@ dialog.welcome[open]::backdrop {
 
 @media (max-width: 560px) {
   .welcome-reopen { font-size: 1.1rem; padding-right: 22px; }
-  .welcome-reopen-meta { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
+  @media (prefers-reduced-motion: reduce) {
   .welcome-reopen.is-pulse,
   .welcome-reopen-bar::before { animation: none; }
 }
