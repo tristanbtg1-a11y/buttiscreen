@@ -4292,7 +4292,7 @@ dialog.welcome[open]::backdrop {
   left: calc(var(--inset) + var(--play) + 8px);
   right: var(--inset);
   overflow: hidden;
-  background: var(--ember);
+  background: #e5620c;
   pointer-events: none;
 }
 
@@ -4302,7 +4302,7 @@ dialog.welcome[open]::backdrop {
   inset: 0 calc(var(--stripe-x) * -1) 0 calc(var(--stripe-x) * -1);
   background: repeating-linear-gradient(
     115deg,
-    rgba(150, 52, 0, 0.5) 0 calc(var(--stripe) * 0.5),
+    rgba(120, 38, 0, 0.5) 0 calc(var(--stripe) * 0.5),
     transparent calc(var(--stripe) * 0.5) var(--stripe)
   );
   animation: welcome-stripes 0.55s linear infinite;
@@ -4313,7 +4313,12 @@ dialog.welcome[open]::backdrop {
 }
 
 .welcome-reopen-label {
-  color: #140b08;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 1.15em;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(20, 11, 8, 0.35);
   text-decoration: underline;
   text-decoration-color: #fff;
   text-decoration-thickness: 2px;
@@ -4342,7 +4347,13 @@ dialog.welcome[open]::backdrop {
 }
 
 @media (max-width: 560px) {
-  .welcome-reopen { font-size: 1.1rem; padding-right: 22px; }
+  .welcome-reopen {
+    font-size: 0.75rem;
+    gap: 12px;
+    padding-right: 14px;
+  }
+
+  .welcome-reopen-label { white-space: nowrap; }
   @media (prefers-reduced-motion: reduce) {
   .welcome-reopen.is-pulse,
   .welcome-reopen-bar::before { animation: none; }
