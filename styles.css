@@ -4065,9 +4065,10 @@ body.home .showreel-open {
   margin-top: 18px;
 }
 
-body.home .showreel-open span {
-  margin-left: 8px;
-  font-size: 0.7em;
+body.home .showreel-open .play-ico {
+  width: 1.35em;
+  height: 1.35em;
+  margin-left: 10px;
 }
 
 /* Popup vidéo de bienvenue : la vidéo seule, fondu à la fin */
@@ -4137,10 +4138,9 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
   display: grid;
 }
 
-.welcome-play svg {
-  width: 40px;
-  height: 40px;
-  margin-left: 4px;
+.welcome-play .play-ico {
+  width: 48px;
+  height: 48px;
 }
 
 .welcome-play:hover {
@@ -4159,9 +4159,9 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
     margin: -34px 0 0 -34px;
   }
 
-  .welcome-play svg {
-    width: 32px;
-    height: 32px;
+  .welcome-play .play-ico {
+    width: 38px;
+    height: 38px;
   }
 }
 
@@ -4325,6 +4325,11 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
   font-size: 0.85em;
 }
 
+.welcome-reopen-play .play-ico {
+  width: 30px;
+  height: 30px;
+}
+
 .welcome-reopen-play {
   display: grid;
   place-items: center;
@@ -4332,9 +4337,6 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
   width: var(--play);
   height: var(--play);
   background: var(--ember);
-  color: #140b08;
-  font-size: 0.875rem;
-  padding-left: 3px;
 }
 
 .welcome-reopen.is-pulse {
@@ -4354,7 +4356,54 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
   }
 
   .welcome-reopen-label { white-space: nowrap; }
-  @media (prefers-reduced-motion: reduce) {
+}
+
+@media (prefers-reduced-motion: reduce) {
   .welcome-reopen.is-pulse,
   .welcome-reopen-bar::before { animation: none; }
+}
+
+/* Symbole play : triangle aux angles adoucis en chrome sombre, reflet brillant en boucle */
+.play-ico {
+  --shine: 105deg;
+  display: inline-block;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  vertical-align: middle;
+  -webkit-mask: var(--play-shape) center / contain no-repeat;
+  mask: var(--play-shape) center / contain no-repeat;
+  --play-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7.2 4.8 19 12 7.2 19.2Z' fill='%23000' stroke='%23000' stroke-width='2.8' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background:
+    linear-gradient(
+      var(--shine),
+      transparent 38%,
+      rgba(255, 255, 255, 0.55) 46%,
+      #fff 50%,
+      rgba(255, 255, 255, 0.55) 54%,
+      transparent 62%
+    ) 160% 0 / 260% 100% no-repeat,
+    linear-gradient(
+      135deg,
+      #170b05 0%,
+      #6f4020 16%,
+      #1a0d06 32%,
+      #8a5126 48%,
+      #140b08 66%,
+      #5a3319 84%,
+      #1a0d06 100%
+    );
+  animation: play-shine 2.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+@keyframes play-shine {
+  0% { background-position: 160% 0, 0 0; }
+  55%, 100% { background-position: -60% 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-ico {
+    animation: none;
+    background-position: 38% 0, 0 0;
+  }
 }
