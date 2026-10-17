@@ -4070,7 +4070,7 @@ body.home .showreel-open span {
   font-size: 0.7em;
 }
 
-/* Popup vidéo de bienvenue */
+/* Popup vidéo de bienvenue : la vidéo seule, fondu à la fin */
 dialog.welcome {
   width: min(960px, calc(100% - 2 * var(--pad)));
   max-width: none;
@@ -4078,9 +4078,8 @@ dialog.welcome {
   margin: auto;
   padding: 0;
   border: 1px solid rgba(247, 244, 239, 0.14);
-  background: #07060d;
-  color: var(--ink);
-  overflow: auto;
+  background: #000;
+  overflow: hidden;
   box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(208, 107, 255, 0.12);
 }
 
@@ -4097,6 +4096,109 @@ dialog.welcome[open]::backdrop {
   animation: welcome-fade 0.5s ease;
 }
 
+dialog.welcome.is-closing,
+dialog.welcome.is-closing::backdrop {
+  animation: welcome-out 0.9s ease forwards;
+}
+
+dialog.welcome video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100dvh - 2 * var(--pad));
+  object-fit: cover;
+  background: #000;
+}
+
+dialog.welcome:focus {
+  outline: none;
+}
+
+.welcome-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: none;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  padding: 0;
+  border: 0;
+  background: var(--ember);
+  color: #140b08;
+  cursor: pointer;
+  animation: welcome-pulse 1.8s ease-out infinite;
+  transition: background 0.2s ease;
+}
+
+dialog.welcome.is-paused:not(.is-closing) .welcome-play {
+  display: grid;
+}
+
+.welcome-play svg {
+  width: 40px;
+  height: 40px;
+  margin-left: 4px;
+}
+
+.welcome-play:hover {
+  background: var(--ink);
+}
+
+.welcome-play:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+@media (max-width: 560px) {
+  .welcome-play {
+    width: 68px;
+    height: 68px;
+    margin: -34px 0 0 -34px;
+  }
+
+  .welcome-play svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.welcome-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(247, 244, 239, 0.45);
+  background: rgba(7, 6, 13, 0.62);
+  backdrop-filter: blur(6px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.welcome-x svg {
+  width: 20px;
+  height: 20px;
+}
+
+.welcome-x:hover {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #140b08;
+}
+
+.welcome-x:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 3px;
+}
+
 @keyframes welcome-in {
   from { opacity: 0; transform: translateY(18px) scale(0.985); }
   to { opacity: 1; transform: none; }
@@ -4107,125 +4209,19 @@ dialog.welcome[open]::backdrop {
   to { opacity: 1; }
 }
 
-.welcome-frame {
-  position: relative;
-}
-
-.welcome-stage {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  background: #000;
-}
-
-.welcome-stage video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.welcome-rec,
-.welcome-tc {
-  position: absolute;
-  top: 14px;
-  font-family: var(--font-m);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: rgba(247, 244, 239, 0.85);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
-  pointer-events: none;
-}
-
-.welcome-rec { left: 16px; display: inline-flex; align-items: center; gap: 8px; }
-.welcome-tc { right: 64px; font-variant-numeric: tabular-nums; }
-
-.welcome-rec i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--rec);
-  animation: welcome-blink 1.2s steps(2, jump-none) infinite;
-}
-
-@keyframes welcome-blink {
-  50% { opacity: 0.15; }
-}
-
-.welcome-sound {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid rgba(247, 244, 239, 0.5);
-  background: rgba(7, 6, 13, 0.6);
-  backdrop-filter: blur(6px);
-  color: var(--ink);
-  font-family: var(--font-m);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.welcome-sound:hover {
-  background: var(--ink);
-  color: #140b08;
-}
-
-.welcome-copy {
-  display: grid;
-  gap: 10px;
-  padding: 24px clamp(18px, 3vw, 32px) 28px;
-}
-
-.welcome-copy .kicker { margin: 0; }
-
-.welcome-copy h2 {
-  margin: 0;
-  font-size: clamp(1.7rem, 3.6vw, 2.8rem);
-  line-height: 1.02;
-}
-
-.welcome-copy p:not(.kicker) {
-  margin: 0;
-  max-width: 56ch;
-  color: #e4d7f0;
-}
-
-.welcome-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.welcome-x {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font-size: 28px;
-  line-height: 1;
-  cursor: pointer;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
-}
-
-.welcome-x:hover { color: var(--ember); }
-
-@media (max-width: 560px) {
-  .welcome-actions .btn { flex: 1 1 100%; }
-  .welcome-tc { display: none; }
+@keyframes welcome-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   dialog.welcome[open],
-  dialog.welcome[open]::backdrop,
-  .welcome-rec i { animation: none; }
+  dialog.welcome[open]::backdrop { animation: none; }
+
+  dialog.welcome.is-closing,
+  dialog.welcome.is-closing::backdrop { animation-duration: 0.01s; }
+
+  .welcome-play { animation: none; }
 }
 
 /* Bouton de réouverture de la popup de bienvenue */
