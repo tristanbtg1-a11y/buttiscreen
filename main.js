@@ -349,9 +349,11 @@
       setTimeout(closeWelcome, 1200);
     };
 
+    document.getElementById("welcome-x").addEventListener("click", closeWelcome);
     wVideo.addEventListener("ended", fadeOutWelcome);
     wVideo.addEventListener("error", closeWelcome);
     wVideo.addEventListener("click", () => {
+      if (performance.now() - unlockedAt < 500) return;
       if (wVideo.paused) wVideo.play().catch(() => {});
       else wVideo.pause();
     });
@@ -360,6 +362,8 @@
     });
     welcome.addEventListener("close", () => {
       welcome.classList.remove("is-closing");
+      cancelAnimationFrame(rampFrame);
+      disarmUnlock();
       wVideo.pause();
       wVideo.removeAttribute("src");
       wVideo.load();
@@ -376,12 +380,54 @@
       openWelcome();
     });
 
+    let unlockedAt = 0;
+    const WELCOME_RAMP = 1500;
+    const UNLOCK_EVENTS = ["pointerdown", "keydown", "touchstart"];
+    let rampFrame = 0;
+
+    // Volume progressif (courbe quadratique, plus naturelle à l'oreille qu'une rampe linéaire).
+    const rampUp = () => {
+      cancelAnimationFrame(rampFrame);
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / WELCOME_RAMP);
+        wVideo.volume = k * k;
+        if (k < 1) rampFrame = requestAnimationFrame(step);
+      };
+      wVideo.volume = 0;
+      wVideo.muted = false;
+      rampFrame = requestAnimationFrame(step);
+    };
+
+    // Le navigateur refuse le son sans geste préalable : on joue muet, puis le
+    // premier geste du visiteur (clic, touche, toucher) déclenche le son progressif.
+    const unlockSound = () => {
+      disarmUnlock();
+      if (welcome.open && wVideo.muted) {
+        unlockedAt = performance.now();
+        rampUp();
+      }
+    };
+    const armUnlock = () => UNLOCK_EVENTS.forEach((e) => document.addEventListener(e, unlockSound, { passive: true }));
+    const disarmUnlock = () => UNLOCK_EVENTS.forEach((e) => document.removeEventListener(e, unlockSound));
+
     const openWelcome = () => {
       if (welcome.open || dialog?.open || showreel?.open) return;
+      const start = parseFloat(wVideo.dataset.start) || 0;
+      wVideo.addEventListener("loadedmetadata", () => {
+        if (start) wVideo.currentTime = start;
+      }, { once: true });
+      wVideo.volume = 0;
+      wVideo.muted = false;
       wVideo.src = "media/sequences/showreel.mp4";
       welcome.showModal();
+      welcome.focus({ preventScroll: true });
       remember();
-      wVideo.play().catch(() => {});
+      wVideo.play().then(rampUp).catch(() => {
+        wVideo.muted = true;
+        wVideo.play().catch(() => {});
+        armUnlock();
+      });
     };
 
     const slow = navigator.connection && (navigator.connection.saveData || /(^|-)2g$/.test(navigator.connection.effectiveType || ""));

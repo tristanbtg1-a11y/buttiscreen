@@ -4110,6 +4110,44 @@ dialog.welcome video {
   background: #000;
 }
 
+dialog.welcome:focus {
+  outline: none;
+}
+
+.welcome-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(247, 244, 239, 0.45);
+  background: rgba(7, 6, 13, 0.62);
+  backdrop-filter: blur(6px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.welcome-x svg {
+  width: 20px;
+  height: 20px;
+}
+
+.welcome-x:hover {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #140b08;
+}
+
+.welcome-x:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 3px;
+}
+
 @keyframes welcome-in {
   from { opacity: 0; transform: translateY(18px) scale(0.985); }
   to { opacity: 1; transform: none; }
