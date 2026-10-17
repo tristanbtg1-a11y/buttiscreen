@@ -4274,8 +4274,13 @@ dialog.welcome[open]::backdrop {
   right: var(--inset);
   overflow: hidden;
   border-radius: 999px;
-  -webkit-mask-image: linear-gradient(90deg, #000 0 72%, rgba(0, 0, 0, 0.3) 72% 100%);
-  mask-image: linear-gradient(90deg, #000 0 72%, rgba(0, 0, 0, 0.3) 72% 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0 50%, rgba(0, 0, 0, 0.3) 50% 100%);
+  mask-image: linear-gradient(90deg, #000 0 50%, rgba(0, 0, 0, 0.3) 50% 100%);
+  -webkit-mask-size: 200% 100%;
+  mask-size: 200% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: welcome-fill 2.6s linear infinite;
   pointer-events: none;
 }
 
@@ -4288,7 +4293,7 @@ dialog.welcome[open]::backdrop {
     rgba(255, 122, 26, 0.8) 0 calc(var(--stripe) * 0.62),
     transparent calc(var(--stripe) * 0.62) var(--stripe)
   );
-  animation: welcome-stripes 0.9s linear infinite;
+  animation: welcome-stripes 0.55s linear infinite;
 }
 
 .welcome-reopen:hover .welcome-reopen-bar::before {
@@ -4297,6 +4302,11 @@ dialog.welcome[open]::backdrop {
     rgba(208, 107, 255, 0.8) 0 calc(var(--stripe) * 0.62),
     transparent calc(var(--stripe) * 0.62) var(--stripe)
   );
+}
+
+@keyframes welcome-fill {
+  from { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+  88%, to { -webkit-mask-position: 0 0; mask-position: 0 0; }
 }
 
 @keyframes welcome-stripes {
@@ -4344,5 +4354,10 @@ dialog.welcome[open]::backdrop {
 
 @media (prefers-reduced-motion: reduce) {
   .welcome-reopen.is-pulse,
+  .welcome-reopen-bar,
   .welcome-reopen-bar::before { animation: none; }
+  .welcome-reopen-bar {
+    -webkit-mask-position: 36% 0;
+    mask-position: 36% 0;
+  }
 }
