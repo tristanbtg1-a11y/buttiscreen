@@ -507,6 +507,15 @@
     new IntersectionObserver((entries) => {
       b.style.animationPlayState = entries[entries.length - 1].isIntersecting ? "running" : "paused";
     }).observe(hero);
+
+    /* Les 3 cycles terminés, le survol du B rejoue un cycle */
+    b.addEventListener("pointerenter", () => {
+      const anim = b.getAnimations().find((a) => a.animationName === "b-morph");
+      if (!anim || motion.matches || anim.playState !== "finished") return;
+      anim.effect.updateTiming({ delay: 0, iterations: 1 });
+      anim.currentTime = 0;
+      anim.play();
+    });
   })();
 
   /* ===== ACCUEIL : apparition des blocs au défilement ===== */
