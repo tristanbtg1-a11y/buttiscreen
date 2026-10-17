@@ -330,6 +330,7 @@
     const wVideo = document.getElementById("welcome-video");
     const wTc = document.getElementById("welcome-tc");
     const wSound = document.getElementById("welcome-sound");
+    const reopen = document.getElementById("welcome-reopen");
     const seen = () => {
       try {
         return Boolean(localStorage.getItem(WELCOME_KEY));
@@ -362,6 +363,17 @@
       wVideo.pause();
       wVideo.removeAttribute("src");
       wVideo.load();
+      if (!welcome.dataset.fromButton) {
+        reopen.classList.add("is-pulse");
+        reopen.addEventListener("animationend", () => reopen.classList.remove("is-pulse"), { once: true });
+      } else {
+        reopen.focus();
+      }
+      delete welcome.dataset.fromButton;
+    });
+    reopen.addEventListener("click", () => {
+      welcome.dataset.fromButton = "1";
+      openWelcome();
     });
 
     const openWelcome = () => {

@@ -4227,3 +4227,71 @@ dialog.welcome[open]::backdrop {
   dialog.welcome[open]::backdrop,
   .welcome-rec i { animation: none; }
 }
+
+/* Bouton de réouverture de la popup de bienvenue */
+.welcome-dock {
+  display: flex;
+  justify-content: center;
+  padding: 28px var(--pad) 0;
+}
+
+.welcome-reopen {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  max-width: 100%;
+  padding: 0 20px 0 6px;
+  border: 1px solid rgba(247, 244, 239, 0.28);
+  border-radius: 999px;
+  background: rgba(247, 244, 239, 0.04);
+  color: var(--ink);
+  font-family: var(--font-d);
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.welcome-reopen:hover {
+  border-color: var(--ember);
+  background: rgba(255, 122, 26, 0.1);
+}
+
+.welcome-reopen-play {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ember);
+  color: #140b08;
+  font-size: 0.7rem;
+  padding-left: 2px;
+}
+
+.welcome-reopen-meta {
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+.welcome-reopen.is-pulse {
+  animation: welcome-pulse 1.4s ease-out 2;
+}
+
+@keyframes welcome-pulse {
+  from { box-shadow: 0 0 0 0 rgba(255, 122, 26, 0.55); }
+  to { box-shadow: 0 0 0 18px rgba(255, 122, 26, 0); }
+}
+
+@media (max-width: 560px) {
+  .welcome-reopen { font-size: 0.92rem; }
+  .welcome-reopen-meta { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-reopen.is-pulse { animation: none; }
+}
