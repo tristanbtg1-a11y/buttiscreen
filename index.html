@@ -634,6 +634,26 @@
         </div>
       </div>
     </dialog>
+    <dialog id="welcome" class="welcome" aria-labelledby="welcome-title">
+      <div class="welcome-frame">
+        <div class="welcome-stage" id="welcome-stage">
+          <video id="welcome-video" muted playsinline preload="none" disablepictureinpicture poster="media/sequences/showreel-poster.jpg" aria-label="Showreel BUTTISCREEN"></video>
+          <span class="welcome-rec" aria-hidden="true"><i></i> REC</span>
+          <span class="welcome-tc" id="welcome-tc" aria-hidden="true">00:00:00:00</span>
+          <button class="welcome-sound" type="button" id="welcome-sound" aria-pressed="false">Activer le son</button>
+        </div>
+        <div class="welcome-copy">
+          <p class="kicker">Bienvenue · Studio de montage · Paris</p>
+          <h2 id="welcome-title">Vos images méritent un vrai montage.</h2>
+          <p>Vingt-quatre secondes pour voir comment le studio travaille le rythme, la couleur et le son.</p>
+          <div class="welcome-actions">
+            <a class="btn" href="#contact" id="welcome-cta">Parler de mon projet</a>
+            <button class="btn ghost" type="button" id="welcome-close">Découvrir le site</button>
+          </div>
+        </div>
+        <button class="welcome-x" type="button" id="welcome-x" aria-label="Fermer la vidéo de bienvenue">×</button>
+      </div>
+    </dialog>
     <script src="boutique.js"></script>
     <script src="main.js"></script>
   </body>
