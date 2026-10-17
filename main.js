@@ -499,6 +499,26 @@
       form.elements.nom?.focus();
     }
   });
+  /* ===== ACCUEIL : le B devient le logo, boucle suspendue hors écran ===== */
+  (function bMorph() {
+    const b = document.querySelector(".b-morph");
+    const hero = document.getElementById("titre");
+    if (!b || !hero || !("IntersectionObserver" in window)) return;
+    new IntersectionObserver((entries) => {
+      b.style.animationPlayState = entries[entries.length - 1].isIntersecting ? "running" : "paused";
+    }).observe(hero);
+
+    /* Les 3 cycles terminés, le survol du B à la souris rejoue un cycle (rien sur écran tactile) */
+    b.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "mouse") return;
+      const anim = b.getAnimations().find((a) => a.animationName === "b-morph");
+      if (!anim || motion.matches || anim.playState !== "finished") return;
+      anim.effect.updateTiming({ delay: 0, iterations: 1 });
+      anim.currentTime = 0;
+      anim.play();
+    });
+  })();
+
   /* ===== ACCUEIL : apparition des blocs au défilement ===== */
   (function reveal() {
     const items = [...document.querySelectorAll("[data-reveal]")];
