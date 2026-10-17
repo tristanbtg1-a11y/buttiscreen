@@ -4237,9 +4237,9 @@ dialog.welcome[open]::backdrop {
 
 .welcome-reopen {
   --play: 50px;
-  --inset: 7px;
-  --stripe: 22.5px;
-  --stripe-x: 24.84px;
+  --inset: 6px;
+  --stripe: 13.5px;
+  --stripe-x: 14.9px;
   position: relative;
   isolation: isolate;
   display: inline-flex;
@@ -4274,8 +4274,8 @@ dialog.welcome[open]::backdrop {
   right: var(--inset);
   overflow: hidden;
   border-radius: 999px;
-  -webkit-mask-image: linear-gradient(90deg, #000 0 72%, rgba(0, 0, 0, 0.35) 72% 100%);
-  mask-image: linear-gradient(90deg, #000 0 72%, rgba(0, 0, 0, 0.35) 72% 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0 72%, rgba(0, 0, 0, 0.3) 72% 100%);
+  mask-image: linear-gradient(90deg, #000 0 72%, rgba(0, 0, 0, 0.3) 72% 100%);
   pointer-events: none;
 }
 
@@ -4285,8 +4285,8 @@ dialog.welcome[open]::backdrop {
   inset: 0 calc(var(--stripe-x) * -1) 0 calc(var(--stripe-x) * -1);
   background: repeating-linear-gradient(
     115deg,
-    rgba(255, 122, 26, 0.5) 0 calc(var(--stripe) / 2),
-    transparent calc(var(--stripe) / 2) var(--stripe)
+    rgba(255, 122, 26, 0.8) 0 calc(var(--stripe) * 0.62),
+    transparent calc(var(--stripe) * 0.62) var(--stripe)
   );
   animation: welcome-stripes 0.9s linear infinite;
 }
@@ -4294,8 +4294,8 @@ dialog.welcome[open]::backdrop {
 .welcome-reopen:hover .welcome-reopen-bar::before {
   background: repeating-linear-gradient(
     115deg,
-    rgba(208, 107, 255, 0.5) 0 calc(var(--stripe) / 2),
-    transparent calc(var(--stripe) / 2) var(--stripe)
+    rgba(208, 107, 255, 0.8) 0 calc(var(--stripe) * 0.62),
+    transparent calc(var(--stripe) * 0.62) var(--stripe)
   );
 }
 
