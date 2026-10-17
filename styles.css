@@ -3347,6 +3347,7 @@ body.home .hero h1 {
 
 body.home .hero h1 .ln {
   display: block;
+  white-space: nowrap;
   overflow: hidden;
   padding: 0.04em 0.06em 0.02em;
   margin: -0.04em -0.06em -0.02em;
@@ -3362,6 +3363,81 @@ body.home .hero h1 .ln:nth-child(2) > span { animation-delay: 0.12s; }
 @keyframes home-rise {
   from { transform: translateY(105%); }
   to { transform: none; }
+}
+
+/* Le B de « Butti » devient le logo : 2 s de transformation, 2 s figé,
+   2 s de retour, 1 s de repos sur la lettre (7 s), joué 3 fois puis la lettre reste.
+   --p pilote tout : 0 = lettre, 1 = logo. */
+@property --p {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* La première ligne laisse de la place à la lueur du néon, hors du masque de révélation */
+body.home .hero h1 .ln:first-child {
+  padding: 0.16em 0.24em 0.2em;
+  margin: -0.16em -0.24em -0.2em;
+}
+
+body.home .hero h1 .ln:first-child > span {
+  animation-name: home-rise-tall;
+}
+
+@keyframes home-rise-tall {
+  from { transform: translateY(140%); }
+  to { transform: none; }
+}
+
+body.home .b-morph {
+  position: relative;
+  animation: b-morph 7s 1.6s 3 both;
+}
+
+@keyframes b-morph {
+  0% { --p: 0; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  28.57% { --p: 1; animation-timing-function: linear; }
+  57.14% { --p: 1; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  85.71% { --p: 0; animation-timing-function: linear; }
+  100% { --p: 0; }
+}
+
+/* La lettre se réchauffe puis s'efface derrière le logo */
+body.home .b-glyph {
+  color: color-mix(in srgb, var(--ember) calc(clamp(0, var(--p) * 3, 1) * 100%), var(--ink));
+  opacity: calc(1 - clamp(0, (var(--p) - 0.4) * 2.5, 1));
+}
+
+/* Calé sur l'encre du B en Bricolage 800 : même hauteur de capitale, même ligne de base */
+body.home .b-logo {
+  position: absolute;
+  left: -0.0023em;
+  top: 0.1783em;
+  width: 0.7202em;
+  height: 0.8551em;
+  pointer-events: none;
+}
+
+body.home .b-logo i {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Le S naît au cœur du B : le logo se révèle du centre vers les bords */
+body.home .b-body {
+  background-image: url("logo-b.webp");
+  opacity: clamp(0, var(--p) * 8, 1);
+  -webkit-mask-image: radial-gradient(circle farthest-corner at 49.6% 48%, #000 calc(var(--p) * 130% - 30%), transparent calc(var(--p) * 130%));
+  mask-image: radial-gradient(circle farthest-corner at 49.6% 48%, #000 calc(var(--p) * 130% - 30%), transparent calc(var(--p) * 130%));
+}
+
+/* Le néon s'allume en fin de transformation, avec une brève hésitation */
+body.home .b-halo {
+  background-image: url("logo-b-halo.webp");
+  opacity: calc(clamp(0, (var(--p) - 0.62) * 2.6, 1) * (1 - 0.22 * (1 - var(--p)) * (0.5 + 0.5 * sin(var(--p) * 22))));
 }
 
 body.home .hero h1 .dot {
@@ -3625,7 +3701,7 @@ body.home .fin {
   }
 
   body.home .hero h1 {
-    font-size: clamp(4rem, 23.5vw, 7rem);
+    font-size: clamp(4rem, 21.5vw, 7rem);
     padding-inline: 4px;
   }
 
@@ -3651,6 +3727,7 @@ body.home .fin {
   body.home .hero-aura,
   body.home .hero h1 .ln > span,
   body.home .hero h1 .dot,
+  body.home .b-morph,
   body.home .hero-copy,
   body.home .hero-actions,
   body.home .hero-top,
@@ -3988,7 +4065,345 @@ body.home .showreel-open {
   margin-top: 18px;
 }
 
-body.home .showreel-open span {
-  margin-left: 8px;
-  font-size: 0.7em;
+body.home .showreel-open .play-ico {
+  width: 1.35em;
+  height: 1.35em;
+  margin-left: 10px;
+}
+
+/* Popup vidéo de bienvenue : la vidéo seule, fondu à la fin */
+dialog.welcome {
+  width: min(960px, calc(100% - 2 * var(--pad)));
+  max-width: none;
+  max-height: calc(100dvh - 2 * var(--pad));
+  margin: auto;
+  padding: 0;
+  border: 1px solid rgba(247, 244, 239, 0.14);
+  background: #000;
+  overflow: hidden;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(208, 107, 255, 0.12);
+}
+
+dialog.welcome::backdrop {
+  background: rgba(4, 3, 8, 0.82);
+  backdrop-filter: blur(6px);
+}
+
+dialog.welcome[open] {
+  animation: welcome-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+dialog.welcome[open]::backdrop {
+  animation: welcome-fade 0.5s ease;
+}
+
+dialog.welcome.is-closing,
+dialog.welcome.is-closing::backdrop {
+  animation: welcome-out 0.9s ease forwards;
+}
+
+dialog.welcome video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100dvh - 2 * var(--pad));
+  object-fit: cover;
+  background: #000;
+}
+
+dialog.welcome:focus {
+  outline: none;
+}
+
+.welcome-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: none;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  padding: 0;
+  border: 0;
+  background: var(--ember);
+  color: #140b08;
+  cursor: pointer;
+  animation: welcome-pulse 1.8s ease-out infinite;
+  transition: background 0.2s ease;
+}
+
+dialog.welcome.is-paused:not(.is-closing) .welcome-play {
+  display: grid;
+}
+
+.welcome-play .play-ico {
+  width: 48px;
+  height: 48px;
+}
+
+.welcome-play:hover {
+  background: var(--ink);
+}
+
+.welcome-play:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+@media (max-width: 560px) {
+  .welcome-play {
+    width: 68px;
+    height: 68px;
+    margin: -34px 0 0 -34px;
+  }
+
+  .welcome-play .play-ico {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+.welcome-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(247, 244, 239, 0.45);
+  background: rgba(7, 6, 13, 0.62);
+  backdrop-filter: blur(6px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.welcome-x svg {
+  width: 20px;
+  height: 20px;
+}
+
+.welcome-x:hover {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #140b08;
+}
+
+.welcome-x:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 3px;
+}
+
+@keyframes welcome-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes welcome-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes welcome-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.welcome[open],
+  dialog.welcome[open]::backdrop { animation: none; }
+
+  dialog.welcome.is-closing,
+  dialog.welcome.is-closing::backdrop { animation-duration: 0.01s; }
+
+  .welcome-play { animation: none; }
+}
+
+/* Bouton de réouverture de la popup de bienvenue */
+.welcome-dock {
+  display: flex;
+  justify-content: center;
+  padding: 28px var(--pad) 0;
+}
+
+.welcome-reopen {
+  --play: 50px;
+  --inset: 6px;
+  --stripe: 13.5px;
+  --stripe-x: 14.9px;
+  --bracket: rgba(255, 122, 26, 0.9);
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 17px;
+  min-height: 65px;
+  max-width: 100%;
+  padding: 0 31px 0 var(--inset);
+  border: 1px solid #2a1840;
+  border-radius: 0;
+  background: #0d0916;
+  color: var(--ink);
+  font-family: var(--font-d);
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+/* Coins de cadrage, comme le cadre du hero */
+.welcome-reopen::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--bracket), var(--bracket)) top left / 14px 1px,
+    linear-gradient(var(--bracket), var(--bracket)) top left / 1px 14px,
+    linear-gradient(var(--bracket), var(--bracket)) top right / 14px 1px,
+    linear-gradient(var(--bracket), var(--bracket)) top right / 1px 14px,
+    linear-gradient(var(--bracket), var(--bracket)) bottom left / 14px 1px,
+    linear-gradient(var(--bracket), var(--bracket)) bottom left / 1px 14px,
+    linear-gradient(var(--bracket), var(--bracket)) bottom right / 14px 1px,
+    linear-gradient(var(--bracket), var(--bracket)) bottom right / 1px 14px;
+  background-repeat: no-repeat;
+}
+
+.welcome-reopen:hover {
+  border-color: var(--ember);
+}
+
+/* Barre hachurée : tout le bouton sauf la zone du play */
+.welcome-reopen-bar {
+  position: absolute;
+  z-index: -1;
+  top: var(--inset);
+  bottom: var(--inset);
+  left: calc(var(--inset) + var(--play) + 8px);
+  right: var(--inset);
+  overflow: hidden;
+  background: #e5620c;
+  pointer-events: none;
+}
+
+.welcome-reopen-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(var(--stripe-x) * -1) 0 calc(var(--stripe-x) * -1);
+  background: repeating-linear-gradient(
+    115deg,
+    rgba(120, 38, 0, 0.5) 0 calc(var(--stripe) * 0.5),
+    transparent calc(var(--stripe) * 0.5) var(--stripe)
+  );
+  animation: welcome-stripes 0.55s linear infinite;
+}
+
+@keyframes welcome-stripes {
+  to { transform: translateX(var(--stripe-x)); }
+}
+
+.welcome-reopen-label {
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 1.15em;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(20, 11, 8, 0.35);
+  text-decoration: underline;
+  text-decoration-color: #fff;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.welcome-reopen-lead {
+  font-size: 0.85em;
+}
+
+.welcome-reopen-play .play-ico {
+  width: 30px;
+  height: 30px;
+}
+
+.welcome-reopen-play {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--play);
+  height: var(--play);
+  background: var(--ember);
+}
+
+.welcome-reopen.is-pulse {
+  animation: welcome-pulse 1.4s ease-out 2;
+}
+
+@keyframes welcome-pulse {
+  from { box-shadow: 0 0 0 0 rgba(255, 122, 26, 0.55); }
+  to { box-shadow: 0 0 0 18px rgba(255, 122, 26, 0); }
+}
+
+@media (max-width: 560px) {
+  .welcome-reopen {
+    font-size: 0.75rem;
+    gap: 12px;
+    padding-right: 14px;
+  }
+
+  .welcome-reopen-label { white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-reopen.is-pulse,
+  .welcome-reopen-bar::before { animation: none; }
+}
+
+/* Symbole play : triangle aux angles adoucis en chrome sombre, reflet brillant en boucle */
+.play-ico {
+  --shine: 105deg;
+  display: inline-block;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  vertical-align: middle;
+  -webkit-mask: var(--play-shape) center / contain no-repeat;
+  mask: var(--play-shape) center / contain no-repeat;
+  --play-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7.2 4.8 19 12 7.2 19.2Z' fill='%23000' stroke='%23000' stroke-width='2.8' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background:
+    linear-gradient(
+      var(--shine),
+      transparent 38%,
+      rgba(255, 255, 255, 0.55) 46%,
+      #fff 50%,
+      rgba(255, 255, 255, 0.55) 54%,
+      transparent 62%
+    ) 160% 0 / 260% 100% no-repeat,
+    linear-gradient(
+      135deg,
+      #170b05 0%,
+      #6f4020 16%,
+      #1a0d06 32%,
+      #8a5126 48%,
+      #140b08 66%,
+      #5a3319 84%,
+      #1a0d06 100%
+    );
+  animation: play-shine 2.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+@keyframes play-shine {
+  0% { background-position: 160% 0, 0 0; }
+  55%, 100% { background-position: -60% 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-ico {
+    animation: none;
+    background-position: 38% 0, 0 0;
+  }
 }

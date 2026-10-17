@@ -55,6 +55,7 @@
         !document.hidden &&
         !(dialog && dialog.open) &&
         !(showreel && showreel.open) &&
+        !document.querySelector("dialog.welcome[open]") &&
         !motion.matches
     );
   }
@@ -323,6 +324,114 @@
     document.getElementById("showreel-open")?.focus();
   });
 
+  const welcome = document.getElementById("welcome");
+  if (welcome) {
+    const WELCOME_KEY = "buttiscreen-welcome";
+    const WELCOME_RAMP = 1500;
+    const wVideo = document.getElementById("welcome-video");
+    const reopen = document.getElementById("welcome-reopen");
+    let rampFrame = 0;
+    let started = false;
+    const seen = () => {
+      try {
+        return Boolean(localStorage.getItem(WELCOME_KEY));
+      } catch (e) {
+        return false;
+      }
+    };
+    const remember = () => {
+      try {
+        localStorage.setItem(WELCOME_KEY, String(Date.now()));
+      } catch (e) {}
+    };
+    const closeWelcome = () => welcome.close();
+    const fadeOutWelcome = () => {
+      if (!welcome.open || welcome.classList.contains("is-closing")) return;
+      welcome.classList.add("is-closing");
+      welcome.addEventListener("animationend", closeWelcome, { once: true });
+      setTimeout(closeWelcome, 1200);
+    };
+
+    // Volume progressif (courbe quadratique, plus naturelle à l'oreille qu'une rampe linéaire).
+    const rampUp = () => {
+      cancelAnimationFrame(rampFrame);
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / WELCOME_RAMP);
+        wVideo.volume = k * k;
+        if (k < 1) rampFrame = requestAnimationFrame(step);
+      };
+      wVideo.volume = 0;
+      rampFrame = requestAnimationFrame(step);
+    };
+
+    // Appelé depuis un geste du visiteur : le navigateur autorise alors le son.
+    const playWelcome = () => {
+      const first = !started;
+      started = true;
+      if (first) wVideo.volume = 0;
+      wVideo.play().then(() => {
+        if (first) rampUp();
+      }).catch(() => {
+        started = false;
+      });
+    };
+
+    wVideo.addEventListener("play", () => welcome.classList.remove("is-paused"));
+    wVideo.addEventListener("pause", () => welcome.classList.add("is-paused"));
+    wVideo.addEventListener("ended", fadeOutWelcome);
+    wVideo.addEventListener("error", closeWelcome);
+    wVideo.addEventListener("click", () => {
+      if (wVideo.paused) playWelcome();
+      else wVideo.pause();
+    });
+    document.getElementById("welcome-play").addEventListener("click", playWelcome);
+    document.getElementById("welcome-x").addEventListener("click", closeWelcome);
+    welcome.addEventListener("click", (event) => {
+      if (event.target === welcome) closeWelcome();
+    });
+    welcome.addEventListener("close", () => {
+      welcome.classList.remove("is-closing", "is-paused");
+      cancelAnimationFrame(rampFrame);
+      started = false;
+      wVideo.pause();
+      wVideo.removeAttribute("src");
+      wVideo.load();
+      if (!welcome.dataset.fromButton) {
+        reopen.classList.add("is-pulse");
+        reopen.addEventListener("animationend", () => reopen.classList.remove("is-pulse"), { once: true });
+      } else {
+        reopen.focus();
+      }
+      delete welcome.dataset.fromButton;
+    });
+    reopen.addEventListener("click", () => {
+      welcome.dataset.fromButton = "1";
+      openWelcome(true);
+    });
+
+    // À l'arrivée sur le site, la vidéo attend le clic sur play (pas de geste = pas de son).
+    // Depuis le bouton sous le hero, le clic vaut déjà demande de lecture.
+    const openWelcome = (autoplay) => {
+      if (welcome.open || dialog?.open || showreel?.open) return;
+      const start = parseFloat(wVideo.dataset.start) || 0;
+      wVideo.addEventListener("loadedmetadata", () => {
+        if (start) wVideo.currentTime = start;
+      }, { once: true });
+      wVideo.preload = "metadata";
+      wVideo.volume = 0;
+      wVideo.src = "media/sequences/showreel.mp4";
+      welcome.classList.add("is-paused");
+      welcome.showModal();
+      welcome.focus({ preventScroll: true });
+      remember();
+      if (autoplay) playWelcome();
+    };
+
+    const slow = navigator.connection && (navigator.connection.saveData || /(^|-)2g$/.test(navigator.connection.effectiveType || ""));
+    if (!seen() && !slow && !location.hash) setTimeout(() => openWelcome(false), 1800);
+  }
+
   function setError(id, message) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -499,6 +608,26 @@
       form.elements.nom?.focus();
     }
   });
+  /* ===== ACCUEIL : le B devient le logo, boucle suspendue hors écran ===== */
+  (function bMorph() {
+    const b = document.querySelector(".b-morph");
+    const hero = document.getElementById("titre");
+    if (!b || !hero || !("IntersectionObserver" in window)) return;
+    new IntersectionObserver((entries) => {
+      b.style.animationPlayState = entries[entries.length - 1].isIntersecting ? "running" : "paused";
+    }).observe(hero);
+
+    /* Les 3 cycles terminés, le survol du B à la souris rejoue un cycle (rien sur écran tactile) */
+    b.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "mouse") return;
+      const anim = b.getAnimations().find((a) => a.animationName === "b-morph");
+      if (!anim || motion.matches || anim.playState !== "finished") return;
+      anim.effect.updateTiming({ delay: 0, iterations: 1 });
+      anim.currentTime = 0;
+      anim.play();
+    });
+  })();
+
   /* ===== ACCUEIL : apparition des blocs au défilement ===== */
   (function reveal() {
     const items = [...document.querySelectorAll("[data-reveal]")];
