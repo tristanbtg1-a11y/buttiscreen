@@ -327,8 +327,11 @@
   const welcome = document.getElementById("welcome");
   if (welcome) {
     const WELCOME_KEY = "buttiscreen-welcome";
+    const WELCOME_RAMP = 1500;
     const wVideo = document.getElementById("welcome-video");
     const reopen = document.getElementById("welcome-reopen");
+    let rampFrame = 0;
+    let started = false;
     const seen = () => {
       try {
         return Boolean(localStorage.getItem(WELCOME_KEY));
@@ -349,21 +352,48 @@
       setTimeout(closeWelcome, 1200);
     };
 
-    document.getElementById("welcome-x").addEventListener("click", closeWelcome);
+    // Volume progressif (courbe quadratique, plus naturelle à l'oreille qu'une rampe linéaire).
+    const rampUp = () => {
+      cancelAnimationFrame(rampFrame);
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / WELCOME_RAMP);
+        wVideo.volume = k * k;
+        if (k < 1) rampFrame = requestAnimationFrame(step);
+      };
+      wVideo.volume = 0;
+      rampFrame = requestAnimationFrame(step);
+    };
+
+    // Appelé depuis un geste du visiteur : le navigateur autorise alors le son.
+    const playWelcome = () => {
+      const first = !started;
+      started = true;
+      if (first) wVideo.volume = 0;
+      wVideo.play().then(() => {
+        if (first) rampUp();
+      }).catch(() => {
+        started = false;
+      });
+    };
+
+    wVideo.addEventListener("play", () => welcome.classList.remove("is-paused"));
+    wVideo.addEventListener("pause", () => welcome.classList.add("is-paused"));
     wVideo.addEventListener("ended", fadeOutWelcome);
     wVideo.addEventListener("error", closeWelcome);
     wVideo.addEventListener("click", () => {
-      if (performance.now() - unlockedAt < 500) return;
-      if (wVideo.paused) wVideo.play().catch(() => {});
+      if (wVideo.paused) playWelcome();
       else wVideo.pause();
     });
+    document.getElementById("welcome-play").addEventListener("click", playWelcome);
+    document.getElementById("welcome-x").addEventListener("click", closeWelcome);
     welcome.addEventListener("click", (event) => {
       if (event.target === welcome) closeWelcome();
     });
     welcome.addEventListener("close", () => {
-      welcome.classList.remove("is-closing");
+      welcome.classList.remove("is-closing", "is-paused");
       cancelAnimationFrame(rampFrame);
-      disarmUnlock();
+      started = false;
       wVideo.pause();
       wVideo.removeAttribute("src");
       wVideo.load();
@@ -377,61 +407,29 @@
     });
     reopen.addEventListener("click", () => {
       welcome.dataset.fromButton = "1";
-      openWelcome();
+      openWelcome(true);
     });
 
-    let unlockedAt = 0;
-    const WELCOME_RAMP = 1500;
-    const UNLOCK_EVENTS = ["pointerdown", "keydown", "touchstart"];
-    let rampFrame = 0;
-
-    // Volume progressif (courbe quadratique, plus naturelle à l'oreille qu'une rampe linéaire).
-    const rampUp = () => {
-      cancelAnimationFrame(rampFrame);
-      const t0 = performance.now();
-      const step = (now) => {
-        const k = Math.min(1, (now - t0) / WELCOME_RAMP);
-        wVideo.volume = k * k;
-        if (k < 1) rampFrame = requestAnimationFrame(step);
-      };
-      wVideo.volume = 0;
-      wVideo.muted = false;
-      rampFrame = requestAnimationFrame(step);
-    };
-
-    // Le navigateur refuse le son sans geste préalable : on joue muet, puis le
-    // premier geste du visiteur (clic, touche, toucher) déclenche le son progressif.
-    const unlockSound = () => {
-      disarmUnlock();
-      if (welcome.open && wVideo.muted) {
-        unlockedAt = performance.now();
-        rampUp();
-      }
-    };
-    const armUnlock = () => UNLOCK_EVENTS.forEach((e) => document.addEventListener(e, unlockSound, { passive: true }));
-    const disarmUnlock = () => UNLOCK_EVENTS.forEach((e) => document.removeEventListener(e, unlockSound));
-
-    const openWelcome = () => {
+    // À l'arrivée sur le site, la vidéo attend le clic sur play (pas de geste = pas de son).
+    // Depuis le bouton sous le hero, le clic vaut déjà demande de lecture.
+    const openWelcome = (autoplay) => {
       if (welcome.open || dialog?.open || showreel?.open) return;
       const start = parseFloat(wVideo.dataset.start) || 0;
       wVideo.addEventListener("loadedmetadata", () => {
         if (start) wVideo.currentTime = start;
       }, { once: true });
+      wVideo.preload = "metadata";
       wVideo.volume = 0;
-      wVideo.muted = false;
       wVideo.src = "media/sequences/showreel.mp4";
+      welcome.classList.add("is-paused");
       welcome.showModal();
       welcome.focus({ preventScroll: true });
       remember();
-      wVideo.play().then(rampUp).catch(() => {
-        wVideo.muted = true;
-        wVideo.play().catch(() => {});
-        armUnlock();
-      });
+      if (autoplay) playWelcome();
     };
 
     const slow = navigator.connection && (navigator.connection.saveData || /(^|-)2g$/.test(navigator.connection.effectiveType || ""));
-    if (!seen() && !slow && !location.hash) setTimeout(openWelcome, 1800);
+    if (!seen() && !slow && !location.hash) setTimeout(() => openWelcome(false), 1800);
   }
 
   function setError(id, message) {

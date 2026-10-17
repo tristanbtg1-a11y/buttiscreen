@@ -4114,6 +4114,57 @@ dialog.welcome:focus {
   outline: none;
 }
 
+.welcome-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: none;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  padding: 0;
+  border: 0;
+  background: var(--ember);
+  color: #140b08;
+  cursor: pointer;
+  animation: welcome-pulse 1.8s ease-out infinite;
+  transition: background 0.2s ease;
+}
+
+dialog.welcome.is-paused:not(.is-closing) .welcome-play {
+  display: grid;
+}
+
+.welcome-play svg {
+  width: 40px;
+  height: 40px;
+  margin-left: 4px;
+}
+
+.welcome-play:hover {
+  background: var(--ink);
+}
+
+.welcome-play:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+@media (max-width: 560px) {
+  .welcome-play {
+    width: 68px;
+    height: 68px;
+    margin: -34px 0 0 -34px;
+  }
+
+  .welcome-play svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 .welcome-x {
   position: absolute;
   top: 12px;
@@ -4169,6 +4220,8 @@ dialog.welcome:focus {
 
   dialog.welcome.is-closing,
   dialog.welcome.is-closing::backdrop { animation-duration: 0.01s; }
+
+  .welcome-play { animation: none; }
 }
 
 /* Bouton de réouverture de la popup de bienvenue */
