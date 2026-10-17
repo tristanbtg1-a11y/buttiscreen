@@ -499,6 +499,16 @@
       form.elements.nom?.focus();
     }
   });
+  /* ===== ACCUEIL : le B devient le logo, boucle suspendue hors écran ===== */
+  (function bMorph() {
+    const b = document.querySelector(".b-morph");
+    const hero = document.getElementById("titre");
+    if (!b || !hero || !("IntersectionObserver" in window)) return;
+    new IntersectionObserver((entries) => {
+      b.style.animationPlayState = entries[entries.length - 1].isIntersecting ? "running" : "paused";
+    }).observe(hero);
+  })();
+
   /* ===== ACCUEIL : apparition des blocs au défilement ===== */
   (function reveal() {
     const items = [...document.querySelectorAll("[data-reveal]")];

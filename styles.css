@@ -3364,6 +3364,81 @@ body.home .hero h1 .ln:nth-child(2) > span { animation-delay: 0.12s; }
   to { transform: none; }
 }
 
+/* Le B de « Butti » devient le logo : 2 s de transformation, 2 s figé,
+   2 s de retour, 1 s de repos sur la lettre, en boucle (7 s).
+   --p pilote tout : 0 = lettre, 1 = logo. */
+@property --p {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* La première ligne laisse de la place à la lueur du néon, hors du masque de révélation */
+body.home .hero h1 .ln:first-child {
+  padding: 0.16em 0.24em 0.2em;
+  margin: -0.16em -0.24em -0.2em;
+}
+
+body.home .hero h1 .ln:first-child > span {
+  animation-name: home-rise-tall;
+}
+
+@keyframes home-rise-tall {
+  from { transform: translateY(140%); }
+  to { transform: none; }
+}
+
+body.home .b-morph {
+  position: relative;
+  animation: b-morph 7s 1.6s infinite both;
+}
+
+@keyframes b-morph {
+  0% { --p: 0; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  28.57% { --p: 1; animation-timing-function: linear; }
+  57.14% { --p: 1; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  85.71% { --p: 0; animation-timing-function: linear; }
+  100% { --p: 0; }
+}
+
+/* La lettre se réchauffe puis s'efface derrière le logo */
+body.home .b-glyph {
+  color: color-mix(in srgb, var(--ember) calc(clamp(0, var(--p) * 3, 1) * 100%), var(--ink));
+  opacity: calc(1 - clamp(0, (var(--p) - 0.4) * 2.5, 1));
+}
+
+/* Calé sur l'encre du B en Bricolage 800 : même hauteur de capitale, même ligne de base */
+body.home .b-logo {
+  position: absolute;
+  left: -0.0023em;
+  top: 0.1783em;
+  width: 0.7202em;
+  height: 0.8551em;
+  pointer-events: none;
+}
+
+body.home .b-logo i {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Le S naît au cœur du B : le logo se révèle du centre vers les bords */
+body.home .b-body {
+  background-image: url("logo-b.webp");
+  opacity: clamp(0, var(--p) * 8, 1);
+  -webkit-mask-image: radial-gradient(circle farthest-corner at 49.6% 48%, #000 calc(var(--p) * 130% - 30%), transparent calc(var(--p) * 130%));
+  mask-image: radial-gradient(circle farthest-corner at 49.6% 48%, #000 calc(var(--p) * 130% - 30%), transparent calc(var(--p) * 130%));
+}
+
+/* Le néon s'allume en fin de transformation, avec une brève hésitation */
+body.home .b-halo {
+  background-image: url("logo-b-halo.webp");
+  opacity: calc(clamp(0, (var(--p) - 0.62) * 2.6, 1) * (1 - 0.22 * (1 - var(--p)) * (0.5 + 0.5 * sin(var(--p) * 22))));
+}
+
 body.home .hero h1 .dot {
   display: inline-block;
   animation: home-dot 0.5s 1s cubic-bezier(0.3, 1.6, 0.5, 1) both;
@@ -3651,6 +3726,7 @@ body.home .fin {
   body.home .hero-aura,
   body.home .hero h1 .ln > span,
   body.home .hero h1 .dot,
+  body.home .b-morph,
   body.home .hero-copy,
   body.home .hero-actions,
   body.home .hero-top,
