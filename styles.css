@@ -3347,6 +3347,7 @@ body.home .hero h1 {
 
 body.home .hero h1 .ln {
   display: block;
+  white-space: nowrap;
   overflow: hidden;
   padding: 0.04em 0.06em 0.02em;
   margin: -0.04em -0.06em -0.02em;
@@ -3700,7 +3701,7 @@ body.home .fin {
   }
 
   body.home .hero h1 {
-    font-size: clamp(4rem, 23.5vw, 7rem);
+    font-size: clamp(4rem, 21.5vw, 7rem);
     padding-inline: 4px;
   }
 
