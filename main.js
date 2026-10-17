@@ -328,8 +328,6 @@
   if (welcome) {
     const WELCOME_KEY = "buttiscreen-welcome";
     const wVideo = document.getElementById("welcome-video");
-    const wTc = document.getElementById("welcome-tc");
-    const wSound = document.getElementById("welcome-sound");
     const reopen = document.getElementById("welcome-reopen");
     const seen = () => {
       try {
@@ -344,22 +342,24 @@
       } catch (e) {}
     };
     const closeWelcome = () => welcome.close();
+    const fadeOutWelcome = () => {
+      if (!welcome.open || welcome.classList.contains("is-closing")) return;
+      welcome.classList.add("is-closing");
+      welcome.addEventListener("animationend", closeWelcome, { once: true });
+      setTimeout(closeWelcome, 1200);
+    };
 
-    wVideo.addEventListener("timeupdate", () => {
-      wTc.textContent = formatTimecode(Math.floor(wVideo.currentTime * FPS));
+    wVideo.addEventListener("ended", fadeOutWelcome);
+    wVideo.addEventListener("error", closeWelcome);
+    wVideo.addEventListener("click", () => {
+      if (wVideo.paused) wVideo.play().catch(() => {});
+      else wVideo.pause();
     });
-    wSound.addEventListener("click", () => {
-      wVideo.muted = !wVideo.muted;
-      wSound.textContent = wVideo.muted ? "Activer le son" : "Couper le son";
-      wSound.setAttribute("aria-pressed", String(!wVideo.muted));
-    });
-    document.getElementById("welcome-x").addEventListener("click", closeWelcome);
-    document.getElementById("welcome-close").addEventListener("click", closeWelcome);
-    document.getElementById("welcome-cta").addEventListener("click", closeWelcome);
     welcome.addEventListener("click", (event) => {
       if (event.target === welcome) closeWelcome();
     });
     welcome.addEventListener("close", () => {
+      welcome.classList.remove("is-closing");
       wVideo.pause();
       wVideo.removeAttribute("src");
       wVideo.load();
@@ -381,7 +381,7 @@
       wVideo.src = "media/sequences/showreel.mp4";
       welcome.showModal();
       remember();
-      if (!motion.matches) wVideo.play().catch(() => {});
+      wVideo.play().catch(() => {});
     };
 
     const slow = navigator.connection && (navigator.connection.saveData || /(^|-)2g$/.test(navigator.connection.effectiveType || ""));
