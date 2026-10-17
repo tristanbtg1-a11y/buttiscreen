@@ -3366,7 +3366,7 @@ body.home .hero h1 .ln:nth-child(2) > span { animation-delay: 0.12s; }
 }
 
 /* Le B de « Butti » devient le logo : 2 s de transformation, 2 s figé,
-   2 s de retour, 1 s de repos sur la lettre, en boucle (7 s).
+   2 s de retour, 1 s de repos sur la lettre (7 s), joué 3 fois puis la lettre reste.
    --p pilote tout : 0 = lettre, 1 = logo. */
 @property --p {
   syntax: "<number>";
@@ -3391,7 +3391,7 @@ body.home .hero h1 .ln:first-child > span {
 
 body.home .b-morph {
   position: relative;
-  animation: b-morph 7s 1.6s infinite both;
+  animation: b-morph 7s 1.6s 3 both;
 }
 
 @keyframes b-morph {
