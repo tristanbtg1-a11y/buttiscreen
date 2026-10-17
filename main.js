@@ -508,8 +508,9 @@
       b.style.animationPlayState = entries[entries.length - 1].isIntersecting ? "running" : "paused";
     }).observe(hero);
 
-    /* Les 3 cycles terminés, le survol du B rejoue un cycle */
-    b.addEventListener("pointerenter", () => {
+    /* Les 3 cycles terminés, le survol du B à la souris rejoue un cycle (rien sur écran tactile) */
+    b.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "mouse") return;
       const anim = b.getAnimations().find((a) => a.animationName === "b-morph");
       if (!anim || motion.matches || anim.playState !== "finished") return;
       anim.effect.updateTiming({ delay: 0, iterations: 1 });
