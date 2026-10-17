@@ -4240,6 +4240,7 @@ dialog.welcome[open]::backdrop {
   --inset: 6px;
   --stripe: 13.5px;
   --stripe-x: 14.9px;
+  --bracket: rgba(255, 122, 26, 0.9);
   position: relative;
   isolation: isolate;
   display: inline-flex;
@@ -4248,39 +4249,51 @@ dialog.welcome[open]::backdrop {
   min-height: 65px;
   max-width: 100%;
   padding: 0 31px 0 var(--inset);
-  border: 1px solid rgba(247, 244, 239, 0.28);
-  border-radius: 999px;
-  background: rgba(247, 244, 239, 0.04);
+  border: 1px solid #2a1840;
+  border-radius: 0;
+  background: #0d0916;
   color: var(--ink);
   font-family: var(--font-d);
   font-size: 1.25rem;
   letter-spacing: -0.02em;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease;
+}
+
+/* Coins de cadrage, comme le cadre du hero */
+.welcome-reopen::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--bracket), var(--bracket)) top left / 14px 1px,
+    linear-gradient(var(--bracket), var(--bracket)) top left / 1px 14px,
+    linear-gradient(var(--bracket), var(--bracket)) top right / 14px 1px,
+    linear-gradient(var(--bracket), var(--bracket)) top right / 1px 14px,
+    linear-gradient(var(--bracket), var(--bracket)) bottom left / 14px 1px,
+    linear-gradient(var(--bracket), var(--bracket)) bottom left / 1px 14px,
+    linear-gradient(var(--bracket), var(--bracket)) bottom right / 14px 1px,
+    linear-gradient(var(--bracket), var(--bracket)) bottom right / 1px 14px;
+  background-repeat: no-repeat;
 }
 
 .welcome-reopen:hover {
-  border-color: var(--ember);
-  background: rgba(255, 122, 26, 0.1);
+  --bracket: rgba(208, 107, 255, 0.95);
+  border-color: var(--neon);
 }
 
-/* Barre de chargement hachurée : tout le bouton sauf la zone du play */
+/* Barre hachurée : tout le bouton sauf la zone du play */
 .welcome-reopen-bar {
   position: absolute;
   z-index: -1;
   top: var(--inset);
   bottom: var(--inset);
-  left: calc(var(--inset) + var(--play) + 10px);
+  left: calc(var(--inset) + var(--play) + 8px);
   right: var(--inset);
   overflow: hidden;
-  border-radius: 999px;
-  -webkit-mask-image: linear-gradient(90deg, #000 0 50%, rgba(0, 0, 0, 0.3) 50% 100%);
-  mask-image: linear-gradient(90deg, #000 0 50%, rgba(0, 0, 0, 0.3) 50% 100%);
-  -webkit-mask-size: 200% 100%;
-  mask-size: 200% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  animation: welcome-fill 2.6s linear infinite;
+  background: #1a1228;
   pointer-events: none;
 }
 
@@ -4304,17 +4317,12 @@ dialog.welcome[open]::backdrop {
   );
 }
 
-@keyframes welcome-fill {
-  from { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
-  88%, to { -webkit-mask-position: 0 0; mask-position: 0 0; }
-}
-
 @keyframes welcome-stripes {
   to { transform: translateX(var(--stripe-x)); }
 }
 
 .welcome-reopen-label {
-  text-shadow: 0 1px 6px rgba(7, 6, 13, 0.85);
+  text-shadow: 0 1px 6px rgba(7, 6, 13, 0.9);
 }
 
 .welcome-reopen-play {
@@ -4323,19 +4331,22 @@ dialog.welcome[open]::backdrop {
   flex: none;
   width: var(--play);
   height: var(--play);
-  border-radius: 50%;
   background: var(--ember);
   color: #140b08;
   font-size: 0.875rem;
   padding-left: 3px;
 }
 
+.welcome-reopen:hover .welcome-reopen-play {
+  background: var(--neon);
+}
+
 .welcome-reopen-meta {
   font-family: var(--font-m);
-  font-size: 13.75px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--ink);
-  text-shadow: 0 1px 6px rgba(7, 6, 13, 0.85);
+  text-shadow: 0 1px 6px rgba(7, 6, 13, 0.9);
 }
 
 .welcome-reopen.is-pulse {
@@ -4354,10 +4365,5 @@ dialog.welcome[open]::backdrop {
 
 @media (prefers-reduced-motion: reduce) {
   .welcome-reopen.is-pulse,
-  .welcome-reopen-bar,
   .welcome-reopen-bar::before { animation: none; }
-  .welcome-reopen-bar {
-    -webkit-mask-position: 36% 0;
-    mask-position: 36% 0;
-  }
 }
