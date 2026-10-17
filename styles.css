@@ -4325,6 +4325,10 @@ dialog.welcome[open]::backdrop {
   text-underline-offset: 5px;
 }
 
+.welcome-reopen-lead {
+  font-size: 0.85em;
+}
+
 .welcome-reopen-play {
   display: grid;
   place-items: center;
