@@ -82,6 +82,14 @@
         <p class="order-lede">
           Rendez-vous, commandes en cours et commandes closes. Accès réservé au studio.
         </p>
+        <div class="brief order-form" id="gate-link">
+          <div class="field full form-actions">
+            <button class="btn" id="gate-link-btn" type="button">Recevoir le lien studio</button>
+          </div>
+          <p class="fine full" id="gate-link-status" role="status">Un lien de connexion part vers l’adresse du studio. Il remplace le mot de passe.</p>
+        </div>
+        <details class="gate-fallback">
+          <summary>Accès de secours par mot de passe</summary>
         <form class="brief order-form" id="gate-form" novalidate>
           <label class="field full">
             <span>E-mail</span>
@@ -97,6 +105,7 @@
           </div>
           <p class="fine full">Ce n’est pas le mot de passe d’un compte client.</p>
         </form>
+        </details>
       </section>
 
       <section id="board" class="gestion-board" hidden tabindex="-1" aria-labelledby="board-title">
@@ -154,6 +163,6 @@
     <script src="auth-client.js?v=phb1"></script>
     <script src="commande-store.js?v=livree"></script>
     <script src="boutique.js?v=boutique2"></script>
-    <script src="gestion.js?v=etat2"></script>
+    <script src="gestion.js?v=unif1"></script>
   </body>
 </html>

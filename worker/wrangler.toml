@@ -20,3 +20,5 @@ binding = "BRIEFS"
 id = "e286dba411574f068c0189476c39e0ad"
 # REPLY_DELAY règle le délai annoncé dans l'accusé ; CONFIRMATION = "off" coupe l'accusé.
 # REPLY_DELAY = "48 heures ouvrées"
+
+# Secret à définir hors du dépôt : npx wrangler secret put MAKE_PASSWORD (mot de passe de la gestion, utilisé par la session studio)

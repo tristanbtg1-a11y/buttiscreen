@@ -689,14 +689,9 @@
     );
   });
 
-  // L'espace gestion reste protégé par le mot de passe studio : le lien de connexion ouvre le compte, pas la gestion.
+  // La gestion a sa propre page : la connexion y passe par le lien studio.
   document.getElementById("gestion-open")?.addEventListener("click", () => {
-    leave();
-    form.querySelector('[name="email"]').value = OWNER;
-    studio.hidden = false;
-    submit.textContent = "Entrer";
-    setStatus("");
-    form.querySelector('[name="motdepasse"]').focus();
+    window.location.href = "gestion.html";
   });
 
   document.getElementById("logout").addEventListener("click", async () => {
