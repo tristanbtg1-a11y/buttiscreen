@@ -9,6 +9,8 @@
   const formError = document.getElementById("compte-error");
   const live = document.getElementById("compte-live");
 
+  const OWNER = "tristan.buttig1@gmail.com";
+
   const setStatus = (message) => {
     if (status) status.textContent = message;
   };
@@ -555,6 +557,8 @@
   };
 
   const render = (email, quiet) => {
+    const gestionBtn = document.getElementById("gestion-open");
+    if (gestionBtn) gestionBtn.hidden = email !== OWNER;
     const project = store.projectFor(email);
     const index = Math.max(
       0,
@@ -621,8 +625,6 @@
     render(data.email, true);
   };
 
-  const OWNER = "tristan.buttig1@gmail.com";
-
   // L'accès studio (mot de passe, vers la gestion) reste à part : par défaut, toute adresse reçoit un lien.
   document.getElementById("studio-toggle")?.addEventListener("click", () => {
     studio.hidden = !studio.hidden;
@@ -685,6 +687,16 @@
     setStatus(
       "Si cette adresse est la vôtre, un e-mail de connexion vient de partir. Il est valable 15 minutes. Pensez à regarder vos courriers indésirables."
     );
+  });
+
+  // L'espace gestion reste protégé par le mot de passe studio : le lien de connexion ouvre le compte, pas la gestion.
+  document.getElementById("gestion-open")?.addEventListener("click", () => {
+    leave();
+    form.querySelector('[name="email"]').value = OWNER;
+    studio.hidden = false;
+    submit.textContent = "Entrer";
+    setStatus("");
+    form.querySelector('[name="motdepasse"]').focus();
   });
 
   document.getElementById("logout").addEventListener("click", async () => {
