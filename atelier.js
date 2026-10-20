@@ -21,19 +21,35 @@
     etat.append(option);
   });
 
-  const showDesk = () => {
+  const gateStatus = document.getElementById("atelier-gate-status");
+  const auth = window.ButtiAuth;
+  let projects = [];
+
+  const showDesk = async () => {
     gate.hidden = true;
     desk.hidden = false;
-    renderList();
+    await renderList();
   };
 
-  const renderList = () => {
-    const projects = store.listProjects();
+  const showGate = (message) => {
+    desk.hidden = true;
+    gate.hidden = false;
+    if (message) gateStatus.textContent = message;
+  };
+
+  const renderList = async () => {
+    const result = await auth.listProjects();
+    if (result.status === 401) {
+      await auth.logout();
+      showGate("La session a expiré. Recevez un nouveau lien.");
+      return;
+    }
+    projects = (result.json && result.json.projets) || [];
     list.innerHTML = "";
     if (!projects.length) {
       const empty = document.createElement("p");
       empty.className = "fine";
-      empty.textContent = "Aucune commande enregistrée dans ce navigateur.";
+      empty.textContent = "Aucune commande enregistrée. Saisissez l’e-mail d’un client pour créer son suivi.";
       list.append(empty);
       return;
     }
@@ -42,35 +58,45 @@
       button.type = "button";
       const title = project.titre || "Projet sans titre";
       button.textContent = `${project.email} — ${title}`;
-      button.addEventListener("click", () => fill(project.email));
+      button.addEventListener("click", () => fill(project));
       list.append(button);
     });
   };
 
-  const fill = (email) => {
-    const project = store.projectFor(email);
-    form.email.value = email;
+  // La facture déjà déposée n'est pas rechargée dans l'atelier : sans nouveau fichier, le serveur la conserve.
+  const fill = (project) => {
+    form.email.value = project.email;
     form.titre.value = project.titre || "";
     form.etat.value = project.etat || "brief";
     form.delai.value = project.delai || "";
-    keepFacture = project.facture
-      ? { facture: project.facture, factureNom: project.factureNom }
-      : null;
+    keepFacture = null;
     file.value = "";
     saved.hidden = true;
     formError.hidden = true;
+    if (project.hasFacture) {
+      saved.hidden = false;
+      saved.textContent = `Facture en ligne : ${project.factureNom || "facture.pdf"}. Elle est conservée sauf si vous en choisissez une autre.`;
+    }
     form.titre.focus();
   };
 
   gateForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const password = String(new FormData(gateForm).get("motdepasse") || "");
-    const result = store.atelierReady()
-      ? await store.unlockAtelier(password)
-      : await store.setAtelierPassword(password);
-    gateError.hidden = result.ok;
-    gateError.textContent = result.ok ? "" : result.error;
-    if (result.ok) showDesk();
+    const email = String(new FormData(gateForm).get("email") || "").trim().toLowerCase();
+    gateError.hidden = true;
+    if (!store.validEmail(email)) {
+      gateError.hidden = false;
+      gateError.textContent = "Indiquez une adresse e-mail valide.";
+      return;
+    }
+    const result = await auth.requestLink(email, "atelier");
+    if (!result.ok) {
+      gateError.hidden = false;
+      gateError.textContent = "L’envoi n’a pas abouti. Réessayez dans un instant.";
+      return;
+    }
+    gateStatus.textContent =
+      "Si cette adresse est celle du studio, un lien de connexion vient de partir. Il est valable 15 minutes.";
   });
 
   file.addEventListener("change", () => {
@@ -106,32 +132,52 @@
         reader.readAsDataURL(chosen);
       });
     }
-    const result = store.saveProject(String(data.get("email") || ""), {
-      titre: data.get("titre"),
-      etat: data.get("etat"),
-      delai: data.get("delai"),
-      facture: facture ? facture.facture : undefined,
-      factureNom: facture ? facture.factureNom : undefined,
-    });
-    formError.hidden = result.ok;
-    formError.textContent = result.ok ? "" : result.error;
-    saved.hidden = !result.ok;
-    saved.textContent = result.ok
-      ? result.hasAccount
-        ? "Suivi enregistré. Le client le voit en se connectant sur cet appareil."
-        : "Suivi enregistré. Il s’affichera quand ce compte sera créé sur cet appareil."
-      : "";
-    if (result.ok) renderList();
+    const body = {
+      email: String(data.get("email") || "").trim().toLowerCase(),
+      titre: String(data.get("titre") || ""),
+      etat: String(data.get("etat") || ""),
+      delai: String(data.get("delai") || ""),
+    };
+    if (facture) {
+      body.facture = facture.facture;
+      body.factureNom = facture.factureNom;
+    }
+    if (!store.validEmail(body.email)) {
+      formError.hidden = false;
+      formError.textContent = "Indiquez un e-mail valide.";
+      return;
+    }
+    const result = await auth.saveProject(body);
+    if (result.status === 401) {
+      await auth.logout();
+      showGate("La session a expiré. Recevez un nouveau lien.");
+      return;
+    }
+    const ok = result.status === 200 && result.json && result.json.ok;
+    formError.hidden = ok;
+    formError.textContent = ok ? "" : "L’enregistrement n’a pas abouti. Réessayez dans un instant.";
+    saved.hidden = !ok;
+    saved.textContent = ok ? "Suivi enregistré. Le client le voit en se connectant, sur n’importe quel appareil." : "";
+    if (ok) {
+      store.saveProject(body.email, { ...body, facture: undefined, factureNom: undefined }); // alimente aussi Make, comme avant
+      await renderList();
+    }
   });
 
-  if (store.atelierOpen()) showDesk();
-  else {
-    document.getElementById("gate-title").firstChild.textContent = store.atelierReady()
-      ? "Ouvrir l’atelier"
-      : "Protéger l’atelier";
-    document.getElementById("gate-copy").textContent = store.atelierReady()
-      ? "Le mot de passe choisi sur cet appareil."
-      : "Choisissez un mot de passe. Il reste dans ce navigateur.";
-    gateForm.querySelector("button").textContent = store.atelierReady() ? "Entrer" : "Enregistrer";
-  }
+  const openFromLink = async () => {
+    const match = location.hash.match(/^#connexion=([0-9a-f]{32})$/);
+    if (!match) return;
+    history.replaceState(null, "", location.pathname + location.search);
+    gateStatus.textContent = "Connexion en cours…";
+    const result = await auth.verify(match[1]);
+    if (result.ok && result.admin) {
+      await showDesk();
+      return;
+    }
+    if (result.ok) await auth.logout();
+    gateStatus.textContent = "Ce lien a expiré ou n’ouvre pas l’atelier. Recevez un nouveau lien.";
+  };
+
+  if (auth.isAdmin()) showDesk();
+  openFromLink();
 })();

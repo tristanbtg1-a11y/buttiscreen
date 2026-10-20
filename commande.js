@@ -3,32 +3,20 @@
   const auth = document.getElementById("auth");
   const board = document.getElementById("board");
   const form = document.getElementById("compte");
-  const modeButtons = [...document.querySelectorAll("[data-mode]")];
-  const confirmField = document.getElementById("confirm-field");
+  const studio = document.getElementById("studio-field");
+  const status = document.getElementById("compte-status");
   const submit = document.getElementById("compte-submit");
   const formError = document.getElementById("compte-error");
   const live = document.getElementById("compte-live");
 
-  let mode = "connexion";
+  const setStatus = (message) => {
+    if (status) status.textContent = message;
+  };
 
   const setError = (message) => {
     formError.hidden = !message;
     formError.textContent = message || "";
     live.textContent = message || "";
-  };
-
-  const showMode = (next) => {
-    mode = next;
-    modeButtons.forEach((button) => {
-      const on = button.dataset.mode === next;
-      button.classList.toggle("is-on", on);
-      button.setAttribute("aria-selected", on ? "true" : "false");
-    });
-    confirmField.hidden = next !== "inscription";
-    submit.textContent = next === "inscription" ? "Créer mon compte" : "Se connecter";
-    form.querySelector('[name="motdepasse"]').autocomplete =
-      next === "inscription" ? "new-password" : "current-password";
-    setError("");
   };
 
   const HOOK = "https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3";
@@ -252,23 +240,24 @@
     requestBtn.disabled = false;
   });
 
-  document.getElementById("brief-find")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const status = document.getElementById("brief-find-status");
-    const email = String(new FormData(event.target).get("email") || "").trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      if (status) status.textContent = "Indiquez une adresse e-mail valide.";
-      return;
-    }
-    if (String(new FormData(event.target).get("website") || "")) return;
-    const button = event.target.querySelector("button[type=submit]");
-    if (button) button.disabled = true;
-    await sendLink(email, status);
-    if (button) button.disabled = false;
-  });
-
   // Lien personnel de l'accusé de réception : le brief s'affiche sur n'importe quel appareil, sans connexion.
   const openFromLink = async () => {
+    const login = location.hash.match(/^#connexion=([0-9a-f]{32})$/);
+    if (login) {
+      history.replaceState(null, "", location.pathname + location.search);
+      setStatus("Connexion en cours…");
+      const result = await window.ButtiAuth.verify(login[1]);
+      if (!result.ok) {
+        setStatus(
+          result.offline
+            ? "Connexion impossible pour le moment. Réessayez dans un instant."
+            : "Ce lien a expiré ou a déjà servi. Saisissez votre e-mail pour en recevoir un nouveau."
+        );
+        return;
+      }
+      await enter(result.email);
+      return;
+    }
     const match = location.hash.match(/^#brief=([0-9a-f]{32})$/);
     if (!match || !window.ButtiBrief) return;
     history.replaceState(null, "", location.pathname + location.search);
@@ -609,25 +598,50 @@
     }, 2000);
   };
 
-  modeButtons.forEach((button) => {
-    button.addEventListener("click", () => showMode(button.dataset.mode));
-  });
+  const leave = () => {
+    form.reset();
+    if (studio) studio.hidden = true;
+    board.hidden = true;
+    auth.hidden = false;
+  };
+
+  // Affiche le compte tout de suite depuis l'appareil, puis le remet à jour depuis le serveur.
+  const enter = async (email) => {
+    render(email);
+    const data = await window.ButtiAuth.me();
+    if (data.expired) {
+      leave();
+      setStatus("Votre session a expiré. Saisissez votre e-mail pour recevoir un nouveau lien.");
+      return;
+    }
+    if (!data.ok) return;
+    store.mergeServer(data.email, data.projet);
+    if (data.brief && window.ButtiBrief) window.ButtiBrief.save(data.brief);
+    render(data.email, true);
+  };
+
+  const OWNER = "tristan.buttig1@gmail.com";
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
     const email = String(data.get("email") || "").trim().toLowerCase();
     const password = String(data.get("motdepasse") || "");
-    const confirm = String(data.get("confirmation") || "");
-    if (email === "tristan.buttig1@gmail.com") {
-      if (mode === "inscription") {
-        setError("Un compte existe déjà avec cet e-mail.");
+    if (!store.validEmail(email)) {
+      setError("Indiquez une adresse e-mail valide.");
+      return;
+    }
+    if (email === OWNER) {
+      if (studio.hidden) {
+        studio.hidden = false;
+        setError("");
+        form.querySelector('[name="motdepasse"]').focus();
         return;
       }
       submit.disabled = true;
       setError("");
       try {
-        const response = await fetch("https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3", {
+        const response = await fetch(HOOK, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "login", email, password }),
@@ -649,28 +663,27 @@
       }
       return;
     }
-    if (mode === "inscription" && password !== confirm) {
-      setError("Les deux mots de passe diffèrent.");
-      return;
-    }
-    const result =
-      mode === "inscription"
-        ? await store.createAccount(email, password)
-        : await store.login(email, password);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+    submit.disabled = true;
     setError("");
-    render(result.email);
+    const result = await window.ButtiAuth.requestLink(email);
+    submit.disabled = false;
+    if (!result.ok) {
+      setError(
+        result.limited
+          ? "Trop de demandes. Réessayez dans une heure."
+          : "L’envoi n’a pas abouti. Réessayez dans un instant, ou écrivez à contact@buttiscreen.fr."
+      );
+      return;
+    }
+    setStatus(
+      "Si cette adresse est la vôtre, un e-mail de connexion vient de partir. Il est valable 15 minutes. Pensez à regarder vos courriers indésirables."
+    );
   });
 
-  document.getElementById("logout").addEventListener("click", () => {
-    store.logout();
-    form.reset();
-    showMode("connexion");
-    board.hidden = true;
-    auth.hidden = false;
+  document.getElementById("logout").addEventListener("click", async () => {
+    await window.ButtiAuth.logout();
+    leave();
+    setStatus("Vous êtes déconnecté. Le lien de connexion est valable 15 minutes et ne sert qu’une fois.");
     document.getElementById("order-title").focus();
   });
 
@@ -936,7 +949,6 @@
   });
 
   const open = store.sessionEmail();
-  if (open) render(open);
-  else showMode("connexion");
+  if (open) enter(open);
   openFromLink();
 })();

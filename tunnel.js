@@ -52,7 +52,7 @@
   const lookupPay = async () => {
     const pay = document.getElementById("pay");
     const status = document.getElementById("pay-status");
-    const email = String(store.email || sessionStorage.getItem("buttiscreen.commande.session") || "")
+    const email = String(store.email || (window.ButtiAuth && window.ButtiAuth.email()) || "")
       .trim()
       .toLowerCase();
     if (!pay) return;

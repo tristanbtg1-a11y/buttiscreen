@@ -4,6 +4,8 @@
 // REPLY_DELAY règle le délai annoncé, CONFIRMATION="off" coupe l'accusé.
 // Copie du brief consultable depuis n'importe quel appareil : KV « BRIEFS », 90 jours, accès par lien personnel.
 
+import { handleAuth } from "./auth.js";
+
 const MAX = { nom: 120, email: 254, projet: 60, message: 6000 };
 const PROJETS = ["Spot / publicité", "Clip", "Film / documentaire", "Réseaux sociaux", "Étalonnage seul", "Autre"];
 const MIN_FILL_MS = 2500;
@@ -333,13 +335,15 @@ export default {
         headers: {
           "access-control-allow-origin": allowed || "null",
           "access-control-allow-methods": "GET, POST, OPTIONS",
-          "access-control-allow-headers": "content-type",
+          "access-control-allow-headers": "content-type, authorization",
           "access-control-max-age": "86400",
           vary: "Origin",
         },
       });
     }
     const path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
+    const auth = await handleAuth(request, env, ctx, allowed, path, reply);
+    if (auth) return auth;
     if (request.method === "GET" && path.startsWith("/brief/")) {
       return getBrief(env, path.slice("/brief/".length), request.headers.get("cf-connecting-ip"), allowed);
     }

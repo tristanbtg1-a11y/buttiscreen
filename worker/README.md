@@ -68,3 +68,12 @@ Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de r�
 - L'accusé contient un lien `commande.html#brief=<id>` ; `GET /brief/<id>` renvoie le brief, sans liste ni recherche par e-mail.
 - `POST /lien` renvoie le lien par e-mail à l'adresse du brief le plus récent (réponse identique que l'adresse existe ou non, limitée par adresse et par IP).
 - `POST /tunnel` enregistre le brief du tunnel de rendez-vous et envoie l'accusé.
+
+## Connexion par lien et suivi projet
+
+- `POST /auth/demande` envoie un lien de connexion (15 minutes, usage unique) ; réponse identique que l'adresse soit connue ou non ; 3 par adresse et par heure, 8 par IP et par heure.
+- `POST /auth/verification` échange le jeton (dans le fragment `#connexion=…` de l'URL, donc jamais envoyé par un simple clic) contre une session : 30 jours pour un client, 12 heures pour le studio.
+- `GET /moi` (en-tête `Authorization: Bearer <session>`) renvoie le suivi du projet et le dernier brief de l'adresse.
+- `ADMIN_EMAILS` (variable de `wrangler.toml`) : adresses du studio. Seules elles peuvent écrire le suivi (`POST /admin/projet`) et le lister (`GET /admin/projets`), via un lien envoyé depuis l'atelier. L'atelier ne reçoit de lien que pour ces adresses.
+- Le suivi et les sessions sont dans le KV `BRIEFS` (clés `p:`, `s:`, `ml:`, index `pidx`).
+- Tests : `node --test worker/*.test.mjs` (39 tests).

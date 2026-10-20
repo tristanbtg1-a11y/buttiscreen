@@ -5,6 +5,8 @@ compatibility_date = "2025-01-01"
 [vars]
 MAIL_TO = "contact@buttiscreen.fr"
 MAIL_FROM = "Buttiscreen <brief@buttiscreen.fr>"
+# Adresses qui peuvent écrire le suivi projet (connexion par lien envoyé à cette boîte).
+ADMIN_EMAILS = "tristan@buttiscreen.fr"
 
 # Secret à définir hors du dépôt : npx wrangler secret put RESEND_API_KEY
 

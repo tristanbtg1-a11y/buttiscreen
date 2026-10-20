@@ -90,47 +90,27 @@
 
       <section id="auth">
         <p class="order-lede">
-          Connectez-vous pour suivre votre film&nbsp;: état, délai, rushes, facture. Pas encore de compte&nbsp;? Créez-le ici.
+          Entrez votre e-mail&nbsp;: nous vous envoyons un lien de connexion. Pas de mot de passe à retenir, et votre suivi vous suit sur tous vos appareils.
         </p>
-        <div class="auth-switch" role="tablist" aria-label="Compte">
-          <button type="button" role="tab" data-mode="connexion" aria-selected="true">Se connecter</button>
-          <button type="button" role="tab" data-mode="inscription" aria-selected="false">Créer un compte</button>
-        </div>
         <form class="brief order-form" id="compte" novalidate>
           <label class="field full">
             <span>E-mail</span>
             <input name="email" type="email" autocomplete="username" inputmode="email" required />
           </label>
-          <label class="field full">
-            <span>Mot de passe</span>
-            <input name="motdepasse" type="password" autocomplete="current-password" required />
-          </label>
-          <label class="field full" id="confirm-field" hidden>
-            <span>Confirmer le mot de passe</span>
-            <input name="confirmation" type="password" autocomplete="new-password" />
+          <label class="field full" id="studio-field" hidden>
+            <span>Mot de passe studio</span>
+            <input name="motdepasse" type="password" autocomplete="current-password" />
           </label>
           <p class="field-error full" id="compte-error" hidden></p>
           <div class="field full form-actions">
-            <button class="btn" id="compte-submit" type="submit">Se connecter</button>
+            <button class="btn" id="compte-submit" type="submit">Recevoir mon lien de connexion</button>
           </div>
-          <p class="fine full">
-            Le compte reste dans ce navigateur.
+          <p class="fine full" id="compte-status" role="status">
+            Le lien est valable 15&nbsp;minutes et ne sert qu’une fois.
             <a href="politique.html">Confidentialité</a>.
           </p>
         </form>
         <p class="sr-only" role="status" id="compte-live"></p>
-        <form class="brief order-form brief-find" id="brief-find" novalidate>
-          <p class="kicker full">Vous avez envoyé un brief&nbsp;?</p>
-          <label class="field full">
-            <span>E-mail utilisé pour le brief</span>
-            <input name="email" type="email" autocomplete="email" inputmode="email" required />
-          </label>
-          <label class="hp" aria-hidden="true">Ne pas remplir<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
-          <div class="field full form-actions">
-            <button class="btn ghost" type="submit">Recevoir le lien par e-mail</button>
-          </div>
-          <p class="fine full" id="brief-find-status" role="status">Le lien personnel de votre brief vous est envoyé par e-mail, pour le consulter depuis n’importe quel appareil.</p>
-        </form>
       </section>
 
       <section id="board" hidden tabindex="-1" aria-labelledby="board-title">
@@ -219,7 +199,8 @@
         <ul class="rush-library" id="rush-library-list"></ul>
       </div>
     </dialog>
+    <script src="auth-client.js?v=phb1"></script>
     <script src="brief-memo.js?v=brief1"></script>
-    <script src="commande.js?v=brief1"></script>
+    <script src="commande.js?v=phb1"></script>
   </body>
 </html>
