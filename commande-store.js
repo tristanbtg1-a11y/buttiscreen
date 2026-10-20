@@ -1,8 +1,5 @@
 (() => {
   const DB = "buttiscreen.commande.v1";
-  const SESSION = "buttiscreen.commande.session";
-  const GATE = "buttiscreen.atelier.v1";
-  const GATE_SESSION = "buttiscreen.atelier.session";
 
   const ETATS = [
     { id: "brief", label: "Brief reçu" },
@@ -38,32 +35,6 @@
 
   const emailOf = (value) => String(value || "").trim().toLowerCase();
 
-  const bytesToB64 = (bytes) => btoa(String.fromCharCode(...bytes));
-
-  const b64ToBytes = (value) => Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
-
-  const hashPassword = async (password, saltBytes) => {
-    const salt = saltBytes || crypto.getRandomValues(new Uint8Array(16));
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(password),
-      "PBKDF2",
-      false,
-      ["deriveBits"]
-    );
-    const bits = await crypto.subtle.deriveBits(
-      { name: "PBKDF2", salt, iterations: 120000, hash: "SHA-256" },
-      key,
-      256
-    );
-    return { salt: bytesToB64(salt), hash: bytesToB64(new Uint8Array(bits)) };
-  };
-
-  const verify = async (password, salt, hash) => {
-    const next = await hashPassword(password, b64ToBytes(salt));
-    return next.hash === hash;
-  };
-
   const validEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const HOOK = "https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3";
@@ -90,36 +61,29 @@
     }).catch(() => {});
   };
 
-  const createAccount = async (rawEmail, password) => {
+  const sessionEmail = () => (window.ButtiAuth ? window.ButtiAuth.email() : "");
+
+  const logout = () => {
+    if (window.ButtiAuth) window.ButtiAuth.logout();
+  };
+
+  // Recopie le suivi du serveur dans le cache de l'appareil. L'état ne recule jamais : un paiement constaté ici
+  // (Stripe, via Make) reste affiché tant que le studio n'a pas fait avancer le suivi.
+  const mergeServer = (rawEmail, server) => {
     const email = emailOf(rawEmail);
-    if (!validEmail(email)) return { ok: false, error: "Indiquez un e-mail valide." };
-    if (password.length < 8) return { ok: false, error: "Huit caractères minimum." };
+    if (!validEmail(email) || !server) return;
     const db = read();
-    if (db.comptes[email]) return { ok: false, error: "Un compte existe déjà avec cet e-mail." };
-    db.comptes[email] = await hashPassword(password);
-    if (!db.projets[email]) db.projets[email] = emptyProject();
+    const current = db.projets[email] || emptyProject();
+    const rank = (id) => ETATS.findIndex((etat) => etat.id === id);
+    db.projets[email] = {
+      titre: String(server.titre || ""),
+      etat: rank(server.etat) >= rank(current.etat) ? server.etat || "brief" : current.etat,
+      delai: String(server.delai || ""),
+      factureNom: String(server.factureNom || ""),
+      facture: String(server.facture || ""),
+    };
     write(db);
-    sessionStorage.setItem(SESSION, email);
-    pushCommande(email, db.projets[email]);
-    return { ok: true, email };
   };
-
-  const login = async (rawEmail, password) => {
-    const email = emailOf(rawEmail);
-    const account = read().comptes[email];
-    if (!account || !(await verify(password, account.salt, account.hash))) {
-      return { ok: false, error: "E-mail ou mot de passe incorrect." };
-    }
-    sessionStorage.setItem(SESSION, email);
-    return { ok: true, email };
-  };
-
-  const sessionEmail = () => {
-    const email = sessionStorage.getItem(SESSION) || "";
-    return read().comptes[email] ? email : "";
-  };
-
-  const logout = () => sessionStorage.removeItem(SESSION);
 
   const projectFor = (email) => read().projets[emailOf(email)] || emptyProject();
 
@@ -157,26 +121,6 @@
       .map((email) => ({ email, ...db.projets[email], hasAccount: Boolean(db.comptes[email]) }));
   };
 
-  const atelierReady = () => Boolean(localStorage.getItem(GATE));
-
-  const setAtelierPassword = async (password) => {
-    if (password.length < 8) return { ok: false, error: "Huit caractères minimum." };
-    localStorage.setItem(GATE, JSON.stringify(await hashPassword(password)));
-    sessionStorage.setItem(GATE_SESSION, "1");
-    return { ok: true };
-  };
-
-  const unlockAtelier = async (password) => {
-    const gate = JSON.parse(localStorage.getItem(GATE) || "null");
-    if (!gate || !(await verify(password, gate.salt, gate.hash))) {
-      return { ok: false, error: "Mot de passe incorrect." };
-    }
-    sessionStorage.setItem(GATE_SESSION, "1");
-    return { ok: true };
-  };
-
-  const atelierOpen = () => sessionStorage.getItem(GATE_SESSION) === "1" && atelierReady();
-
   const bindMenu = () => {
     const menu = document.getElementById("menu");
     const menuBtn = document.querySelector(".menu-btn");
@@ -208,18 +152,13 @@
 
   window.ButtiCommande = {
     ETATS,
-    createAccount,
-    login,
     logout,
     sessionEmail,
+    mergeServer,
     projectFor,
     saveProject,
     setEtat,
     listProjects,
-    atelierReady,
-    setAtelierPassword,
-    unlockAtelier,
-    atelierOpen,
     validEmail,
   };
 })();

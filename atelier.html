@@ -28,16 +28,17 @@
     <main id="contenu" class="wrap order" tabindex="-1">
       <section id="atelier-gate">
         <p class="kicker">Studio</p>
-        <h1 class="order-title" id="gate-title">Protéger l’atelier<span class="dot">.</span></h1>
-        <p class="order-lede" id="gate-copy">Choisissez un mot de passe. Il reste dans ce navigateur.</p>
+        <h1 class="order-title" id="gate-title">Ouvrir l’atelier<span class="dot">.</span></h1>
+        <p class="order-lede" id="gate-copy">Saisissez l’adresse du studio : le lien de connexion y est envoyé.</p>
         <form class="brief order-form" id="atelier-gate-form">
           <label class="field full">
-            <span>Mot de passe atelier</span>
-            <input name="motdepasse" type="password" autocomplete="current-password" required />
+            <span>E-mail du studio</span>
+            <input name="email" type="email" autocomplete="username" inputmode="email" required />
           </label>
           <p class="field-error full" id="atelier-gate-error" hidden></p>
+          <p class="fine full" id="atelier-gate-status" role="status"></p>
           <div class="field full form-actions">
-            <button class="btn" type="submit">Enregistrer</button>
+            <button class="btn" type="submit">Recevoir le lien</button>
           </div>
         </form>
       </section>
@@ -46,7 +47,7 @@
         <p class="kicker">Studio</p>
         <h1 class="order-title">Atelier<span class="dot">.</span></h1>
         <p class="order-lede">
-          Déposez ici l’état, le délai et la facture. Le client les voit dans Mon compte, sur ce navigateur.
+          Déposez ici l’état, le délai et la facture. Le client les voit dans Mon compte, sur tous ses appareils.
         </p>
         <div id="atelier-list" class="atelier-list" aria-label="Commandes"></div>
         <form class="brief order-form" id="atelier-form">
@@ -79,7 +80,8 @@
         </form>
       </section>
     </main>
+    <script src="auth-client.js?v=phb1"></script>
     <script src="commande-store.js"></script>
-    <script src="atelier.js"></script>
+    <script src="atelier.js?v=phb1"></script>
   </body>
 </html>
