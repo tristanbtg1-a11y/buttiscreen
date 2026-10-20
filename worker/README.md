@@ -52,3 +52,12 @@ Le Worker `buttiscreen-contact` est relié à ce dépôt : Cloudflare le constru
 Réglages de la construction : branche de production `main`, dossier racine `worker`, commande de build vide, commande de déploiement `npx wrangler deploy`.
 Le secret `RESEND_API_KEY` se règle dans Cloudflare (Paramètres, Variables d'exécution et secrets), jamais dans le dépôt.
 `MAIL_TO` et `MAIL_FROM` restent dans `wrangler.toml`.
+
+## Accusé de réception au visiteur
+
+Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de réception qui reprend son brief (projet, e-mail, message). Les réponses du visiteur arrivent sur `MAIL_TO`.
+
+- **Désactivé tant qu'aucun KV `RATE` n'est lié** : un formulaire public ne doit pas pouvoir écrire à des tiers sans limite. Une fois lié, au plus un accusé par adresse et par jour, et cinq par IP et par heure.
+- L'accusé ne fait jamais échouer le brief : s'il échoue, le visiteur voit quand même « brief envoyé ».
+- `REPLY_DELAY` (défaut : « 48 heures ouvrées ») règle le délai annoncé ; `CONFIRMATION = "off"` coupe l'accusé.
+- Tests : `node --test worker/contact.test.mjs` (21 tests).
