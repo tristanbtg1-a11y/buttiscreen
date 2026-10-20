@@ -301,6 +301,50 @@ async function handleBriefQuote(request, env, id, allowed, reply) {
   return quoteReply(env, record.email, `ip:${ip}`, 30, allowed, reply);
 }
 
+// Dépôt de rushes : le Worker demande à Make l'espace d'envoi (Frame.io) pour l'adresse de la session.
+// Le navigateur envoie ensuite le fichier directement aux adresses fournies.
+const clean = (v, n) => String(v ?? "").replace(/[\u0000-\u001f\u007f/\\]+/g, " ").trim().slice(0, n);
+
+async function handleRushes(request, env, allowed, reply) {
+  const s = await sessionOf(request, env);
+  if (!s) return reply({ error: "session" }, 401, allowed);
+  if (!env.MAKE_PASSWORD) return reply({ error: "config" }, 503, allowed);
+  const { input: d, res } = await parse(request, 2000, reply, allowed);
+  if (res) return res;
+  const size = Number(d.size);
+  const stem = clean(d.stem, 120);
+  const ext = /^\.[A-Za-z0-9]{1,8}$/.test(String(d.ext || "")) ? String(d.ext) : "";
+  if (!Number.isInteger(size) || size < 1 || size > 100e9 || !stem) return reply({ error: "validation" }, 422, allowed);
+  if (env.RATE && !(await bump(env.RATE, `rs:${await sha256(s.token)}:${Math.floor(Date.now() / 3_600_000)}`, 120, 3600))) {
+    return reply({ error: "limite" }, 429, allowed);
+  }
+  const slug = /^[a-z0-9-]{1,60}$/.test(String(d.slug || ""))
+    ? String(d.slug)
+    : s.email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 60) || "client";
+  try {
+    const made = await fetch(MAKE_HOOK, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        action: "rushes",
+        email: s.email,
+        password: env.MAKE_PASSWORD,
+        nom: clean(d.nom, 120),
+        slug,
+        stem,
+        ext,
+        size: String(size),
+        type: clean(d.type, 100),
+      }),
+    });
+    const data = await made.json().catch(() => null);
+    if (!made.ok || !data || data.ok !== true) return reply({ ok: false }, 200, allowed);
+    return reply({ ok: true, name: data.name, type: data.type, parts: data.parts, file: data.file }, 200, allowed);
+  } catch {
+    return reply({ error: "make" }, 502, allowed);
+  }
+}
+
 async function handleList(request, env, allowed, reply) {
   const s = await sessionOf(request, env);
   if (!s || !isAdmin(env, s.email)) return reply({ error: "session" }, 401, allowed);
@@ -325,6 +369,7 @@ export async function handleAuth(request, env, ctx, allowed, path, reply) {
   if (m === "POST" && path === "/auth/verification") return handleVerify(request, env, allowed, reply);
   if (m === "POST" && path === "/auth/deconnexion") return handleLogout(request, env, allowed, reply);
   if (m === "GET" && path === "/moi") return handleMe(request, env, allowed, reply);
+  if (m === "POST" && path === "/moi/rushes") return handleRushes(request, env, allowed, reply);
   if (m === "GET" && path === "/moi/devis") return handleMyQuote(request, env, allowed, reply);
   if (m === "GET" && path.startsWith("/devis/")) return handleBriefQuote(request, env, path.slice("/devis/".length), allowed, reply);
   if (m === "POST" && path === "/admin/projet") return handleSave(request, env, allowed, reply);

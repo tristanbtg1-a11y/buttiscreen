@@ -319,3 +319,44 @@ test("devis du tunnel : l'identifiant du brief tient lieu de clé, un identifian
     q.restore();
   }
 });
+
+test("rushes : l'espace d'envoi est demandé à Make pour l'adresse de la session, entrées nettoyées", async () => {
+  const e = { ...env(), MAKE_PASSWORD: "pw" };
+  const client = (await login(e, "client@example.com")).json;
+  const q = quoteFetch({ ok: true, name: "c_rush_01_a.mov", type: "video/quicktime", parts: [{ url: "https://upload.example/1", size: 10 }], file: { data: { id: "f" } } });
+  try {
+    const res = await call("/moi/rushes", {
+      token: client.session,
+      body: { email: "autre@x.fr", nom: "Camille", slug: "camille", stem: "plan/../01\n", ext: ".mov", size: 10, type: "video/quicktime" },
+      e,
+    });
+    const body = await res.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.parts[0].url, "https://upload.example/1");
+    const sent = q.seen[0].body;
+    assert.equal(sent.action, "rushes");
+    assert.equal(sent.email, "client@example.com"); // jamais l'adresse fournie par le navigateur
+    assert.equal(sent.password, "pw");
+    assert.equal(sent.slug, "camille");
+    assert.equal(sent.stem.includes("/"), false);
+    assert.equal(sent.size, "10");
+  } finally {
+    q.restore();
+  }
+});
+
+test("rushes : sans session 401, entrée invalide 422, sans MAKE_PASSWORD 503, refus de Make renvoyé tel quel", async () => {
+  const e = { ...env(), MAKE_PASSWORD: "pw" };
+  const client = (await login(e, "client@example.com")).json;
+  assert.equal((await call("/moi/rushes", { body: { stem: "a", size: 1 }, e })).status, 401);
+  assert.equal((await call("/moi/rushes", { token: client.session, body: { stem: "a", size: 0 }, e })).status, 422);
+  assert.equal((await call("/moi/rushes", { token: client.session, body: { stem: "", size: 5 }, e })).status, 422);
+  assert.equal((await call("/moi/rushes", { token: client.session, body: { stem: "a", size: 5 }, e: { ...e, MAKE_PASSWORD: undefined } })).status, 503);
+  const q = quoteFetch({ ok: false });
+  try {
+    const res = await call("/moi/rushes", { token: client.session, body: { stem: "a", ext: ".mov", size: 5 }, e });
+    assert.deepEqual(await res.json(), { ok: false });
+  } finally {
+    q.restore();
+  }
+});
