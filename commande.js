@@ -69,12 +69,8 @@
     if (!pay) return;
     payEmail = email;
     try {
-      const response = await fetch(HOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "payer", email }),
-      });
-      const data = await response.json().catch(() => null);
+      const answer = await window.ButtiAuth.devis();
+      const data = answer.status === 200 ? answer.json : null;
       const amount = formatEuros(data && data.montant);
       receipt = data;
       paintSlip(data);

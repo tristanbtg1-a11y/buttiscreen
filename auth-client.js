@@ -93,6 +93,11 @@
     logout,
     saveProject: (body) => adminCall("/admin/projet", { method: "POST", body }),
     listProjects: () => adminCall("/admin/projets"),
+    devis: async () => {
+      const current = read();
+      return current ? call("/moi/devis", { auth: current.session }) : { status: 401, json: null };
+    },
+    devisByBrief: (id) => call(`/devis/${encodeURIComponent(id)}`),
     gestionToken: () => adminCall("/admin/gestion", { method: "POST", body: {} }),
   };
 })();

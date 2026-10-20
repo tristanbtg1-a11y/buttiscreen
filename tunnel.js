@@ -49,6 +49,8 @@
     return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(number);
   };
 
+  let briefId = Promise.resolve("");
+
   const lookupPay = async () => {
     const pay = document.getElementById("pay");
     const status = document.getElementById("pay-status");
@@ -61,12 +63,9 @@
       return;
     }
     try {
-      const response = await fetch(WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "payer", email }),
-      });
-      const data = await response.json().catch(() => null);
+      const id = await briefId;
+      const answer = id && window.ButtiAuth ? await window.ButtiAuth.devisByBrief(id) : { status: 0, json: null };
+      const data = answer.status === 200 ? answer.json : null;
       const amount = formatEuros(data && data.montant);
       if (stripeUrl(data && data.url)) {
         pay.href = data.url;
@@ -218,11 +217,14 @@
       cree: new Date().toISOString(),
       clef: `rdv-${slug}-${Date.now()}`,
     };
-    fetch("https://buttiscreen-contact.tristan-buttig1.workers.dev/tunnel", {
+    briefId = fetch("https://buttiscreen-contact.tristan-buttig1.workers.dev/tunnel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...store, website: "", t: Date.now() - 5000 }),
-    }).catch(() => {});
+    })
+      .then((response) => response.json())
+      .then((json) => String((json && json.id) || ""))
+      .catch(() => "");
     try {
       await fetch(WEBHOOK, {
         method: "POST",

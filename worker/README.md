@@ -83,3 +83,9 @@ Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de r�
 - `POST /admin/gestion` (session studio) : le Worker se connecte à Make avec `MAKE_PASSWORD` (secret du Worker) et renvoie le jeton de la gestion. `MAKE_OWNER_EMAIL` (défaut `tristan.buttig1@gmail.com`) est l'adresse du compte Make.
 - Sans `MAKE_PASSWORD` : 503, et la page gestion propose l'accès de secours par mot de passe.
 - Le lien de connexion peut viser la page `gestion` ou `atelier`, seulement pour les adresses de `ADMIN_EMAILS`.
+
+## Devis et paiement
+
+- `GET /moi/devis` (session client) et `GET /devis/<id du brief>` (visiteur du tunnel : l'identifiant aléatoire du brief qu'il vient d'envoyer tient lieu de clé) : le Worker interroge Make (`action: "payer"`) avec `MAKE_PASSWORD` et ne renvoie que les champs utiles (lien Stripe, montant, état, nom, projet, date, détail, règlement).
+- `POST /tunnel` renvoie l'identifiant du brief.
+- Une fois cette version en ligne, la route « payer » de Make peut exiger le mot de passe : le navigateur n'appelle plus Make pour le paiement.
