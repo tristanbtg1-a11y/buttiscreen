@@ -2037,6 +2037,41 @@ dialog#showreel::backdrop {
   min-width: 0;
 }
 
+.brief-card {
+  margin-top: 28px;
+  padding: 18px 18px 14px;
+  background: #100c18;
+  border: 1px solid rgba(247, 244, 239, 0.16);
+  border-left: 3px solid var(--ember);
+  min-width: 0;
+}
+
+.brief-card[hidden] {
+  display: none;
+}
+
+.brief-card-title {
+  margin: 6px 0 0;
+  font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.brief-facts {
+  margin-top: 14px;
+}
+
+.brief-message {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  background: rgba(247, 244, 239, 0.05);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  letter-spacing: -0.02em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .rush-box {
   margin-top: 28px;
 }

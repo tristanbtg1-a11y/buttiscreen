@@ -590,6 +590,12 @@
       sendBtn.textContent = label;
     }
     if (ok) {
+      window.ButtiBrief?.save({
+        nom: data.get("nom"),
+        email: data.get("email"),
+        projet: data.get("projet"),
+        message: data.get("message"),
+      });
       showSuccess(true);
     } else {
       const fail = document.getElementById("fail-mail");

@@ -209,6 +209,7 @@
   document.getElementById("send-brief")?.addEventListener("click", async () => {
     const status = document.getElementById("send-status");
     const slug = String(store.email || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    window.ButtiBrief?.save(store);
     const payload = {
       ...store,
       studio: "BUTTISCREEN",

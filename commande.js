@@ -182,6 +182,29 @@
     slip.hidden = false;
   };
 
+  const paintBrief = (email) => {
+    const card = document.getElementById("brief-card");
+    if (!card) return;
+    const brief = window.ButtiBrief && window.ButtiBrief.latestFor(email);
+    if (!brief) {
+      card.hidden = true;
+      return;
+    }
+    const rows = [["Projet", brief.projet]];
+    if (brief.duree) rows.push(["Durée", brief.duree]);
+    if (brief.diffusion) rows.push(["Diffusion", brief.diffusion]);
+    if (brief.creneau) rows.push(["Créneau", brief.creneau]);
+    const sent = dateLong(brief.cree);
+    if (sent) rows.push(["Envoyé le", sent]);
+    document.getElementById("brief-card-title").textContent = brief.nom ? `Brief de ${brief.nom}` : "Brief envoyé";
+    document.getElementById("brief-facts").innerHTML = rows
+      .filter(([, value]) => value)
+      .map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`)
+      .join("");
+    document.getElementById("brief-message").textContent = brief.message || "";
+    card.hidden = false;
+  };
+
   const formatDelai = (iso) => {
     if (!iso) return "À confirmer";
     const [year, month, day] = iso.split("-").map(Number);
@@ -483,6 +506,7 @@
       rail.append(item);
     });
     paintPayment();
+    paintBrief(email);
     auth.hidden = true;
     board.hidden = false;
     if (!quiet) {

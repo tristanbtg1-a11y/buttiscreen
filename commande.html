@@ -113,6 +113,13 @@
 
       <section id="board" hidden tabindex="-1" aria-labelledby="board-title">
         <p class="kicker" id="board-email"></p>
+        <article class="brief-card" id="brief-card" hidden aria-labelledby="brief-card-title">
+          <p class="kicker">Votre brief</p>
+          <h2 class="brief-card-title" id="brief-card-title"></h2>
+          <dl class="order-facts brief-facts" id="brief-facts"></dl>
+          <p class="brief-message" id="brief-message"></p>
+          <p class="fine" id="brief-note">Une copie de ce brief reste dans ce navigateur. Pour le compléter, répondez à l’accusé de réception ou écrivez à <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.</p>
+        </article>
         <article class="order-slip" id="order-slip" hidden>
           <p class="kicker">Référence</p>
           <p class="order-ref" id="order-ref"></p>
@@ -197,6 +204,7 @@
         <ul class="rush-library" id="rush-library-list"></ul>
       </div>
     </dialog>
-    <script src="commande.js?v=jeton"></script>
+    <script src="brief-memo.js?v=brief1"></script>
+    <script src="commande.js?v=brief1"></script>
   </body>
 </html>
