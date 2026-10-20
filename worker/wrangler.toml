@@ -8,10 +8,9 @@ MAIL_FROM = "Buttiscreen <brief@buttiscreen.fr>"
 
 # Secret à définir hors du dépôt : npx wrangler secret put RESEND_API_KEY
 
-# Accusé de réception au visiteur : actif seulement quand ce KV est lié (limite par adresse et par IP).
-# Créer l'espace de stockage, puis décommenter en remplaçant l'identifiant :
-# [[kv_namespaces]]
-# binding = "RATE"
-# id = "<identifiant du KV>"
+# Accusé de réception au visiteur : actif parce que ce KV est lié (limite par adresse et par IP).
+[[kv_namespaces]]
+binding = "RATE"
+id = "e286dba411574f068c0189476c39e0ad"
 # REPLY_DELAY règle le délai annoncé dans l'accusé ; CONFIRMATION = "off" coupe l'accusé.
 # REPLY_DELAY = "48 heures ouvrées"
