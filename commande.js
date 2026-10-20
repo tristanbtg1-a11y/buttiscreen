@@ -464,21 +464,15 @@
     state.textContent = "Envoi";
     let data = null;
     try {
-      const response = await fetch(HOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "rushes",
-          email,
-          nom: document.getElementById("rush-box").dataset.nom || "",
-          slug,
-          stem,
-          ext,
-          size: file.size,
-          type,
-        }),
+      const answer = await window.ButtiAuth.rushes({
+        nom: document.getElementById("rush-box").dataset.nom || "",
+        slug,
+        stem,
+        ext,
+        size: file.size,
+        type,
       });
-      data = await response.json();
+      data = answer.json;
     } catch {
       state.textContent = "Échec";
       return false;

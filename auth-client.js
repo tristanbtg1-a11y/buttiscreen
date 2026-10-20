@@ -97,6 +97,10 @@
       const current = read();
       return current ? call("/moi/devis", { auth: current.session }) : { status: 401, json: null };
     },
+    rushes: async (body) => {
+      const current = read();
+      return current ? call("/moi/rushes", { method: "POST", body, auth: current.session }) : { status: 401, json: null };
+    },
     devisByBrief: (id) => call(`/devis/${encodeURIComponent(id)}`),
     gestionToken: () => adminCall("/admin/gestion", { method: "POST", body: {} }),
   };

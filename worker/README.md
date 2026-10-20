@@ -89,3 +89,7 @@ Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de r�
 - `GET /moi/devis` (session client) et `GET /devis/<id du brief>` (visiteur du tunnel : l'identifiant aléatoire du brief qu'il vient d'envoyer tient lieu de clé) : le Worker interroge Make (`action: "payer"`) avec `MAKE_PASSWORD` et ne renvoie que les champs utiles (lien Stripe, montant, état, nom, projet, date, détail, règlement).
 - `POST /tunnel` renvoie l'identifiant du brief.
 - Une fois cette version en ligne, la route « payer » de Make peut exiger le mot de passe : le navigateur n'appelle plus Make pour le paiement.
+
+## Rushes
+
+- `POST /moi/rushes` (session client) : le Worker demande à Make l'espace d'envoi Frame.io pour l'adresse de la session (jamais celle envoyée par le navigateur), avec `MAKE_PASSWORD`. Noms de fichier nettoyés, taille bornée, 120 demandes par session et par heure. Le navigateur envoie ensuite les fichiers directement aux adresses renvoyées.
