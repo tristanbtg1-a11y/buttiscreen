@@ -455,6 +455,57 @@ test("clôture à la main : statut close chez Make, conservé aux enregistrement
   }
 });
 
+const PDF = (n) => ({ facture: "data:application/pdf;base64,JVBERi0" + n, factureNom: `facture-${n}.pdf` });
+
+test("factures : historique conservé, e-mail au client sur demande, PDF relisible par le studio seul", async () => {
+  const e = makeEnv();
+  const admin = (await login(e, "tristan@buttiscreen.fr", "atelier")).json;
+  const client = (await login(e, "c@x.fr")).json;
+  const f = bothFetch();
+  try {
+    const post = (body) => call("/admin/projet", { token: admin.session, body: { email: "c@x.fr", ...body }, e });
+    const first = await (await post({ titre: "Film", ...PDF(1), notifier: true })).json();
+    assert.equal(first.mailed, true);
+    const mail = f.resend.find((m) => /facture est disponible/.test(m.subject || ""));
+    assert.deepEqual(mail.to, ["c@x.fr"]);
+    assert.match(mail.text, /commande\.html/);
+    assert.equal(mail.attachments, undefined); // le PDF reste dans Mon compte, jamais en pièce jointe
+    const second = await (await post({ ...PDF(2) })).json();
+    assert.equal(second.mailed, false); // pas de case cochée, pas d'e-mail
+    assert.equal(f.resend.filter((m) => /facture est disponible/.test(m.subject || "")).length, 1);
+    await post({ facture: "", factureNom: "" }); // une facture déposée ne se retire pas
+    const list = await (await call("/admin/factures", { method: "GET", token: admin.session, e })).json();
+    assert.deepEqual(list.factures.map((x) => x.nom), ["facture-2.pdf", "facture-1.pdf"]);
+    assert.equal(list.factures[0].email, "c@x.fr");
+    assert.equal(list.factures[0].titre, "Film");
+    assert.equal(list.factures[0].data, undefined); // la liste ne porte pas les PDF
+    const pdf = await (await call(`/admin/facture/${list.factures[1].id}`, { method: "GET", token: admin.session, e })).json();
+    assert.equal(pdf.data, "data:application/pdf;base64,JVBERi01");
+    const me = await (await call("/moi", { method: "GET", token: client.session, e })).json();
+    assert.equal(me.projet.factureNom, "facture-2.pdf"); // Mon compte propose la dernière
+    assert.equal((await call("/admin/factures", { method: "GET", token: client.session, e })).status, 401);
+    assert.equal((await call(`/admin/facture/${list.factures[0].id}`, { method: "GET", token: client.session, e })).status, 401);
+    assert.equal((await call("/admin/facture/pas-un-id", { method: "GET", token: admin.session, e })).status, 404);
+  } finally {
+    f.restore();
+  }
+});
+
+test("factures : celles déposées avant l'historique y entrent une seule fois", async () => {
+  const e = makeEnv();
+  const admin = (await login(e, "tristan@buttiscreen.fr", "atelier")).json;
+  const hash = async (v) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  await e.BRIEFS.put("pidx", JSON.stringify(["vieux@x.fr", "sans@x.fr"]));
+  await e.BRIEFS.put(`p:${await hash("vieux@x.fr")}`, JSON.stringify({ titre: "Ancien", etat: "livraison", facture: "data:application/pdf;base64,AAAA", factureNom: "ancienne.pdf", maj: "2026-09-01T10:00:00.000Z" }));
+  await e.BRIEFS.put(`p:${await hash("sans@x.fr")}`, JSON.stringify({ titre: "Rien", etat: "brief", maj: "2026-09-02T10:00:00.000Z" }));
+  const get = async () => (await (await call("/admin/factures", { method: "GET", token: admin.session, e })).json()).factures;
+  const once = await get();
+  assert.equal(once.length, 1);
+  assert.equal(once[0].nom, "ancienne.pdf");
+  assert.equal(once[0].email, "vieux@x.fr");
+  assert.deepEqual((await get()).map((x) => x.id), once.map((x) => x.id)); // pas de doublon à la lecture suivante
+});
+
 test("première connexion client : mail au studio, fiche créée seulement si la gestion ne la connaît pas", async () => {
   const e = makeEnv();
   const f = bothFetch({ login: { ok: true, token: "T" }, list: { ok: true, items: [] } });

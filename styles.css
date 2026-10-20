@@ -2512,6 +2512,150 @@ dialog#final-pay-dialog::backdrop {
   text-underline-offset: 0.2em;
 }
 
+.check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ember);
+}
+
+.check span {
+  color: #cbb9dc;
+  font-size: 0.95rem;
+}
+
+.factures {
+  margin-top: 40px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.factures summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  font-family: var(--font-m);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+}
+
+.factures summary::-webkit-details-marker {
+  display: none;
+}
+
+.factures summary::after {
+  content: "+";
+  font-size: 20px;
+  color: var(--ember);
+}
+
+.factures[open] summary::after {
+  content: "−";
+}
+
+.factures-body {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 20px;
+}
+
+.factures-search {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.factures-scroll {
+  max-height: 360px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  scrollbar-width: thin;
+}
+
+.factures-scroll:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+
+.factures-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.factures-list li {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.95rem;
+}
+
+.factures-list li:last-child {
+  border-bottom: 0;
+}
+
+.factures-list time,
+.factures-file,
+.factures-who small {
+  color: var(--muted);
+  font-family: var(--font-m);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.factures-who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.factures-who strong {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.factures-list .btn {
+  width: auto;
+  min-height: 40px;
+}
+
+@media (max-width: 700px) {
+  .factures-list li {
+    grid-template-columns: 1fr auto;
+  }
+
+  .factures-list time,
+  .factures-who,
+  .factures-file {
+    grid-column: 1;
+  }
+
+  .factures-list .btn {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+}
+
 .atelier-list {
   display: grid;
   gap: 8px;

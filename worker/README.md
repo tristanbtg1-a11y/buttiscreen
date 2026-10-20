@@ -86,6 +86,8 @@ Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de r�
 
 ## Devis et paiement
 
+- Historique des factures : chaque PDF déposé par `POST /admin/projet` est gardé à part (`f:<id>`), avec un index de métadonnées (`fidx`, 1000 entrées au plus). `GET /admin/factures` renvoie la liste sans les PDF, `GET /admin/facture/<id>` un PDF, tous deux réservés aux adresses du studio. Une facture déposée ne se supprime pas : une erreur se corrige par un nouveau dépôt. Avec `notifier: true`, le client reçoit un e-mail « Votre facture est disponible » (lien vers Mon compte, jamais de pièce jointe) ; la réponse indique `mailed`. Les factures déposées avant l'historique y entrent à la première lecture.
+- Clôture : `clos: true` sur `POST /admin/projet` archive le dossier (statut `close` chez Make) sans toucher à l'état vu par le client.
 - `GET /moi/devis` (session client) et `GET /devis/<id du brief>` (visiteur du tunnel : l'identifiant aléatoire du brief qu'il vient d'envoyer tient lieu de clé) : le Worker interroge Make (`action: "payer"`) avec `MAKE_PASSWORD` et ne renvoie que les champs utiles (lien Stripe, montant, état, nom, projet, date, détail, règlement).
 - `POST /tunnel` renvoie l'identifiant du brief.
 - Une fois cette version en ligne, la route « payer » de Make peut exiger le mot de passe : le navigateur n'appelle plus Make pour le paiement.

@@ -9,7 +9,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=fact1" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -47,7 +47,7 @@
         <p class="kicker">Studio</p>
         <h1 class="order-title">Atelier<span class="dot">.</span></h1>
         <p class="order-lede">
-          Déposez ici l’état, le délai et la facture. Le client les voit dans Mon compte, sur tous ses appareils.
+          Déposez ici l’état, le délai et la facture. Le client les voit dans Mon compte, sur tous ses appareils. Chaque facture déposée est conservée dans l’historique ci-dessous.
         </p>
         <div id="atelier-list" class="atelier-list" aria-label="Commandes"></div>
         <form class="brief order-form" id="atelier-form">
@@ -71,17 +71,33 @@
             <span>Facture PDF</span>
             <input name="facture" type="file" accept="application/pdf,.pdf" />
           </label>
+          <label class="check full">
+            <input name="notifier" type="checkbox" checked />
+            <span>Prévenir le client par e-mail quand je dépose une facture</span>
+          </label>
           <p class="field-error full" id="atelier-error" hidden></p>
           <p class="fine full" id="atelier-saved" hidden></p>
           <div class="field full form-actions">
             <button class="btn" type="submit">Enregistrer le suivi</button>
-            <button class="btn ghost" type="button" id="clear-file">Retirer la facture</button>
           </div>
         </form>
+
+        <details class="factures" id="factures">
+          <summary id="factures-summary">Factures envoyées</summary>
+          <div class="factures-body">
+            <label class="sr-only" for="factures-search">Rechercher une facture</label>
+            <input class="factures-search" id="factures-search" type="search" placeholder="Rechercher un client, un projet, un fichier" autocomplete="off" />
+            <div class="factures-scroll" id="factures-scroll" tabindex="0" role="region" aria-label="Liste des factures envoyées">
+              <ol class="factures-list" id="factures-list"></ol>
+            </div>
+            <p class="fine" id="factures-empty" hidden></p>
+            <button class="btn ghost" type="button" id="factures-more" hidden>Voir plus</button>
+          </div>
+        </details>
       </section>
     </main>
-    <script src="auth-client.js?v=phb3"></script>
+    <script src="auth-client.js?v=fact1"></script>
     <script src="commande-store.js?v=phb3"></script>
-    <script src="atelier.js?v=phb2"></script>
+    <script src="atelier.js?v=fact1"></script>
   </body>
 </html>

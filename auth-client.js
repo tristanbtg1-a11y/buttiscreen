@@ -93,6 +93,8 @@
     logout,
     saveProject: (body) => adminCall("/admin/projet", { method: "POST", body }),
     listProjects: () => adminCall("/admin/projets"),
+    listInvoices: () => adminCall("/admin/factures"),
+    invoice: (id) => adminCall(`/admin/facture/${encodeURIComponent(id)}`),
     devis: async () => {
       const current = read();
       return current ? call("/moi/devis", { auth: current.session }) : { status: 401, json: null };
