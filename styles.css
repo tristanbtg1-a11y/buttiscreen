@@ -4460,3 +4460,21 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
   position: absolute;
   left: -9999px;
 }
+
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+#studio-field input {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f1fa;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.75rem;
+}
