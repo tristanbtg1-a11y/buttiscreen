@@ -10,9 +10,7 @@
   const list = document.getElementById("atelier-list");
   const etat = form.querySelector('[name="etat"]');
   const file = form.querySelector('[name="facture"]');
-  const clearFile = document.getElementById("clear-file");
-
-  let keepFacture = null;
+  const notifier = form.querySelector('[name="notifier"]');
 
   store.ETATS.forEach((item) => {
     const option = document.createElement("option");
@@ -28,7 +26,7 @@
   const showDesk = async () => {
     gate.hidden = true;
     desk.hidden = false;
-    await renderList();
+    await Promise.all([renderList(), renderInvoices()]);
   };
 
   const showGate = (message) => {
@@ -69,16 +67,118 @@
     form.titre.value = project.titre || "";
     form.etat.value = project.etat || "brief";
     form.delai.value = project.delai || "";
-    keepFacture = null;
     file.value = "";
     saved.hidden = true;
     formError.hidden = true;
     if (project.hasFacture) {
       saved.hidden = false;
-      saved.textContent = `Facture en ligne : ${project.factureNom || "facture.pdf"}. Elle est conservée sauf si vous en choisissez une autre.`;
+      saved.textContent = `Dernière facture en ligne : ${project.factureNom || "facture.pdf"}. Elle reste dans l’historique ; une nouvelle facture s’y ajoute sans la remplacer.`;
     }
     form.titre.focus();
   };
+
+  // Historique des factures : les plus récentes d'abord, filtrable, par pages de 50.
+  const PAGE = 50;
+  const factures = document.getElementById("factures");
+  const facturesSummary = document.getElementById("factures-summary");
+  const facturesList = document.getElementById("factures-list");
+  const facturesEmpty = document.getElementById("factures-empty");
+  const facturesMore = document.getElementById("factures-more");
+  const facturesSearch = document.getElementById("factures-search");
+  let invoices = [];
+  let shown = PAGE;
+
+  const invoiceDate = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeZone: "Europe/Paris" }).format(date);
+  };
+
+  const invoiceSize = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} Mo` : `${Math.max(1, Math.round(bytes / 1024))} Ko`);
+
+  const saveInvoice = async (entry, button) => {
+    button.disabled = true;
+    const result = await auth.invoice(entry.id);
+    button.disabled = false;
+    if (result.status === 401) {
+      await auth.logout();
+      showGate("La session a expiré. Recevez un nouveau lien.");
+      return;
+    }
+    if (!(result.json && result.json.ok && result.json.data)) {
+      button.textContent = "Indisponible";
+      return;
+    }
+    const link = document.createElement("a");
+    link.href = result.json.data;
+    link.download = result.json.nom || entry.nom || "facture.pdf";
+    document.body.append(link);
+    link.click();
+    link.remove();
+  };
+
+  const paintInvoices = () => {
+    const needle = facturesSearch.value.trim().toLowerCase();
+    const rows = invoices.filter((entry) =>
+      !needle || [entry.email, entry.titre, entry.nom].some((value) => String(value || "").toLowerCase().includes(needle))
+    );
+    facturesList.innerHTML = "";
+    rows.slice(0, shown).forEach((entry) => {
+      const item = document.createElement("li");
+      const when = document.createElement("time");
+      when.dateTime = entry.cree || "";
+      when.textContent = invoiceDate(entry.cree);
+      const who = document.createElement("span");
+      who.className = "factures-who";
+      const mail = document.createElement("strong");
+      mail.textContent = entry.email;
+      const project = document.createElement("small");
+      project.textContent = entry.titre || "Projet sans titre";
+      who.append(mail, project);
+      const name = document.createElement("span");
+      name.className = "factures-file";
+      name.textContent = `${entry.nom} · ${invoiceSize(entry.taille)}`;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "btn ghost";
+      button.textContent = "Télécharger";
+      button.setAttribute("aria-label", `Télécharger ${entry.nom} (${entry.email})`);
+      button.addEventListener("click", () => saveInvoice(entry, button));
+      item.append(when, who, name, button);
+      facturesList.append(item);
+    });
+    facturesMore.hidden = rows.length <= shown;
+    facturesEmpty.hidden = rows.length > 0;
+    facturesEmpty.textContent = invoices.length ? "Aucune facture ne correspond à cette recherche." : "Aucune facture déposée pour l’instant.";
+  };
+
+  const renderInvoices = async () => {
+    const result = await auth.listInvoices();
+    if (result.status === 401) {
+      await auth.logout();
+      showGate("La session a expiré. Recevez un nouveau lien.");
+      return;
+    }
+    if (!(result.json && result.json.ok)) {
+      facturesSummary.textContent = "Factures envoyées";
+      facturesEmpty.hidden = false;
+      facturesEmpty.textContent = "L’historique n’a pas pu être chargé. Réessayez dans un instant.";
+      return;
+    }
+    invoices = result.json.factures || [];
+    facturesSummary.textContent = `Factures envoyées (${invoices.length})`;
+    shown = PAGE;
+    paintInvoices();
+  };
+
+  facturesSearch.addEventListener("input", () => {
+    shown = PAGE;
+    paintInvoices();
+  });
+  facturesMore.addEventListener("click", () => {
+    shown += PAGE;
+    paintInvoices();
+  });
 
   gateForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -99,16 +199,6 @@
       "Si cette adresse est celle du studio, un lien de connexion vient de partir. Il est valable 15 minutes.";
   });
 
-  file.addEventListener("change", () => {
-    keepFacture = null;
-  });
-
-  clearFile.addEventListener("click", () => {
-    keepFacture = { facture: "", factureNom: "" };
-    file.value = "";
-    saved.hidden = true;
-  });
-
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
@@ -123,7 +213,7 @@
       formError.textContent = "Le PDF dépasse 2 Mo.";
       return;
     }
-    let facture = keepFacture;
+    let facture = null;
     if (chosen) {
       facture = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -141,6 +231,7 @@
     if (facture) {
       body.facture = facture.facture;
       body.factureNom = facture.factureNom;
+      body.notifier = notifier.checked;
     }
     if (!store.validEmail(body.email)) {
       formError.hidden = false;
@@ -157,9 +248,14 @@
     formError.hidden = ok;
     formError.textContent = ok ? "" : "L’enregistrement n’a pas abouti. Réessayez dans un instant.";
     saved.hidden = !ok;
-    saved.textContent = ok ? "Suivi enregistré. Le client le voit en se connectant, sur n’importe quel appareil." : "";
     if (ok) {
-      await renderList();
+      const sent = Boolean(facture);
+      const mail = !sent ? "" : result.json.mailed ? " Le client a reçu un e-mail." : notifier.checked ? " L’e-mail au client n’a pas pu partir." : "";
+      saved.textContent = `${sent ? "Facture et suivi enregistrés." : "Suivi enregistré."} Le client le voit en se connectant, sur n’importe quel appareil.${mail}`;
+      file.value = "";
+      await Promise.all([renderList(), renderInvoices()]);
+    } else {
+      saved.textContent = "";
     }
   });
 

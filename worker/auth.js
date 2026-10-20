@@ -10,6 +10,7 @@ const ADMIN_SESSION_TTL = 12 * 3600;
 const MIN_FILL_MS = 2500;
 const ETATS = ["brief", "preparation", "montage", "etalonnage", "livraison"];
 const MAX_FACTURE = 2_900_000;
+const MAX_INDEX = 1000;
 const PAGES = { commande: "commande.html", atelier: "atelier.html", gestion: "gestion.html" };
 const MAKE_HOOK = "https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3";
 
@@ -65,6 +66,54 @@ export function buildLoginMail(email, token, page, env) {
       `<tr><td style="padding:18px 28px 28px;border-top:1px solid #e6e2ef;font:12px/1.6 Helvetica,Arial,sans-serif;color:#7a7488">Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : personne ne peut entrer sans ce lien.<br>BUTTISCREEN · Studio de montage vidéo · Paris · <a href="${esc(SITE)}" style="color:#7a7488">buttiscreen.fr</a></td></tr></table></td></tr></table>`,
     headers: { "Auto-Submitted": "auto-replied" },
   };
+}
+
+export function buildInvoiceMail(email, titre, env) {
+  const contact = env.MAIL_TO || "contact@buttiscreen.fr";
+  const url = `${SITE}/commande.html`;
+  const projet = titre ? ` pour « ${titre} »` : "";
+  return {
+    from: env.MAIL_FROM || "Buttiscreen <brief@buttiscreen.fr>",
+    to: [email],
+    reply_to: contact,
+    subject: "Votre facture est disponible — BUTTISCREEN",
+    text: [
+      "Bonjour,",
+      "",
+      `Votre facture${projet} vient d'être déposée dans votre espace Mon compte. Vous pouvez la télécharger à tout moment :`,
+      "",
+      url,
+      "",
+      "Connectez-vous avec votre adresse e-mail : un lien de connexion vous est envoyé.",
+      "",
+      "BUTTISCREEN · Studio de montage vidéo · Paris",
+      SITE,
+    ].join("\n"),
+    html:
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#efedf3"><tr><td align="center" style="padding:24px 12px">` +
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff"><tr><td style="background:#07060d;padding:20px 28px;border-bottom:3px solid #ff6a00">` +
+      `<img src="${SITE}/logo-mail.png" width="44" height="44" alt="" style="display:inline-block;vertical-align:middle;border:0"><span style="display:inline-block;vertical-align:middle;margin-left:14px;color:#f4f1fa;font:600 15px Helvetica,Arial,sans-serif;letter-spacing:3px">BUTTISCREEN</span></td></tr>` +
+      `<tr><td style="padding:32px 28px 8px;font-family:Helvetica,Arial,sans-serif;color:#1b1826"><p style="margin:0 0 18px;font-size:16px">Bonjour,</p>` +
+      `<h1 style="margin:0 0 14px;font:600 22px Georgia,'Times New Roman',serif;color:#07060d">Votre facture est disponible.</h1>` +
+      `<p style="margin:0 0 24px;font-size:15px;line-height:1.6">Elle vient d’être déposée${esc(projet)} dans votre espace Mon compte, où vous pouvez la télécharger à tout moment.</p>` +
+      `<p style="margin:0 0 28px"><a href="${esc(url)}" style="display:inline-block;padding:12px 22px;background:#ff6a00;color:#07060d;text-decoration:none;font:600 14px Helvetica,Arial,sans-serif">Ouvrir Mon compte</a></p></td></tr>` +
+      `<tr><td style="padding:18px 28px 28px;border-top:1px solid #e6e2ef;font:12px/1.6 Helvetica,Arial,sans-serif;color:#7a7488">Connectez-vous avec votre adresse e-mail : un lien de connexion vous est envoyé.<br>BUTTISCREEN · Studio de montage vidéo · Paris · <a href="${esc(SITE)}" style="color:#7a7488">buttiscreen.fr</a></td></tr></table></td></tr></table>`,
+    headers: { "Auto-Submitted": "auto-generated" },
+  };
+}
+
+async function sendInvoiceMail(env, email, titre) {
+  if (!env.RESEND_API_KEY) return false;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify(buildInvoiceMail(email, titre, env)),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 const slugOf = (email) => String(email).toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -276,6 +325,61 @@ const readIndex = async (env) => {
   }
 };
 
+// Historique des factures : le PDF vit dans « f:<id> », l'index « fidx » ne garde que les métadonnées.
+// Une facture déposée n'est jamais effacée : une erreur se corrige par un nouveau dépôt.
+const sizeOf = (data) => Math.round((String(data).length * 3) / 4);
+
+async function readInvoices(env) {
+  const raw = await env.BRIEFS.get("fidx");
+  if (raw !== null) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  // Première lecture : les factures déposées avant l'historique y entrent une fois.
+  const found = [];
+  for (const email of await readIndex(env)) {
+    const p = await readProject(env, email);
+    if (!p.facture) continue;
+    const id = randomToken();
+    await env.BRIEFS.put(`f:${id}`, JSON.stringify({ email, nom: p.factureNom, data: p.facture, cree: p.maj }));
+    found.push({ id, email, titre: p.titre, nom: p.factureNom || "facture.pdf", cree: p.maj, taille: sizeOf(p.facture) });
+  }
+  found.sort((a, b) => String(b.cree).localeCompare(String(a.cree)));
+  await env.BRIEFS.put("fidx", JSON.stringify(found.slice(0, MAX_INDEX)));
+  return found;
+}
+
+async function addInvoice(env, email, titre, nom, data, cree) {
+  const index = await readInvoices(env);
+  const id = randomToken();
+  await env.BRIEFS.put(`f:${id}`, JSON.stringify({ email, nom, data, cree }));
+  const entry = { id, email, titre, nom, cree, taille: sizeOf(data) };
+  await env.BRIEFS.put("fidx", JSON.stringify([entry, ...index].slice(0, MAX_INDEX)));
+  return entry;
+}
+
+async function handleInvoices(request, env, allowed, reply) {
+  const s = await sessionOf(request, env);
+  if (!s || !isAdmin(env, s.email)) return reply({ error: "session" }, 401, allowed);
+  return reply({ ok: true, factures: await readInvoices(env) }, 200, allowed);
+}
+
+async function handleInvoice(request, env, id, allowed, reply) {
+  const s = await sessionOf(request, env);
+  if (!s || !isAdmin(env, s.email)) return reply({ error: "session" }, 401, allowed);
+  if (!TOKEN_RE.test(id)) return reply({ error: "introuvable" }, 404, allowed);
+  try {
+    const f = JSON.parse((await env.BRIEFS.get(`f:${id}`)) || "null");
+    if (!f) return reply({ error: "introuvable" }, 404, allowed);
+    return reply({ ok: true, nom: f.nom, data: f.data }, 200, allowed);
+  } catch {
+    return reply({ error: "introuvable" }, 404, allowed);
+  }
+}
+
 // Écriture du suivi : réservée aux adresses du studio (ADMIN_EMAILS), vérifiée à chaque appel.
 async function handleSave(request, env, allowed, reply) {
   const s = await sessionOf(request, env);
@@ -293,20 +397,23 @@ async function handleSave(request, env, allowed, reply) {
   }
   if (d.delai !== undefined) next.delai = oneLine(d.delai).slice(0, 40);
   if (d.clos !== undefined) next.clos = d.clos === true; // dossier clôturé à la main : archivé, jamais effacé
-  if (d.facture !== undefined) {
-    const f = String(d.facture);
-    if (f && (!f.startsWith("data:application/pdf;base64,") || f.length > MAX_FACTURE)) {
+  let depot = null;
+  const f = d.facture === undefined ? "" : String(d.facture);
+  if (f) {
+    if (!f.startsWith("data:application/pdf;base64,") || f.length > MAX_FACTURE) {
       return reply({ error: "facture" }, 422, allowed);
     }
-    next.facture = f;
-    next.factureNom = f ? oneLine(d.factureNom).slice(0, 120) : "";
+    next.facture = f; // dernière facture : c'est celle que Mon compte propose
+    next.factureNom = oneLine(d.factureNom).slice(0, 120) || "facture.pdf";
   }
   next.maj = new Date().toISOString();
+  if (f) depot = await addInvoice(env, email, next.titre, next.factureNom, f, next.maj);
   await env.BRIEFS.put(`p:${await sha256(email)}`, JSON.stringify(next));
   const idx = await readIndex(env);
   if (!idx.includes(email)) await env.BRIEFS.put("pidx", JSON.stringify([email, ...idx].slice(0, 500)));
   await pushCommande(env, email, next);
-  return reply({ ok: true, projet: { ...next, facture: undefined, hasFacture: Boolean(next.facture) } }, 200, allowed);
+  const mailed = depot && d.notifier === true ? await sendInvoiceMail(env, email, next.titre) : false;
+  return reply({ ok: true, mailed, facture: depot, projet: { ...next, facture: undefined, hasFacture: Boolean(next.facture) } }, 200, allowed);
 }
 
 // Ouvre la gestion avec la session studio : le Worker se connecte à Make à la place du studio.
@@ -462,5 +569,7 @@ export async function handleAuth(request, env, ctx, allowed, path, reply) {
   if (m === "POST" && path === "/admin/projet") return handleSave(request, env, allowed, reply);
   if (m === "POST" && path === "/admin/gestion") return handleGestion(request, env, allowed, reply);
   if (m === "GET" && path === "/admin/projets") return handleList(request, env, allowed, reply);
+  if (m === "GET" && path === "/admin/factures") return handleInvoices(request, env, allowed, reply);
+  if (m === "GET" && path.startsWith("/admin/facture/")) return handleInvoice(request, env, path.slice("/admin/facture/".length), allowed, reply);
   return reply({ error: "method" }, 405, allowed);
 }
