@@ -3214,6 +3214,34 @@ dialog#final-pay-dialog::backdrop {
   padding: 16px 0 18px;
 }
 
+.gestion-card.has-close {
+  position: relative;
+  padding-right: 52px;
+}
+
+.gestion-close {
+  position: absolute;
+  top: 12px;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.gestion-close:hover,
+.gestion-close:focus-visible {
+  color: var(--ember);
+  border-color: var(--ember);
+}
+
 .gestion-card h3 {
   margin: 0 0 6px;
   font-size: clamp(1.35rem, 2vw, 1.8rem);
