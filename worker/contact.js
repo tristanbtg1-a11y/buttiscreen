@@ -2,6 +2,7 @@
 // Variables : RESEND_API_KEY (secret), MAIL_TO, MAIL_FROM, ALLOWED_ORIGINS (facultatif, séparées par des virgules).
 // Accusé de réception au visiteur : actif seulement si le KV « RATE » est lié (limite par adresse et par IP).
 // REPLY_DELAY règle le délai annoncé, CONFIRMATION="off" coupe l'accusé.
+// Copie du brief consultable depuis n'importe quel appareil : KV « BRIEFS », 90 jours, accès par lien personnel.
 
 const MAX = { nom: 120, email: 254, projet: 60, message: 6000 };
 const PROJETS = ["Spot / publicité", "Clip", "Film / documentaire", "Réseaux sociaux", "Étalonnage seul", "Autre"];
@@ -9,6 +10,8 @@ const MIN_FILL_MS = 2500;
 const DEFAULT_DELAY = "48 heures ouvrées";
 const SITE = "https://buttiscreen.fr";
 const PER_IP_PER_HOUR = 5;
+const BRIEF_TTL = 90 * 86400;
+const ID_RE = /^[0-9a-f]{32}$/;
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -61,8 +64,9 @@ export function buildMail(data, env) {
   };
 }
 
-export function buildConfirmation(data, env) {
+export function buildConfirmation(data, env, id) {
   const { nom, email, projet, message } = data;
+  const link = id ? `${SITE}/commande.html#brief=${id}` : "";
   const delay = oneLine(env.REPLY_DELAY || DEFAULT_DELAY);
   const contact = env.MAIL_TO || "contact@buttiscreen.fr";
   const text = [
@@ -74,10 +78,14 @@ export function buildConfirmation(data, env) {
     "Votre brief",
     `Projet : ${projet}`,
     `E-mail : ${email}`,
+    ...(data.duree ? [`Durée : ${data.duree}`] : []),
+    ...(data.diffusion ? [`Diffusion : ${data.diffusion}`] : []),
+    ...(data.creneau ? [`Créneau : ${data.creneau}`] : []),
     "",
     message,
     "",
     "Pour le compléter (références, rushes, date de livraison), répondez simplement à ce message.",
+    ...(link ? ["", "Retrouvez votre brief depuis n'importe quel appareil : " + link] : []),
     "",
     "Ceci est un accusé de réception automatique. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message ou écrivez à " + contact + ".",
     "",
@@ -99,9 +107,12 @@ export function buildConfirmation(data, env) {
     `<h1 style="margin:0 0 14px;font:600 22px Georgia,'Times New Roman',serif;color:#07060d">Votre brief est bien reçu.</h1>` +
     `<p style="margin:0 0 24px;font-size:15px;line-height:1.6">Nous le lisons avec attention et revenons vers vous personnellement sous ${esc(delay)}.</p>` +
     `<p style="margin:0 0 8px;font-size:11px;letter-spacing:2px;color:#ff6a00;font-weight:600">VOTRE BRIEF</p>` +
-    `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px">${row("Projet", esc(projet))}${row("E-mail", esc(email))}</table>` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px">${row("Projet", esc(projet))}${row("E-mail", esc(email))}${data.duree ? row("Durée", esc(data.duree)) : ""}${data.diffusion ? row("Diffusion", esc(data.diffusion)) : ""}${data.creneau ? row("Créneau", esc(data.creneau)) : ""}</table>` +
     `<div style="margin:0 0 24px;padding:14px 16px;background:#f6f5f9;border-left:3px solid #d9d4e6;font-size:15px;line-height:1.6;white-space:pre-wrap">${esc(message)}</div>` +
-    `<p style="margin:0 0 28px;font-size:15px;line-height:1.6">Pour le compléter (références, rushes, date de livraison), répondez simplement à ce message.</p>` +
+    `<p style="margin:0 0 20px;font-size:15px;line-height:1.6">Pour le compléter (références, rushes, date de livraison), répondez simplement à ce message.</p>` +
+    (link
+      ? `<p style="margin:0 0 28px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#ff6a00;color:#07060d;text-decoration:none;font:600 14px Helvetica,Arial,sans-serif">Retrouver mon brief</a></p>`
+      : `<div style="height:8px"></div>`) +
     `</td></tr>` +
     `<tr><td style="padding:18px 28px 28px;border-top:1px solid #e6e2ef;font:12px/1.6 Helvetica,Arial,sans-serif;color:#7a7488">` +
     `Ceci est un accusé de réception automatique. Si vous n’êtes pas à l’origine de cette demande, ignorez ce message ou écrivez à ` +
@@ -138,18 +149,177 @@ async function allowConfirmation(env, email, ip) {
   return true;
 }
 
-async function sendConfirmation(env, data, ip) {
+async function sendConfirmation(env, data, ip, id) {
   try {
     if (!(await allowConfirmation(env, data.email, ip))) return false;
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
-      body: JSON.stringify(buildConfirmation(data, env)),
+      body: JSON.stringify(buildConfirmation(data, env, id)),
     });
     return res.ok;
   } catch {
     return false; // l'accusé ne doit jamais faire échouer le brief
   }
+}
+
+const randomId = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
+const clip = (v, n) => oneLine(v ?? "").slice(0, n);
+
+async function bump(kv, key, limit, ttl) {
+  const n = Number(await kv.get(key)) || 0;
+  if (n >= limit) return false;
+  await kv.put(key, String(n + 1), { expirationTtl: ttl });
+  return true;
+}
+
+// Garde une copie du brief, 90 jours, sous un identifiant aléatoire (le lien envoyé par e-mail le contient).
+async function storeBrief(env, data, source) {
+  try {
+    if (!env.BRIEFS) return null;
+    const id = randomId();
+    const email = data.email.toLowerCase();
+    const record = {
+      cree: new Date().toISOString(),
+      nom: data.nom,
+      email,
+      projet: data.projet,
+      duree: data.duree || "",
+      diffusion: data.diffusion || "",
+      creneau: data.creneau || "",
+      message: data.message,
+      source,
+    };
+    await env.BRIEFS.put(`b:${id}`, JSON.stringify(record), { expirationTtl: BRIEF_TTL });
+    const indexKey = `e:${await sha256(email)}`;
+    let ids = [];
+    try {
+      ids = JSON.parse((await env.BRIEFS.get(indexKey)) || "[]");
+    } catch {}
+    await env.BRIEFS.put(indexKey, JSON.stringify([id, ...ids].slice(0, 10)), { expirationTtl: BRIEF_TTL });
+    return id;
+  } catch {
+    return null; // la copie ne doit jamais faire échouer le brief
+  }
+}
+
+async function readBody(request) {
+  const raw = await request.text();
+  if (raw.length > 20000) return { tooBig: true };
+  return { input: JSON.parse(raw) };
+}
+
+async function getBrief(env, id, ip, allowed) {
+  if (!allowed) return reply({ error: "origin" }, 403, "");
+  if (!env.BRIEFS || !ID_RE.test(id)) return reply({ error: "introuvable" }, 404, allowed);
+  if (env.RATE && !(await bump(env.RATE, `g:${ip || "inconnue"}:${Math.floor(Date.now() / 3_600_000)}`, 60, 3600))) {
+    return reply({ error: "limite" }, 429, allowed);
+  }
+  const raw = await env.BRIEFS.get(`b:${id}`);
+  if (!raw) return reply({ error: "introuvable" }, 404, allowed);
+  const b = JSON.parse(raw);
+  return reply(
+    { ok: true, brief: { cree: b.cree, nom: b.nom, email: b.email, projet: b.projet, duree: b.duree, diffusion: b.diffusion, creneau: b.creneau, message: b.message } },
+    200,
+    allowed
+  );
+}
+
+// Brief du tunnel : copie seulement (le studio reçoit déjà ce brief par le tunnel), accusé si les limites le permettent.
+async function handleTunnel(request, env, ctx, allowed) {
+  let input;
+  try {
+    const body = await readBody(request);
+    if (body.tooBig) return reply({ error: "size" }, 413, allowed);
+    input = body.input;
+  } catch {
+    return reply({ error: "json" }, 400, allowed);
+  }
+  const d = input && typeof input === "object" ? input : {};
+  const data = {
+    nom: clip(d.nom, MAX.nom),
+    email: clip(d.email, MAX.email),
+    projet: clip(d.projet, MAX.projet),
+    duree: clip(d.duree, 60),
+    diffusion: clip(d.diffusion, 120),
+    creneau: clip(d.creneau, 120),
+    message: String(d.message ?? "").trim().slice(0, MAX.message),
+  };
+  const ip = request.headers.get("cf-connecting-ip");
+  if (data.nom.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || !data.projet || data.message.length < 10) {
+    return reply({ error: "validation" }, 422, allowed);
+  }
+  if (env.RATE && !(await bump(env.RATE, `t:${ip || "inconnue"}:${Math.floor(Date.now() / 3_600_000)}`, 10, 3600))) {
+    return reply({ ok: true }, 200, allowed);
+  }
+  const id = await storeBrief(env, data, "tunnel");
+  const confirmation = sendConfirmation(env, data, ip, id);
+  if (ctx && ctx.waitUntil) ctx.waitUntil(confirmation);
+  else await confirmation;
+  return reply({ ok: true }, 200, allowed);
+}
+
+export function buildLinkMail(email, briefs, env) {
+  const contact = env.MAIL_TO || "contact@buttiscreen.fr";
+  const when = (iso) =>
+    new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" }).format(new Date(iso));
+  const lines = briefs.map((b) => `${when(b.cree)} · ${b.projet} : ${SITE}/commande.html#brief=${b.id}`);
+  return {
+    from: env.MAIL_FROM || "Buttiscreen <brief@buttiscreen.fr>",
+    to: [email],
+    reply_to: contact,
+    subject: "Retrouver votre brief — BUTTISCREEN",
+    text: ["Bonjour,", "", "Vous avez demandé à retrouver votre brief. Voici le lien personnel :", "", ...lines, "", "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.", "", "BUTTISCREEN · Studio de montage vidéo · Paris", SITE].join("\n"),
+    html:
+      `<p style="font:15px/1.6 Helvetica,Arial,sans-serif;color:#1b1826">Bonjour,<br><br>Vous avez demandé à retrouver votre brief. Voici le lien personnel :</p>` +
+      briefs
+        .map((b) => `<p style="margin:0 0 10px"><a href="${esc(SITE)}/commande.html#brief=${esc(b.id)}" style="display:inline-block;padding:12px 22px;background:#ff6a00;color:#07060d;text-decoration:none;font:600 14px Helvetica,Arial,sans-serif">${esc(when(b.cree))} · ${esc(b.projet)}</a></p>`)
+        .join("") +
+      `<p style="font:12px/1.6 Helvetica,Arial,sans-serif;color:#7a7488">Si vous n’êtes pas à l’origine de cette demande, ignorez ce message.<br>BUTTISCREEN · Studio de montage vidéo · Paris · <a href="${esc(SITE)}" style="color:#7a7488">buttiscreen.fr</a></p>`,
+    headers: { "Auto-Submitted": "auto-replied" },
+  };
+}
+
+// « Retrouver mon brief » : renvoie les liens par e-mail, sans jamais révéler si l'adresse est connue.
+async function handleLink(request, env, ctx, allowed) {
+  let input;
+  try {
+    const body = await readBody(request);
+    if (body.tooBig) return reply({ error: "size" }, 413, allowed);
+    input = body.input;
+  } catch {
+    return reply({ error: "json" }, 400, allowed);
+  }
+  const d = input && typeof input === "object" ? input : {};
+  const email = oneLine(d.email ?? "").toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > MAX.email) return reply({ error: "validation" }, 422, allowed);
+  const ok = reply({ ok: true }, 200, allowed);
+  if (Boolean(d.website) || !(Date.now() - Number(d.t) >= MIN_FILL_MS)) return ok;
+  if (!env.BRIEFS || !env.RATE) return ok;
+  const ip = request.headers.get("cf-connecting-ip") || "inconnue";
+  const hour = Math.floor(Date.now() / 3_600_000);
+  if (!(await bump(env.RATE, `l:${ip}:${hour}`, 5, 3600))) return ok;
+  const hash = await sha256(email);
+  if (!(await bump(env.RATE, `lm:${hash}:${Math.floor(Date.now() / 86_400_000)}`, 3, 86400))) return ok;
+  const task = (async () => {
+    try {
+      const ids = JSON.parse((await env.BRIEFS.get(`e:${hash}`)) || "[]").slice(0, 3);
+      const briefs = [];
+      for (const id of ids) {
+        const raw = await env.BRIEFS.get(`b:${id}`);
+        if (raw) briefs.push({ id, ...JSON.parse(raw) });
+      }
+      if (!briefs.length) return;
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+        body: JSON.stringify(buildLinkMail(email, briefs, env)),
+      });
+    } catch {}
+  })();
+  if (ctx && ctx.waitUntil) ctx.waitUntil(task);
+  else await task;
+  return ok;
 }
 
 export default {
@@ -162,16 +332,22 @@ export default {
         status: 204,
         headers: {
           "access-control-allow-origin": allowed || "null",
-          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-methods": "GET, POST, OPTIONS",
           "access-control-allow-headers": "content-type",
           "access-control-max-age": "86400",
           vary: "Origin",
         },
       });
     }
+    const path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
+    if (request.method === "GET" && path.startsWith("/brief/")) {
+      return getBrief(env, path.slice("/brief/".length), request.headers.get("cf-connecting-ip"), allowed);
+    }
     if (request.method !== "POST") return reply({ error: "method" }, 405, allowed);
     if (!allowed) return reply({ error: "origin" }, 403, "");
     if (!env.RESEND_API_KEY) return reply({ error: "config" }, 500, allowed);
+    if (path === "/lien") return handleLink(request, env, ctx, allowed);
+    if (path === "/tunnel") return handleTunnel(request, env, ctx, allowed);
 
     let input;
     try {
@@ -193,7 +369,8 @@ export default {
     });
     if (!res.ok) return reply({ error: "send" }, 502, allowed);
 
-    const confirmation = sendConfirmation(env, v.data, request.headers.get("cf-connecting-ip"));
+    const id = await storeBrief(env, v.data, "site");
+    const confirmation = sendConfirmation(env, v.data, request.headers.get("cf-connecting-ip"), id);
     if (ctx && ctx.waitUntil) ctx.waitUntil(confirmation);
     else await confirmation;
     return reply({ ok: true }, 200, allowed);

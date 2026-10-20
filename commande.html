@@ -78,6 +78,16 @@
       <p class="kicker">Compte</p>
       <h1 class="order-title" id="order-title" tabindex="-1">Mon compte<span class="dot">.</span></h1>
 
+      <article class="brief-card" id="brief-card" hidden aria-labelledby="brief-card-title">
+        <p class="kicker">Votre brief</p>
+        <h2 class="brief-card-title" id="brief-card-title"></h2>
+        <dl class="order-facts brief-facts" id="brief-facts"></dl>
+        <p class="brief-message" id="brief-message"></p>
+        <p class="fine" id="brief-note"></p>
+        <button class="btn ghost" type="button" id="brief-request" hidden>Recevoir le lien par e-mail</button>
+        <p class="fine" id="brief-status" role="status"></p>
+      </article>
+
       <section id="auth">
         <p class="order-lede">
           Connectez-vous pour suivre votre film&nbsp;: état, délai, rushes, facture. Pas encore de compte&nbsp;? Créez-le ici.
@@ -109,6 +119,18 @@
           </p>
         </form>
         <p class="sr-only" role="status" id="compte-live"></p>
+        <form class="brief order-form brief-find" id="brief-find" novalidate>
+          <p class="kicker full">Vous avez envoyé un brief&nbsp;?</p>
+          <label class="field full">
+            <span>E-mail utilisé pour le brief</span>
+            <input name="email" type="email" autocomplete="email" inputmode="email" required />
+          </label>
+          <label class="hp" aria-hidden="true">Ne pas remplir<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
+          <div class="field full form-actions">
+            <button class="btn ghost" type="submit">Recevoir le lien par e-mail</button>
+          </div>
+          <p class="fine full" id="brief-find-status" role="status">Le lien personnel de votre brief vous est envoyé par e-mail, pour le consulter depuis n’importe quel appareil.</p>
+        </form>
       </section>
 
       <section id="board" hidden tabindex="-1" aria-labelledby="board-title">
@@ -197,6 +219,7 @@
         <ul class="rush-library" id="rush-library-list"></ul>
       </div>
     </dialog>
-    <script src="commande.js?v=jeton"></script>
+    <script src="brief-memo.js?v=brief1"></script>
+    <script src="commande.js?v=brief1"></script>
   </body>
 </html>

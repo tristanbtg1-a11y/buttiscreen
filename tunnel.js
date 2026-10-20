@@ -209,6 +209,7 @@
   document.getElementById("send-brief")?.addEventListener("click", async () => {
     const status = document.getElementById("send-status");
     const slug = String(store.email || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    window.ButtiBrief?.save(store);
     const payload = {
       ...store,
       studio: "BUTTISCREEN",
@@ -217,6 +218,11 @@
       cree: new Date().toISOString(),
       clef: `rdv-${slug}-${Date.now()}`,
     };
+    fetch("https://buttiscreen-contact.tristan-buttig1.workers.dev/tunnel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...store, website: "", t: Date.now() - 5000 }),
+    }).catch(() => {});
     try {
       await fetch(WEBHOOK, {
         method: "POST",

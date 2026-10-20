@@ -12,5 +12,9 @@ MAIL_FROM = "Buttiscreen <brief@buttiscreen.fr>"
 [[kv_namespaces]]
 binding = "RATE"
 id = "e286dba411574f068c0189476c39e0ad"
+# Copie du brief conservée 90 jours, lisible uniquement via le lien personnel de l'accusé (même KV, clés distinctes).
+[[kv_namespaces]]
+binding = "BRIEFS"
+id = "e286dba411574f068c0189476c39e0ad"
 # REPLY_DELAY règle le délai annoncé dans l'accusé ; CONFIRMATION = "off" coupe l'accusé.
 # REPLY_DELAY = "48 heures ouvrées"
