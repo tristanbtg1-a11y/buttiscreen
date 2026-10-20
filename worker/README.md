@@ -46,6 +46,14 @@ Ils ne contactent jamais le vrai Resend.
 
 Ne publier `politique.html` mise à jour qu'au moment où l'étape 5 est faite : tant que le formulaire ouvre la messagerie, le texte actuel est le bon.
 
+## Déploiement par GitHub Actions
+
+Le workflow `.github/workflows/worker.yml` lance les tests (`node --test worker/`) sur chaque PR, puis déploie le Worker à chaque envoi sur `main` qui touche `worker/`. Il se lance aussi à la main (onglet Actions, « Run workflow »).
+Deux secrets de dépôt sont nécessaires (GitHub : Settings, Secrets and variables, Actions) :
+- `CLOUDFLARE_API_TOKEN` : jeton créé dans Cloudflare (My Profile, API Tokens) avec le modèle « Edit Cloudflare Workers » ;
+- `CLOUDFLARE_ACCOUNT_ID` : identifiant du compte, visible dans l'adresse du tableau de bord.
+Les secrets du Worker (`RESEND_API_KEY`, `MAKE_PASSWORD`) restent dans Cloudflare, `wrangler deploy` ne les touche pas. Une fois ce déploiement en service, déconnecter le dépôt de l'intégration Git de Cloudflare (Worker, Settings, Builds) pour éviter un double déploiement.
+
 ## Déploiement par Cloudflare (Git)
 
 Le Worker `buttiscreen-contact` est relié à ce dépôt : Cloudflare le construit et le déploie à chaque envoi sur `main`.
