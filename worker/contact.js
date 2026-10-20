@@ -258,7 +258,7 @@ async function handleTunnel(request, env, ctx, allowed) {
   const confirmation = sendConfirmation(env, data, ip, id);
   if (ctx && ctx.waitUntil) ctx.waitUntil(confirmation);
   else await confirmation;
-  return reply({ ok: true }, 200, allowed);
+  return reply(id ? { ok: true, id } : { ok: true }, 200, allowed);
 }
 
 export function buildLinkMail(email, briefs, env) {

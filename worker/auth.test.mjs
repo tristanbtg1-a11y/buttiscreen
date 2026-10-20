@@ -249,3 +249,73 @@ test("gestion : sans MAKE_PASSWORD, 503 ; refus de Make, 502 ; lien de gestion r
     r.restore();
   }
 });
+
+const quoteFetch = (answers) => {
+  const original = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = async (url, init) => {
+    seen.push({ url: String(url), body: JSON.parse(init.body) });
+    return new Response(JSON.stringify(answers), { status: 200 });
+  };
+  return { seen, restore: () => (globalThis.fetch = original) };
+};
+
+test("devis : le client connecté reçoit son devis, Make reçoit l'adresse de sa session et le mot de passe", async () => {
+  const e = { ...env(), MAKE_PASSWORD: "pw" };
+  const client = (await login(e, "client@example.com")).json;
+  const q = quoteFetch({ ok: true, url: "https://buy.stripe.com/x", montant: "450", etat: "brief", nom: "C", secret: "ne-doit-pas-sortir" });
+  try {
+    const res = await call("/moi/devis", { method: "GET", token: client.session, e });
+    const body = await res.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.url, "https://buy.stripe.com/x");
+    assert.equal(body.montant, "450");
+    assert.equal("secret" in body, false);
+    assert.equal(q.seen[0].body.action, "payer");
+    assert.equal(q.seen[0].body.email, "client@example.com");
+    assert.equal(q.seen[0].body.password, "pw");
+  } finally {
+    q.restore();
+  }
+  assert.equal((await call("/moi/devis", { method: "GET", e })).status, 401);
+});
+
+test("devis : sans MAKE_PASSWORD, 503 ; refus de Make, 502", async () => {
+  const e = env();
+  const client = (await login(e, "client@example.com")).json;
+  assert.equal((await call("/moi/devis", { method: "GET", token: client.session, e })).status, 503);
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => new Response('{"ok":false}', { status: 200 });
+  try {
+    assert.equal((await call("/moi/devis", { method: "GET", token: client.session, e: { ...e, MAKE_PASSWORD: "pw" } })).status, 502);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("devis du tunnel : l'identifiant du brief tient lieu de clé, un identifiant inconnu est refusé", async () => {
+  const e = { ...env(), MAKE_PASSWORD: "pw" };
+  const r = mockResend();
+  let id;
+  try {
+    const res = await call("/tunnel", {
+      body: { nom: "Camille Durand", email: "camille@example.com", projet: "Clip", message: "Un clip de trois minutes.", t: Date.now() - 10_000 },
+      e,
+    });
+    id = (await res.json()).id;
+    assert.match(id, /^[0-9a-f]{32}$/);
+  } finally {
+    r.restore();
+  }
+  const q = quoteFetch({ ok: true, url: "", montant: "", etat: "" });
+  try {
+    const res = await call(`/devis/${id}`, { method: "GET", e });
+    assert.equal(res.status, 200);
+    assert.equal(q.seen[0].body.email, "camille@example.com");
+    assert.equal((await call(`/devis/${"0".repeat(32)}`, { method: "GET", e })).status, 404);
+    assert.equal((await call("/devis/pas-un-id", { method: "GET", e })).status, 404);
+    assert.equal((await call(`/devis/${id}`, { method: "GET", e, origin: "https://evil.example" })).status, 403);
+  } finally {
+    q.restore();
+  }
+});

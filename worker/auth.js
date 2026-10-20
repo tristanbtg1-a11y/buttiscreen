@@ -246,6 +246,61 @@ async function handleGestion(request, env, allowed, reply) {
   }
 }
 
+// Devis et lien de paiement : le Worker interroge Make avec le mot de passe de la gestion, que le navigateur ne voit jamais.
+async function askQuote(env, email) {
+  try {
+    const res = await fetch(MAKE_HOOK, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "payer", email, password: env.MAKE_PASSWORD }),
+    });
+    const d = await res.json().catch(() => null);
+    if (!res.ok || !d || d.ok === false) return null;
+    const pick = (v) => String(v ?? "").slice(0, 500);
+    return {
+      url: pick(d.url),
+      montant: pick(d.montant),
+      etat: pick(d.etat),
+      nom: pick(d.nom),
+      projet: pick(d.projet),
+      cree: pick(d.cree),
+      detail: pick(d.detail),
+      regle: pick(d.regle),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function quoteReply(env, email, bucket, limit, allowed, reply) {
+  if (!env.MAKE_PASSWORD) return reply({ error: "config" }, 503, allowed);
+  if (env.RATE && !(await bump(env.RATE, `dv:${bucket}:${Math.floor(Date.now() / 3_600_000)}`, limit, 3600))) {
+    return reply({ error: "limite" }, 429, allowed);
+  }
+  const devis = await askQuote(env, email);
+  if (!devis) return reply({ error: "make" }, 502, allowed);
+  return reply({ ok: true, ...devis }, 200, allowed);
+}
+
+// Client connecté : son devis, d'après l'adresse de sa session.
+async function handleMyQuote(request, env, allowed, reply) {
+  const s = await sessionOf(request, env);
+  if (!s) return reply({ error: "session" }, 401, allowed);
+  return quoteReply(env, s.email, await sha256(s.token), 60, allowed, reply);
+}
+
+// Visiteur du tunnel : le brief qu'il vient d'envoyer (identifiant aléatoire) tient lieu de clé.
+async function handleBriefQuote(request, env, id, allowed, reply) {
+  if (!env.BRIEFS || !TOKEN_RE.test(id)) return reply({ error: "introuvable" }, 404, allowed);
+  let record = null;
+  try {
+    record = JSON.parse((await env.BRIEFS.get(`b:${id}`)) || "null");
+  } catch {}
+  if (!record || !record.email) return reply({ error: "introuvable" }, 404, allowed);
+  const ip = request.headers.get("cf-connecting-ip") || "inconnue";
+  return quoteReply(env, record.email, `ip:${ip}`, 30, allowed, reply);
+}
+
 async function handleList(request, env, allowed, reply) {
   const s = await sessionOf(request, env);
   if (!s || !isAdmin(env, s.email)) return reply({ error: "session" }, 401, allowed);
@@ -261,7 +316,7 @@ async function handleList(request, env, allowed, reply) {
 // Renvoie une Response si le chemin est géré ici, sinon null.
 export async function handleAuth(request, env, ctx, allowed, path, reply) {
   const m = request.method;
-  if (!path.startsWith("/auth/") && path !== "/moi" && !path.startsWith("/admin/")) return null;
+  if (!path.startsWith("/auth/") && !path.startsWith("/moi") && !path.startsWith("/admin/") && !path.startsWith("/devis/")) return null;
   if (!allowed) return reply({ error: "origin" }, 403, "");
   if (m === "POST" && path === "/auth/demande") {
     if (!env.RESEND_API_KEY) return reply({ error: "config" }, 500, allowed);
@@ -270,6 +325,8 @@ export async function handleAuth(request, env, ctx, allowed, path, reply) {
   if (m === "POST" && path === "/auth/verification") return handleVerify(request, env, allowed, reply);
   if (m === "POST" && path === "/auth/deconnexion") return handleLogout(request, env, allowed, reply);
   if (m === "GET" && path === "/moi") return handleMe(request, env, allowed, reply);
+  if (m === "GET" && path === "/moi/devis") return handleMyQuote(request, env, allowed, reply);
+  if (m === "GET" && path.startsWith("/devis/")) return handleBriefQuote(request, env, path.slice("/devis/".length), allowed, reply);
   if (m === "POST" && path === "/admin/projet") return handleSave(request, env, allowed, reply);
   if (m === "POST" && path === "/admin/gestion") return handleGestion(request, env, allowed, reply);
   if (m === "GET" && path === "/admin/projets") return handleList(request, env, allowed, reply);
