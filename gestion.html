@@ -14,7 +14,7 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=boutique2" />
+    <link rel="stylesheet" href="styles.css?v=clos1" />
   </head>
   <body data-shop>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -142,6 +142,20 @@
         <p class="fine" id="etat-status" role="status"></p>
       </div>
     </dialog>
+    <dialog id="cloture-dialog" aria-labelledby="cloture-title">
+      <div class="file-pop">
+        <div class="file-pop-bar">
+          <h2 id="cloture-title">Clôturer ce dossier ?</h2>
+          <button class="btn ghost" type="button" id="cloture-cancel">Annuler</button>
+        </div>
+        <p class="fine" id="cloture-who"></p>
+        <p class="fine">Le dossier passe dans « Closes ». Rien n’est effacé : le client garde son compte, son suivi et sa facture, et vous pourrez le rouvrir.</p>
+        <div class="etat-actions">
+          <button class="btn" type="button" id="cloture-confirm">Clôturer le dossier</button>
+        </div>
+        <p class="fine" id="cloture-status" role="status"></p>
+      </div>
+    </dialog>
     <dialog id="gestion-chat" aria-labelledby="gestion-chat-title">
       <div class="file-pop chat-pop">
         <div class="file-pop-bar">
@@ -163,6 +177,6 @@
     <script src="auth-client.js?v=phb3"></script>
     <script src="commande-store.js?v=phb3"></script>
     <script src="boutique.js?v=boutique2"></script>
-    <script src="gestion.js?v=unif1"></script>
+    <script src="gestion.js?v=clos1"></script>
   </body>
 </html>

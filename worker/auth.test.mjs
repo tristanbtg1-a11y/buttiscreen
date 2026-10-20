@@ -432,6 +432,29 @@ test("suivi enregistré par le studio : la fiche commande part chez Make, statut
   }
 });
 
+test("clôture à la main : statut close chez Make, conservé aux enregistrements suivants, annulable", async () => {
+  const e = makeEnv();
+  const admin = (await login(e, "tristan@buttiscreen.fr", "atelier")).json;
+  const client = (await login(e, "c@x.fr")).json;
+  const f = bothFetch();
+  try {
+    const post = (body) => call("/admin/projet", { token: admin.session, body: { email: "c@x.fr", ...body }, e });
+    await post({ titre: "Film", etat: "montage" });
+    await post({ clos: true });
+    await post({ delai: "2026-12-01" }); // un enregistrement ordinaire ne rouvre pas le dossier
+    const fiches = f.made.filter((m) => m.action === "commande");
+    assert.deepEqual(fiches.map((m) => m.statut), ["cours", "close", "close"]);
+    assert.equal(fiches[1].etat, "montage"); // l'état vu par le client ne bouge pas
+    const list = await (await call("/admin/projets", { method: "GET", token: admin.session, e })).json();
+    assert.equal(list.projets[0].clos, true);
+    await post({ clos: false });
+    assert.equal(f.made.filter((m) => m.action === "commande").at(-1).statut, "cours");
+    assert.equal((await call("/admin/projet", { token: client.session, body: { email: "c@x.fr", clos: true }, e })).status, 401);
+  } finally {
+    f.restore();
+  }
+});
+
 test("première connexion client : mail au studio, fiche créée seulement si la gestion ne la connaît pas", async () => {
   const e = makeEnv();
   const f = bothFetch({ login: { ok: true, token: "T" }, list: { ok: true, items: [] } });

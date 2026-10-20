@@ -94,7 +94,7 @@ export function pushCommande(env, email, p) {
     nom: p.titre || email,
     projet: p.titre || "",
     etat,
-    statut: etat === "livraison" ? "close" : "cours",
+    statut: etat === "livraison" || p.clos === true ? "close" : "cours",
     delai: p.delai || "",
     message: "",
     cree: new Date().toISOString(),
@@ -170,7 +170,7 @@ async function sessionOf(request, env) {
   }
 }
 
-const emptyProject = () => ({ titre: "", etat: "brief", delai: "", factureNom: "", facture: "", maj: "" });
+const emptyProject = () => ({ titre: "", etat: "brief", delai: "", factureNom: "", facture: "", clos: false, maj: "" });
 
 async function readProject(env, email) {
   try {
@@ -292,6 +292,7 @@ async function handleSave(request, env, allowed, reply) {
     next.etat = d.etat;
   }
   if (d.delai !== undefined) next.delai = oneLine(d.delai).slice(0, 40);
+  if (d.clos !== undefined) next.clos = d.clos === true; // dossier clôturé à la main : archivé, jamais effacé
   if (d.facture !== undefined) {
     const f = String(d.facture);
     if (f && (!f.startsWith("data:application/pdf;base64,") || f.length > MAX_FACTURE)) {
@@ -438,7 +439,7 @@ async function handleList(request, env, allowed, reply) {
   const projets = [];
   for (const email of idx) {
     const p = await readProject(env, email);
-    projets.push({ email, titre: p.titre, etat: p.etat, delai: p.delai, factureNom: p.factureNom, hasFacture: Boolean(p.facture), maj: p.maj });
+    projets.push({ email, titre: p.titre, etat: p.etat, delai: p.delai, clos: p.clos === true, factureNom: p.factureNom, hasFacture: Boolean(p.facture), maj: p.maj });
   }
   return reply({ ok: true, projets }, 200, allowed);
 }

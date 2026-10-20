@@ -108,13 +108,20 @@
 
   // État enregistré sur le serveur (atelier ou gestion), lu avec la session studio quand elle est ouverte.
   const serverEtat = {};
+  const serverClos = {};
   const loadServerEtat = async () => {
     if (!window.ButtiAuth?.isAdmin()) return;
     const result = await window.ButtiAuth.listProjects();
     ((result.json && result.json.projets) || []).forEach((p) => {
       serverEtat[p.email] = p.etat;
+      serverClos[p.email] = p.clos === true;
     });
   };
+
+  const keyOf = (email) => String(email || "").trim().toLowerCase();
+  const isLivre = (item) => shownEtat(item.email, item.etat) === "livraison";
+  // Clôturé à la main : le serveur fait foi quand il connaît le dossier, sinon le statut de la fiche.
+  const isManualClose = (item) => (keyOf(item.email) in serverClos ? serverClos[keyOf(item.email)] : item.statut === "close");
 
   const shownEtat = (email, remote) => {
     const local = window.ButtiCommande?.projectFor(email)?.etat || "";
@@ -192,11 +199,23 @@
     </article>
   `;
 
+  const closeButton = (item) =>
+    String(item.email || "").includes("@")
+      ? `<button class="gestion-close" type="button" data-cloturer="${esc(item.email)}" aria-label="Clôturer le dossier de ${esc(item.projet || item.nom || item.email)}"><span aria-hidden="true">×</span></button>`
+      : "";
+
+  const reopenButton = (item) =>
+    String(item.email || "").includes("@") && !isLivre(item) && isManualClose(item)
+      ? `<button class="btn ghost" type="button" data-rouvrir="${esc(item.email)}">Rouvrir</button>`
+      : "";
+
   const cardCommande = (item, pay, withState) => {
     const etat = shownEtat(item.email, item.etat);
+    const closed = isLivre(item) || isManualClose(item);
     return `
-    <article class="gestion-card">
-      <p class="gestion-pill${etat === "livraison" || item.statut === "close" ? " is-close" : ""}">${etat === "livraison" || item.statut === "close" ? "Close" : "En cours"}</p>
+    <article class="gestion-card${withState ? " has-close" : ""}">
+      ${withState ? closeButton(item) : ""}
+      <p class="gestion-pill${closed ? " is-close" : ""}">${closed ? "Close" : "En cours"}</p>
       <h3>${esc(item.projet || item.nom || item.email || "Commande")}</h3>
       ${line("Client", item.nom && item.nom !== item.projet ? item.nom : "")}
       ${line("E-mail", item.email)}
@@ -204,7 +223,7 @@
       ${line("Délai", item.delai)}
       ${line("Mise à jour", when(item.cree))}
       ${payBox(item, pay)}
-      ${withState ? stateButton(item.email) : ""}
+      ${withState ? stateButton(item.email) : reopenButton(item)}
       ${chatButton(item.email)}
     </article>
   `;
@@ -222,7 +241,7 @@
     );
     const withPay = (item) => payments.get(String(item.email || "").toLowerCase());
     const rdv = items.filter((item) => item.kind === "rdv").sort(byDate);
-    const isClose = (item) => item.statut === "close" || shownEtat(item.email, item.etat) === "livraison";
+    const isClose = (item) => isManualClose(item) || isLivre(item);
     const commandes = items.filter((item) => item.kind === "commande");
     const cours = commandes.filter((item) => !isClose(item)).sort(byDate);
     const closes = commandes.filter(isClose).sort(byDate);
@@ -492,9 +511,9 @@
   };
   const STUDIO_MAIL = "tristan@buttiscreen.fr";
 
-  const askStudioLink = () => {
-    if (!etatStatus) return;
-    etatStatus.textContent = `Pour que le client voie l’état, ouvrez la session studio : un lien part vers ${STUDIO_MAIL}. `;
+  const askStudioLink = (node = etatStatus, reason = "Pour que le client voie l’état") => {
+    if (!node) return;
+    node.textContent = `${reason}, ouvrez la session studio : un lien part vers ${STUDIO_MAIL}. `;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "btn ghost";
@@ -502,11 +521,11 @@
     button.addEventListener("click", async () => {
       button.disabled = true;
       const result = await window.ButtiAuth.requestLink(STUDIO_MAIL, "atelier");
-      etatStatus.textContent = result.ok
-        ? `Lien envoyé à ${STUDIO_MAIL}. Cliquez dessus, puis revenez ici et choisissez l’état.`
+      node.textContent = result.ok
+        ? `Lien envoyé à ${STUDIO_MAIL}. Cliquez dessus, puis revenez ici et recommencez.`
         : "L’envoi n’a pas abouti. Réessayez dans un instant.";
     });
-    etatStatus.append(button);
+    node.append(button);
   };
 
   // Le serveur d'abord : c'est lui que lit Mon compte. L'état local ne suit qu'après son accord.
@@ -551,6 +570,76 @@
     });
     etatDialog.addEventListener("close", () => {
       board.querySelector(`[data-etat="${etatEmail}"]`)?.focus();
+    });
+  }
+
+  // Clôture : le dossier passe dans « Closes », rien n'est effacé et le client garde son compte.
+  const closeDialog = document.getElementById("cloture-dialog");
+  const closeWho = document.getElementById("cloture-who");
+  const closeStatus = document.getElementById("cloture-status");
+  const closeConfirm = document.getElementById("cloture-confirm");
+  let closeEmail = "";
+
+  const setClos = async (email, clos) => {
+    const result = await window.ButtiAuth.saveProject({ email, clos });
+    if (result.status === 401) {
+      await window.ButtiAuth.logout();
+      return "session";
+    }
+    if (!(result.status === 200 && result.json && result.json.ok)) return "erreur";
+    serverClos[email] = clos;
+    if (listedItems.length) paint(listedItems);
+    return "ok";
+  };
+
+  if (closeDialog && closeConfirm) {
+    board.addEventListener("click", async (event) => {
+      const open = event.target.closest("[data-cloturer]");
+      if (open) {
+        closeEmail = keyOf(open.dataset.cloturer);
+        const item = listedItems.find((row) => row.kind === "commande" && keyOf(row.email) === closeEmail);
+        closeWho.textContent = `${(item && (item.projet || item.nom)) || closeEmail} · ${closeEmail}`;
+        closeStatus.textContent = "";
+        closeConfirm.hidden = false;
+        closeConfirm.disabled = false;
+        if (!window.ButtiAuth?.isAdmin()) {
+          closeConfirm.hidden = true;
+          askStudioLink(closeStatus, "Pour clôturer un dossier");
+        }
+        closeDialog.showModal();
+        return;
+      }
+      const reopen = event.target.closest("[data-rouvrir]");
+      if (reopen) {
+        const email = keyOf(reopen.dataset.rouvrir);
+        if (!window.ButtiAuth?.isAdmin()) {
+          window.alert(`Ouvrez d’abord la session studio : un lien part vers ${STUDIO_MAIL} depuis « Clôturer ».`);
+          return;
+        }
+        reopen.disabled = true;
+        const outcome = await setClos(email, false);
+        if (outcome !== "ok") reopen.disabled = false;
+      }
+    });
+    closeConfirm.addEventListener("click", async () => {
+      closeConfirm.disabled = true;
+      closeStatus.textContent = "Clôture en cours…";
+      const outcome = await setClos(closeEmail, true);
+      if (outcome === "ok") {
+        closeDialog.close();
+        return;
+      }
+      if (outcome === "session") {
+        closeConfirm.hidden = true;
+        askStudioLink(closeStatus, "La session a expiré. Pour clôturer");
+        return;
+      }
+      closeConfirm.disabled = false;
+      closeStatus.textContent = "La clôture n’a pas été enregistrée. Réessayez dans un instant.";
+    });
+    document.getElementById("cloture-cancel")?.addEventListener("click", () => closeDialog.close());
+    closeDialog.addEventListener("click", (event) => {
+      if (event.target === closeDialog) closeDialog.close();
     });
   }
 
