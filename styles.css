@@ -4442,3 +4442,21 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
     background-position: 38% 0, 0 0;
   }
 }
+
+.brief-find {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 2rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 2px solid var(--ember, #e2552c);
+}
+
+.brief-find h3 {
+  margin: 0;
+}
+
+.brief-find .hp {
+  position: absolute;
+  left: -9999px;
+}

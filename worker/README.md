@@ -60,4 +60,11 @@ Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de r�
 - **Désactivé tant qu'aucun KV `RATE` n'est lié** : un formulaire public ne doit pas pouvoir écrire à des tiers sans limite. Une fois lié, au plus un accusé par adresse et par jour, et cinq par IP et par heure.
 - L'accusé ne fait jamais échouer le brief : s'il échoue, le visiteur voit quand même « brief envoyé ».
 - `REPLY_DELAY` (défaut : « 48 heures ouvrées ») règle le délai annoncé ; `CONFIRMATION = "off"` coupe l'accusé.
-- Tests : `node --test worker/contact.test.mjs` (21 tests).
+- Tests : `node --test worker/contact.test.mjs` (29 tests).
+
+## Copie du brief et lien personnel
+
+- Binding `BRIEFS` (même KV que `RATE`, clés distinctes) : chaque brief est conservé 90 jours sous un identifiant aléatoire de 128 bits.
+- L'accusé contient un lien `commande.html#brief=<id>` ; `GET /brief/<id>` renvoie le brief, sans liste ni recherche par e-mail.
+- `POST /lien` renvoie le lien par e-mail à l'adresse du brief le plus récent (réponse identique que l'adresse existe ou non, limitée par adresse et par IP).
+- `POST /tunnel` enregistre le brief du tunnel de rendez-vous et envoie l'accusé.

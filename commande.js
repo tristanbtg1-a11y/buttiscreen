@@ -182,14 +182,46 @@
     slip.hidden = false;
   };
 
+  const briefNote = (kept) => {
+    const note = document.getElementById("brief-note");
+    if (!note) return;
+    note.innerHTML = kept
+      ? "Ce brief est conservé 90 jours par le studio. Pour le compléter, répondez à l’accusé de réception ou écrivez à <a href=\"mailto:contact@buttiscreen.fr\">contact@buttiscreen.fr</a>."
+      : "Une copie de ce brief reste dans ce navigateur. Pour le compléter, répondez à l’accusé de réception ou écrivez à <a href=\"mailto:contact@buttiscreen.fr\">contact@buttiscreen.fr</a>.";
+  };
+
+  const requestBtn = document.getElementById("brief-request");
+  const briefStatus = document.getElementById("brief-status");
+  const pageOpened = Date.now() - 4000;
+
+  // Connecté sans brief sur cet appareil : proposer le lien par e-mail.
   const paintBrief = (email) => {
     const card = document.getElementById("brief-card");
     if (!card) return;
     const brief = window.ButtiBrief && window.ButtiBrief.latestFor(email);
-    if (!brief) {
-      card.hidden = true;
+    if (brief) {
+      showBrief(brief, false);
       return;
     }
+    document.getElementById("brief-card-title").textContent = "Votre brief";
+    document.getElementById("brief-facts").innerHTML = "";
+    document.getElementById("brief-message").textContent = "";
+    briefNote(false);
+    const note = document.getElementById("brief-note");
+    if (note) note.textContent = "Votre brief n’est pas affiché sur cet appareil. Recevez son lien personnel par e-mail pour le retrouver.";
+    if (requestBtn) {
+      requestBtn.hidden = false;
+      requestBtn.dataset.email = email;
+    }
+    card.hidden = false;
+  };
+
+  const showBrief = (brief, kept) => {
+    const card = document.getElementById("brief-card");
+    if (!card) return;
+    if (requestBtn) requestBtn.hidden = true;
+    if (briefStatus) briefStatus.textContent = "";
+    briefNote(kept);
     const rows = [["Projet", brief.projet]];
     if (brief.duree) rows.push(["Durée", brief.duree]);
     if (brief.diffusion) rows.push(["Diffusion", brief.diffusion]);
@@ -203,6 +235,53 @@
       .join("");
     document.getElementById("brief-message").textContent = brief.message || "";
     card.hidden = false;
+  };
+
+  const sendLink = async (email, statusEl) => {
+    const ok = await (window.ButtiBrief ? window.ButtiBrief.requestLink(email, pageOpened) : false);
+    if (statusEl) {
+      statusEl.textContent = ok
+        ? "Si un brief existe pour cette adresse, un e-mail vient de partir. Pensez à regarder vos courriers indésirables."
+        : "L’envoi n’a pas abouti. Réessayez dans un instant, ou écrivez à contact@buttiscreen.fr.";
+    }
+  };
+
+  requestBtn?.addEventListener("click", async () => {
+    requestBtn.disabled = true;
+    await sendLink(requestBtn.dataset.email || "", briefStatus);
+    requestBtn.disabled = false;
+  });
+
+  document.getElementById("brief-find")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const status = document.getElementById("brief-find-status");
+    const email = String(new FormData(event.target).get("email") || "").trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (status) status.textContent = "Indiquez une adresse e-mail valide.";
+      return;
+    }
+    if (String(new FormData(event.target).get("website") || "")) return;
+    const button = event.target.querySelector("button[type=submit]");
+    if (button) button.disabled = true;
+    await sendLink(email, status);
+    if (button) button.disabled = false;
+  });
+
+  // Lien personnel de l'accusé de réception : le brief s'affiche sur n'importe quel appareil, sans connexion.
+  const openFromLink = async () => {
+    const match = location.hash.match(/^#brief=([0-9a-f]{32})$/);
+    if (!match || !window.ButtiBrief) return;
+    history.replaceState(null, "", location.pathname + location.search);
+    const result = await window.ButtiBrief.fetchById(match[1]);
+    const status = document.getElementById("brief-find-status");
+    if (result.ok) {
+      window.ButtiBrief.save(result.brief);
+      showBrief(result.brief, true);
+    } else if (status) {
+      status.textContent = result.gone
+        ? "Ce lien a expiré ou n’existe plus. Saisissez votre e-mail pour en recevoir un nouveau."
+        : "Le brief ne se charge pas pour le moment. Réessayez dans un instant.";
+    }
   };
 
   const formatDelai = (iso) => {
@@ -859,4 +938,5 @@
   const open = store.sessionEmail();
   if (open) render(open);
   else showMode("connexion");
+  openFromLink();
 })();
