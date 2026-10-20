@@ -601,6 +601,7 @@
   const leave = () => {
     form.reset();
     if (studio) studio.hidden = true;
+    submit.textContent = "Recevoir mon lien de connexion";
     board.hidden = true;
     auth.hidden = false;
   };
@@ -622,6 +623,14 @@
 
   const OWNER = "tristan.buttig1@gmail.com";
 
+  // L'accès studio (mot de passe, vers la gestion) reste à part : par défaut, toute adresse reçoit un lien.
+  document.getElementById("studio-toggle")?.addEventListener("click", () => {
+    studio.hidden = !studio.hidden;
+    submit.textContent = studio.hidden ? "Recevoir mon lien de connexion" : "Entrer";
+    setError("");
+    if (!studio.hidden) form.querySelector('[name="motdepasse"]').focus();
+  });
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
@@ -631,11 +640,9 @@
       setError("Indiquez une adresse e-mail valide.");
       return;
     }
-    if (email === OWNER) {
-      if (studio.hidden) {
-        studio.hidden = false;
-        setError("");
-        form.querySelector('[name="motdepasse"]').focus();
+    if (!studio.hidden) {
+      if (email !== OWNER) {
+        setError("Cet accès est réservé au studio.");
         return;
       }
       submit.disabled = true;
