@@ -106,9 +106,23 @@
 
   const RANK = ["brief", "preparation", "montage", "etalonnage", "livraison"];
 
+  // État enregistré sur le serveur (atelier ou gestion), lu avec la session studio quand elle est ouverte.
+  const serverEtat = {};
+  const loadServerEtat = async () => {
+    if (!window.ButtiAuth?.isAdmin()) return;
+    const result = await window.ButtiAuth.listProjects();
+    ((result.json && result.json.projets) || []).forEach((p) => {
+      serverEtat[p.email] = p.etat;
+    });
+  };
+
   const shownEtat = (email, remote) => {
     const local = window.ButtiCommande?.projectFor(email)?.etat || "";
-    return RANK.indexOf(local) > RANK.indexOf(remote) ? local : remote || local;
+    const server = serverEtat[String(email || "").trim().toLowerCase()] || "";
+    return [remote, local, server].reduce(
+      (best, value) => (RANK.indexOf(value) > RANK.indexOf(best) ? value : best),
+      ""
+    ) || remote || local;
   };
 
   const stateButton = (email) =>
@@ -245,7 +259,7 @@
     submit.disabled = true;
     showError("");
     try {
-      const result = await ask(current.token);
+      const [result] = await Promise.all([ask(current.token), loadServerEtat()]);
       if (!result.ok) {
         sessionStorage.removeItem(SESSION);
         showError(result.error);
@@ -476,6 +490,49 @@
     markEtat();
     if (!etatDialog.open) etatDialog.showModal();
   };
+  const STUDIO_MAIL = "tristan@buttiscreen.fr";
+
+  const askStudioLink = () => {
+    if (!etatStatus) return;
+    etatStatus.textContent = `Pour que le client voie l’état, ouvrez la session studio : un lien part vers ${STUDIO_MAIL}. `;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn ghost";
+    button.textContent = "Recevoir le lien";
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      const result = await window.ButtiAuth.requestLink(STUDIO_MAIL, "atelier");
+      etatStatus.textContent = result.ok
+        ? `Lien envoyé à ${STUDIO_MAIL}. Cliquez dessus, puis revenez ici et choisissez l’état.`
+        : "L’envoi n’a pas abouti. Réessayez dans un instant.";
+    });
+    etatStatus.append(button);
+  };
+
+  // Le serveur d'abord : c'est lui que lit Mon compte. L'état local ne suit qu'après son accord.
+  const saveEtat = async (etat) => {
+    if (!window.ButtiAuth?.isAdmin()) {
+      askStudioLink();
+      return;
+    }
+    if (etatStatus) etatStatus.textContent = "Enregistrement…";
+    const result = await window.ButtiAuth.saveProject({ email: etatEmail, etat });
+    if (result.status === 401) {
+      await window.ButtiAuth.logout();
+      askStudioLink();
+      return;
+    }
+    if (!(result.status === 200 && result.json && result.json.ok)) {
+      if (etatStatus) etatStatus.textContent = "L’état n’a pas été enregistré. Réessayez dans un instant.";
+      return;
+    }
+    serverEtat[etatEmail] = etat;
+    window.ButtiCommande.setEtat(etatEmail, etat);
+    markEtat();
+    if (etatStatus) etatStatus.textContent = `Mon compte affiche maintenant ${ETATS[etat]}, sur tous les appareils du client.`;
+    if (listedItems.length) paint(listedItems);
+  };
+
   if (etatDialog && window.ButtiCommande?.setEtat) {
     board.addEventListener("click", (event) => {
       const button = event.target.closest("[data-etat]");
@@ -487,14 +544,7 @@
       const choice = event.target.closest("[data-set-etat]");
       if (choice) {
         const etat = choice.dataset.setEtat;
-        const savedEtat = window.ButtiCommande.setEtat(etatEmail, etat);
-        if (!savedEtat.ok) {
-          if (etatStatus) etatStatus.textContent = "L’état n’a pas été enregistré.";
-          return;
-        }
-        markEtat();
-        if (etatStatus) etatStatus.textContent = `Mon compte affiche maintenant ${ETATS[etat]}.`;
-        if (listedItems.length) paint(listedItems);
+        saveEtat(etat);
         return;
       }
       if (event.target === etatDialog) etatDialog.close();
