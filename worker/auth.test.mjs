@@ -360,3 +360,130 @@ test("rushes : sans session 401, entrée invalide 422, sans MAKE_PASSWORD 503, r
     q.restore();
   }
 });
+
+// Faux Resend + faux Make : `make` donne la réponse selon l'action ; tout est consigné.
+const bothFetch = (make = {}) => {
+  const original = globalThis.fetch;
+  const resend = [];
+  const made = [];
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    if (String(url).includes("resend.com")) {
+      resend.push(body);
+      return new Response("{}", { status: 200 });
+    }
+    made.push(body);
+    const answer = make[body.action];
+    return new Response(JSON.stringify(typeof answer === "function" ? answer(body) : answer ?? { ok: true }), { status: 200 });
+  };
+  return { resend, made, restore: () => (globalThis.fetch = original) };
+};
+const makeEnv = () => ({ ...env(), MAKE_PASSWORD: "pw" });
+
+// Connexion complète sans remplacer le faux fetch en place (contrairement à login()).
+async function loginKeep(f, e, email, page) {
+  await call("/auth/demande", { body: demande(email, page ? { page } : {}), e, ip: "198.51.100." + Math.floor(Math.random() * 200) });
+  const mail = [...f.resend].reverse().find((m) => /lien de connexion/.test(m.subject || ""));
+  const res = await call("/auth/verification", { body: { token: tokenOf({ body: mail }) }, e });
+  return res.json();
+}
+
+test("rendez-vous du tunnel : le Worker écrit la fiche chez Make avec le mot de passe", async () => {
+  const e = makeEnv();
+  const f = bothFetch();
+  try {
+    await call("/tunnel", {
+      body: { nom: "Camille Durand", email: "Camille@Example.com", projet: "Clip", duree: "3 min", creneau: "mardi 10 h", message: "Un clip de trois minutes.", t: Date.now() - 10_000 },
+      e,
+    });
+    const rdv = f.made.find((m) => m.action === "rdv");
+    assert.equal(rdv.password, "pw");
+    assert.equal(rdv.email, "Camille@Example.com");
+    assert.equal(rdv.creneau, "mardi 10 h");
+    assert.match(rdv.clef, /^rdv-camilleexamplecom-\d+$/);
+  } finally {
+    f.restore();
+  }
+  const g = bothFetch();
+  try {
+    await call("/tunnel", { body: { nom: "Camille Durand", email: "c@example.com", projet: "Clip", message: "Un clip de trois minutes.", t: Date.now() - 10_000 }, e: env(), ip: "198.51.100.1" });
+    assert.equal(g.made.length, 0); // sans MAKE_PASSWORD, rien n'est écrit
+  } finally {
+    g.restore();
+  }
+});
+
+test("suivi enregistré par le studio : la fiche commande part chez Make, statut close à la livraison", async () => {
+  const e = makeEnv();
+  const admin = (await login(e, "tristan@buttiscreen.fr", "atelier")).json;
+  const f = bothFetch();
+  try {
+    await call("/admin/projet", { token: admin.session, body: { email: "c@x.fr", titre: "Film", etat: "montage", delai: "2026-12-01" }, e });
+    await call("/admin/projet", { token: admin.session, body: { email: "c@x.fr", etat: "livraison" }, e });
+    const fiches = f.made.filter((m) => m.action === "commande");
+    assert.equal(fiches[0].clef, "cmd-cx" + "fr");
+    assert.equal(fiches[0].etat, "montage");
+    assert.equal(fiches[0].statut, "cours");
+    assert.equal(fiches[0].nom, "Film");
+    assert.equal(fiches[1].statut, "close");
+    assert.equal(fiches[1].projet, "Film"); // le titre déjà connu est conservé
+  } finally {
+    f.restore();
+  }
+});
+
+test("première connexion client : mail au studio, fiche créée seulement si la gestion ne la connaît pas", async () => {
+  const e = makeEnv();
+  const f = bothFetch({ login: { ok: true, token: "T" }, list: { ok: true, items: [] } });
+  try {
+    await loginKeep(f, e, "nouveau@example.com");
+    assert.equal(f.resend.some((m) => /Nouveau compte client — nouveau@example\.com/.test(m.subject)), true);
+    assert.deepEqual(f.made.map((m) => m.action), ["login", "list", "commande"]);
+    assert.equal(f.made[2].etat, "brief");
+    assert.equal(f.made[1].token, "T");
+  } finally {
+    f.restore();
+  }
+});
+
+test("première connexion : fiche déjà connue de la gestion ou liste illisible, rien n'est écrasé ; pas de répétition", async () => {
+  const e = makeEnv();
+  const known = bothFetch({ login: { ok: true, token: "T" }, list: { ok: true, items: [{ kind: "commande", email: "Ancien@Example.com", etat: "montage" }] } });
+  try {
+    await loginKeep(known, e, "ancien@example.com");
+    assert.equal(known.made.some((m) => m.action === "commande"), false);
+  } finally {
+    known.restore();
+  }
+  const broken = bothFetch({ login: { ok: true, token: "T" }, list: { ok: false } });
+  try {
+    await loginKeep(broken, e, "autre@example.com");
+    assert.equal(broken.made.some((m) => m.action === "commande"), false);
+  } finally {
+    broken.restore();
+  }
+  const again = bothFetch({ login: { ok: true, token: "T" }, list: { ok: true, items: [] } });
+  try {
+    await loginKeep(again, e, "ancien@example.com");
+    assert.equal(again.made.length, 0); // déjà accueilli
+    assert.equal(again.resend.filter((m) => /Nouveau compte/.test(m.subject || "")).length, 0);
+  } finally {
+    again.restore();
+  }
+});
+
+test("première connexion : suivi déjà créé par le studio, ou connexion du studio : aucune fiche", async () => {
+  const e = makeEnv();
+  const admin = (await login(e, "tristan@buttiscreen.fr", "atelier")).json;
+  const f = bothFetch({ login: { ok: true, token: "T" }, list: { ok: true, items: [] } });
+  try {
+    await call("/admin/projet", { token: admin.session, body: { email: "suivi@example.com", titre: "Clip" }, e });
+    f.made.length = 0;
+    await loginKeep(f, e, "suivi@example.com");
+    assert.equal(f.made.length, 0);
+    await loginKeep(f, e, "tristan@buttiscreen.fr", "atelier");
+    assert.equal(f.resend.some((m) => /Nouveau compte client — tristan/.test(m.subject || "")), false);
+  } finally {
+    f.restore();
+  }
+});

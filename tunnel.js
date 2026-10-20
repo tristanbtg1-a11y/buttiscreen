@@ -1,6 +1,5 @@
 (() => {
   const MAILHOOK = "4wxc1v3zhi3323lkdnpej56j5havqk2g@hook.eu1.make.com";
-  const WEBHOOK = "https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3";
   const STUDIO = "contact@buttiscreen.fr";
   const store = {
     nom: "",
@@ -207,16 +206,7 @@
 
   document.getElementById("send-brief")?.addEventListener("click", async () => {
     const status = document.getElementById("send-status");
-    const slug = String(store.email || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     window.ButtiBrief?.save(store);
-    const payload = {
-      ...store,
-      studio: "BUTTISCREEN",
-      fuseau: "Europe/Paris",
-      action: "rdv",
-      cree: new Date().toISOString(),
-      clef: `rdv-${slug}-${Date.now()}`,
-    };
     briefId = fetch("https://buttiscreen-contact.tristan-buttig1.workers.dev/tunnel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -225,15 +215,8 @@
       .then((response) => response.json())
       .then((json) => String((json && json.id) || ""))
       .catch(() => "");
-    try {
-      await fetch(WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      /* La messagerie reste le chemin sûr. */
-    }
+    // Le Worker enregistre le rendez-vous chez Make ; on attend sa réponse (4 s au plus) avant d'ouvrir la messagerie.
+    await Promise.race([briefId, new Promise((resolve) => setTimeout(resolve, 4000))]);
     const href = `mailto:${MAILHOOK}?cc=${encodeURIComponent(STUDIO)}&subject=${encodeURIComponent("Brief BUTTISCREEN")}&body=${encodeURIComponent(bodyOf())}`;
     if (status) status.textContent = "Le message s’ouvre dans votre messagerie, vers le studio.";
     window.location.href = href;

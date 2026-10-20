@@ -67,6 +67,86 @@ export function buildLoginMail(email, token, page, env) {
   };
 }
 
+const slugOf = (email) => String(email).toLowerCase().replace(/[^a-z0-9]/g, "");
+
+// Écriture dans Make, toujours avec le mot de passe de la gestion que seul le Worker détient. Sans lui, on ne fait rien.
+async function makeCall(env, body) {
+  if (!env.MAKE_PASSWORD) return null;
+  try {
+    const res = await fetch(MAKE_HOOK, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ...body, password: env.MAKE_PASSWORD }),
+    });
+    return await res.json().catch(() => null);
+  } catch {
+    return null;
+  }
+}
+
+// Fiche « commande » de la gestion : même contenu que l'ancien envoi depuis le navigateur.
+export function pushCommande(env, email, p) {
+  const etat = p.etat || "brief";
+  return makeCall(env, {
+    action: "commande",
+    clef: `cmd-${slugOf(email)}`,
+    email,
+    nom: p.titre || email,
+    projet: p.titre || "",
+    etat,
+    statut: etat === "livraison" ? "close" : "cours",
+    delai: p.delai || "",
+    message: "",
+    cree: new Date().toISOString(),
+  });
+}
+
+// Fiche « rendez-vous » du tunnel.
+export function pushRdv(env, data) {
+  return makeCall(env, {
+    action: "rdv",
+    clef: `rdv-${slugOf(data.email)}-${Date.now()}`,
+    studio: "BUTTISCREEN",
+    fuseau: "Europe/Paris",
+    nom: data.nom,
+    email: data.email,
+    projet: data.projet,
+    duree: data.duree || "",
+    diffusion: data.diffusion || "",
+    creneau: data.creneau || "",
+    message: data.message,
+    cree: new Date().toISOString(),
+  });
+}
+
+// Première connexion d'un client : prévenir le studio, et créer sa fiche dans la gestion si elle n'existe pas déjà
+// (jamais d'écrasement : l'écriture dans Make remplace la fiche, donc on vérifie d'abord).
+async function welcomeClient(env, email) {
+  try {
+    const hash = await sha256(email);
+    if (await env.BRIEFS.get(`c:${hash}`)) return;
+    await env.BRIEFS.put(`c:${hash}`, new Date().toISOString());
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        from: env.MAIL_FROM || "Buttiscreen <brief@buttiscreen.fr>",
+        to: [env.MAIL_TO || "contact@buttiscreen.fr"],
+        subject: `Nouveau compte client — ${email}`.slice(0, 200),
+        text: `${email} vient de se connecter pour la première fois à Mon compte.\n\nSon suivi se renseigne dans l'atelier : ${SITE}/atelier.html`,
+        headers: { "Auto-Submitted": "auto-generated" },
+      }),
+    });
+    if ((await env.BRIEFS.get(`p:${hash}`)) || !env.MAKE_PASSWORD) return;
+    const login = await makeCall(env, { action: "login", email: env.MAKE_OWNER_EMAIL || "tristan.buttig1@gmail.com" });
+    if (!login || !login.token) return;
+    const list = await makeCall(env, { action: "list", token: login.token });
+    if (!list || list.ok !== true || !Array.isArray(list.items)) return; // doute : on n'écrit pas
+    const known = list.items.some((i) => i && i.kind === "commande" && String(i.email || "").toLowerCase() === email);
+    if (!known) await pushCommande(env, email, { etat: "brief" });
+  } catch {}
+}
+
 async function parse(request, max, reply, allowed) {
   const raw = await request.text();
   if (raw.length > max) return { res: reply({ error: "size" }, 413, allowed) };
@@ -147,7 +227,7 @@ async function handleRequest(request, env, ctx, allowed, reply) {
 
 // Le jeton du lien s'échange une seule fois contre une session. Il est dans le fragment (#), donc jamais envoyé
 // au serveur par un simple clic : un scanner de messagerie qui ouvre le lien ne le consomme pas.
-async function handleVerify(request, env, allowed, reply) {
+async function handleVerify(request, env, ctx, allowed, reply) {
   const { input: d, res } = await parse(request, 500, reply, allowed);
   if (res) return res;
   const token = String(d.token || "");
@@ -166,6 +246,11 @@ async function handleVerify(request, env, allowed, reply) {
   await env.BRIEFS.put(`s:${await sha256(session)}`, JSON.stringify({ email, admin }), {
     expirationTtl: admin ? ADMIN_SESSION_TTL : SESSION_TTL,
   });
+  if (!admin) {
+    const welcome = welcomeClient(env, email);
+    if (ctx && ctx.waitUntil) ctx.waitUntil(welcome);
+    else await welcome;
+  }
   return reply({ ok: true, session, email, admin }, 200, allowed);
 }
 
@@ -219,6 +304,7 @@ async function handleSave(request, env, allowed, reply) {
   await env.BRIEFS.put(`p:${await sha256(email)}`, JSON.stringify(next));
   const idx = await readIndex(env);
   if (!idx.includes(email)) await env.BRIEFS.put("pidx", JSON.stringify([email, ...idx].slice(0, 500)));
+  await pushCommande(env, email, next);
   return reply({ ok: true, projet: { ...next, facture: undefined, hasFacture: Boolean(next.facture) } }, 200, allowed);
 }
 
@@ -366,7 +452,7 @@ export async function handleAuth(request, env, ctx, allowed, path, reply) {
     if (!env.RESEND_API_KEY) return reply({ error: "config" }, 500, allowed);
     return handleRequest(request, env, ctx, allowed, reply);
   }
-  if (m === "POST" && path === "/auth/verification") return handleVerify(request, env, allowed, reply);
+  if (m === "POST" && path === "/auth/verification") return handleVerify(request, env, ctx, allowed, reply);
   if (m === "POST" && path === "/auth/deconnexion") return handleLogout(request, env, allowed, reply);
   if (m === "GET" && path === "/moi") return handleMe(request, env, allowed, reply);
   if (m === "POST" && path === "/moi/rushes") return handleRushes(request, env, allowed, reply);

@@ -4,7 +4,7 @@
 // REPLY_DELAY règle le délai annoncé, CONFIRMATION="off" coupe l'accusé.
 // Copie du brief consultable depuis n'importe quel appareil : KV « BRIEFS », 90 jours, accès par lien personnel.
 
-import { handleAuth } from "./auth.js";
+import { handleAuth, pushRdv } from "./auth.js";
 
 const MAX = { nom: 120, email: 254, projet: 60, message: 6000 };
 const PROJETS = ["Spot / publicité", "Clip", "Film / documentaire", "Réseaux sociaux", "Étalonnage seul", "Autre"];
@@ -255,9 +255,9 @@ async function handleTunnel(request, env, ctx, allowed) {
     return reply({ ok: true }, 200, allowed);
   }
   const id = await storeBrief(env, data, "tunnel");
-  const confirmation = sendConfirmation(env, data, ip, id);
-  if (ctx && ctx.waitUntil) ctx.waitUntil(confirmation);
-  else await confirmation;
+  const both = Promise.all([sendConfirmation(env, data, ip, id), pushRdv(env, data)]);
+  if (ctx && ctx.waitUntil) ctx.waitUntil(both);
+  else await both;
   return reply(id ? { ok: true, id } : { ok: true }, 200, allowed);
 }
 

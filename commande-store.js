@@ -37,30 +37,6 @@
 
   const validEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const HOOK = "https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3";
-
-  const pushCommande = (email, project) => {
-    const etat = project.etat || "brief";
-    const slug = email.replace(/[^a-z0-9]/g, "");
-    const payload = {
-      action: "commande",
-      clef: `cmd-${slug}`,
-      email,
-      nom: project.titre || email,
-      projet: project.titre || "",
-      etat,
-      statut: etat === "livraison" ? "close" : "cours",
-      delai: project.delai || "",
-      message: "",
-      cree: new Date().toISOString(),
-    };
-    fetch(HOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }).catch(() => {});
-  };
-
   const sessionEmail = () => (window.ButtiAuth ? window.ButtiAuth.email() : "");
 
   const logout = () => {
@@ -100,7 +76,6 @@
       facture: project.facture ?? current.facture,
     };
     write(db);
-    pushCommande(email, db.projets[email]);
     return { ok: true, email, hasAccount: Boolean(db.comptes[email]) };
   };
 
