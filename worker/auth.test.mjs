@@ -1,4 +1,4 @@
-// Tests de la connexion par lien et du suivi projet. Lancer : node --test worker/
+// Tests de la connexion par lien et du suivi projet. Lancer : node --test "worker/*.test.mjs"
 import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "./contact.js";

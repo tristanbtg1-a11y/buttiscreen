@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test worker/
+      - run: node --test "worker/*.test.mjs"
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

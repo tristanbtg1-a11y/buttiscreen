@@ -48,7 +48,7 @@ Ne publier `politique.html` mise à jour qu'au moment où l'étape 5 est faite :
 
 ## Déploiement par GitHub Actions
 
-Le workflow `.github/workflows/worker.yml` lance les tests (`node --test worker/`) sur chaque PR, puis déploie le Worker à chaque envoi sur `main` qui touche `worker/`. Il se lance aussi à la main (onglet Actions, « Run workflow »).
+Le workflow `.github/workflows/worker.yml` lance les tests (`node --test "worker/*.test.mjs"`) sur chaque PR, puis déploie le Worker à chaque envoi sur `main` qui touche `worker/`. Il se lance aussi à la main (onglet Actions, « Run workflow »).
 Deux secrets de dépôt sont nécessaires (GitHub : Settings, Secrets and variables, Actions) :
 - `CLOUDFLARE_API_TOKEN` : jeton créé dans Cloudflare (My Profile, API Tokens) avec le modèle « Edit Cloudflare Workers » ;
 - `CLOUDFLARE_ACCOUNT_ID` : identifiant du compte, visible dans l'adresse du tableau de bord.
@@ -111,4 +111,4 @@ Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de r�
   - **commande** : à chaque enregistrement du suivi par le studio (`POST /admin/projet`), fiche `commande` (état, délai, titre, statut `close` à la livraison) ;
   - **première connexion d'un client** : e-mail « Nouveau compte client » au studio, et fiche `commande` (état « brief ») créée seulement si la gestion ne la connaît pas : le Worker lit d'abord la liste (jamais d'écrasement, et rien n'est écrit si la lecture échoue). Repère `c:<hash>` dans le KV pour ne le faire qu'une fois par adresse.
 - Sans `MAKE_PASSWORD`, aucune écriture dans Make : les e-mails (brief, accusé) partent quand même.
-- Tests : `node --test worker/*.test.mjs` (51 tests).
+- Tests : `node --test "worker/*.test.mjs"` (54 tests).
