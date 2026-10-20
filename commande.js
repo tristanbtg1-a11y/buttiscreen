@@ -288,7 +288,7 @@
     if (!RANK.includes(etat)) return;
     const project = store.projectFor(email);
     if (RANK.indexOf(etat) <= RANK.indexOf(project.etat || "brief")) return;
-    store.saveProject(email, { ...project, etat });
+    store.setEtat(email, etat); // cache de l'appareil seulement : la fiche de la gestion est écrite par le Worker
     render(email, true);
   };
 

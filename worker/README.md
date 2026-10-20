@@ -93,3 +93,12 @@ Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de r�
 ## Rushes
 
 - `POST /moi/rushes` (session client) : le Worker demande à Make l'espace d'envoi Frame.io pour l'adresse de la session (jamais celle envoyée par le navigateur), avec `MAKE_PASSWORD`. Noms de fichier nettoyés, taille bornée, 120 demandes par session et par heure. Le navigateur envoie ensuite les fichiers directement aux adresses renvoyées.
+
+## Écritures dans Make (commande et rendez-vous)
+
+- Le navigateur n'écrit plus dans Make. Le Worker écrit avec `MAKE_PASSWORD` :
+  - **rendez-vous** : à chaque `POST /tunnel`, fiche `rdv` (mêmes champs que l'ancien envoi du navigateur) ;
+  - **commande** : à chaque enregistrement du suivi par le studio (`POST /admin/projet`), fiche `commande` (état, délai, titre, statut `close` à la livraison) ;
+  - **première connexion d'un client** : e-mail « Nouveau compte client » au studio, et fiche `commande` (état « brief ») créée seulement si la gestion ne la connaît pas : le Worker lit d'abord la liste (jamais d'écrasement, et rien n'est écrit si la lecture échoue). Repère `c:<hash>` dans le KV pour ne le faire qu'une fois par adresse.
+- Sans `MAKE_PASSWORD`, aucune écriture dans Make : les e-mails (brief, accusé) partent quand même.
+- Tests : `node --test worker/*.test.mjs` (51 tests).

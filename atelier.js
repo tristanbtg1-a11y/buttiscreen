@@ -159,7 +159,6 @@
     saved.hidden = !ok;
     saved.textContent = ok ? "Suivi enregistré. Le client le voit en se connectant, sur n’importe quel appareil." : "";
     if (ok) {
-      store.saveProject(body.email, { ...body, facture: undefined, factureNom: undefined }); // alimente aussi Make, comme avant
       await renderList();
     }
   });
