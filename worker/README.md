@@ -45,3 +45,10 @@ Ils ne contactent jamais le vrai Resend.
 7. Facultatif : règle de limitation de débit Cloudflare sur la route du Worker.
 
 Ne publier `politique.html` mise à jour qu'au moment où l'étape 5 est faite : tant que le formulaire ouvre la messagerie, le texte actuel est le bon.
+
+## Déploiement par Cloudflare (Git)
+
+Le Worker `buttiscreen-contact` est relié à ce dépôt : Cloudflare le construit et le déploie à chaque envoi sur `main`.
+Réglages de la construction : branche de production `main`, dossier racine `worker`, commande de build vide, commande de déploiement `npx wrangler deploy`.
+Le secret `RESEND_API_KEY` se règle dans Cloudflare (Paramètres, Variables d'exécution et secrets), jamais dans le dépôt.
+`MAIL_TO` et `MAIL_FROM` restent dans `wrangler.toml`.
