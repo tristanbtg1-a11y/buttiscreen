@@ -10,7 +10,8 @@ const ADMIN_SESSION_TTL = 12 * 3600;
 const MIN_FILL_MS = 2500;
 const ETATS = ["brief", "preparation", "montage", "etalonnage", "livraison"];
 const MAX_FACTURE = 2_900_000;
-const PAGES = { commande: "commande.html", atelier: "atelier.html" };
+const PAGES = { commande: "commande.html", atelier: "atelier.html", gestion: "gestion.html" };
+const MAKE_HOOK = "https://hook.eu1.make.com/q9filj9cvcdae4534x28xxztxeynrqd3";
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -122,8 +123,8 @@ async function handleRequest(request, env, ctx, allowed, reply) {
   const ok = reply({ ok: true }, 200, allowed);
   if (Boolean(d.website) || !(Date.now() - Number(d.t) >= MIN_FILL_MS)) return ok;
   if (!env.BRIEFS || !env.RATE) return ok;
-  const page = d.page === "atelier" ? "atelier" : "commande";
-  if (page === "atelier" && !isAdmin(env, email)) return ok; // pas de lien d'atelier pour un tiers
+  const page = d.page === "atelier" || d.page === "gestion" ? d.page : "commande";
+  if (page !== "commande" && !isAdmin(env, email)) return ok; // pas de lien d'atelier ni de gestion pour un tiers
   const ip = request.headers.get("cf-connecting-ip") || "inconnue";
   if (!(await bump(env.RATE, `ar:${ip}:${Math.floor(Date.now() / 3_600_000)}`, 8, 3600))) return ok;
   const hash = await sha256(email);
@@ -221,6 +222,30 @@ async function handleSave(request, env, allowed, reply) {
   return reply({ ok: true, projet: { ...next, facture: undefined, hasFacture: Boolean(next.facture) } }, 200, allowed);
 }
 
+// Ouvre la gestion avec la session studio : le Worker se connecte à Make à la place du studio.
+// Le mot de passe de Make (MAKE_PASSWORD) reste un secret du Worker, jamais dans le navigateur.
+async function handleGestion(request, env, allowed, reply) {
+  const s = await sessionOf(request, env);
+  if (!s || !isAdmin(env, s.email)) return reply({ error: "session" }, 401, allowed);
+  if (!env.MAKE_PASSWORD) return reply({ error: "config" }, 503, allowed);
+  if (env.RATE && !(await bump(env.RATE, `ag:${await sha256(s.token)}:${Math.floor(Date.now() / 3_600_000)}`, 12, 3600))) {
+    return reply({ error: "limite" }, 429, allowed);
+  }
+  const email = env.MAKE_OWNER_EMAIL || "tristan.buttig1@gmail.com";
+  try {
+    const res = await fetch(MAKE_HOOK, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "login", email, password: env.MAKE_PASSWORD }),
+    });
+    const data = await res.json().catch(() => null);
+    if (res.ok && data && data.token) return reply({ ok: true, email, token: String(data.token) }, 200, allowed);
+    return reply({ error: "refus" }, 502, allowed);
+  } catch {
+    return reply({ error: "make" }, 502, allowed);
+  }
+}
+
 async function handleList(request, env, allowed, reply) {
   const s = await sessionOf(request, env);
   if (!s || !isAdmin(env, s.email)) return reply({ error: "session" }, 401, allowed);
@@ -246,6 +271,7 @@ export async function handleAuth(request, env, ctx, allowed, path, reply) {
   if (m === "POST" && path === "/auth/deconnexion") return handleLogout(request, env, allowed, reply);
   if (m === "GET" && path === "/moi") return handleMe(request, env, allowed, reply);
   if (m === "POST" && path === "/admin/projet") return handleSave(request, env, allowed, reply);
+  if (m === "POST" && path === "/admin/gestion") return handleGestion(request, env, allowed, reply);
   if (m === "GET" && path === "/admin/projets") return handleList(request, env, allowed, reply);
   return reply({ error: "method" }, 405, allowed);
 }

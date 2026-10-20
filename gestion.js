@@ -554,6 +554,59 @@
     });
   }
 
-  const saved = session();
-  if (saved?.token) load(saved, false);
+  // Connexion unifiée : la session studio (lien reçu par e-mail) obtient le jeton de Make via le Worker.
+  const linkStatus = document.getElementById("gate-link-status");
+  const setLinkStatus = (message) => {
+    if (linkStatus) linkStatus.textContent = message;
+  };
+
+  const openWithStudioSession = async () => {
+    const result = await window.ButtiAuth.gestionToken();
+    if (result.status === 401) {
+      await window.ButtiAuth.logout();
+      setLinkStatus("La session studio a expiré. Recevez un nouveau lien.");
+      return;
+    }
+    if (result.json && result.json.ok) {
+      await load({ email: result.json.email, token: result.json.token }, true);
+      return;
+    }
+    setLinkStatus(
+      result.json && result.json.error === "config"
+        ? "Le mot de passe de la gestion n’est pas encore enregistré côté serveur. Utilisez l’accès de secours."
+        : "Le studio ne répond pas. Réessayez dans un instant."
+    );
+  };
+
+  document.getElementById("gate-link-btn")?.addEventListener("click", async (event) => {
+    event.target.disabled = true;
+    const result = await window.ButtiAuth.requestLink("tristan@buttiscreen.fr", "gestion");
+    event.target.disabled = false;
+    setLinkStatus(
+      result.ok
+        ? "Lien envoyé à tristan@buttiscreen.fr. Il est valable 15 minutes : cliquez dessus pour ouvrir la gestion."
+        : "L’envoi n’a pas abouti. Réessayez dans un instant."
+    );
+  });
+
+  const start = async () => {
+    const hash = location.hash.match(/^#connexion=([0-9a-f]{32})$/);
+    if (hash) {
+      history.replaceState(null, "", location.pathname + location.search);
+      setLinkStatus("Connexion en cours…");
+      const result = await window.ButtiAuth.verify(hash[1]);
+      if (!result.ok || !result.admin) {
+        if (result.ok) await window.ButtiAuth.logout();
+        setLinkStatus("Ce lien a expiré ou n’ouvre pas la gestion. Recevez un nouveau lien.");
+        return;
+      }
+    }
+    const saved = session();
+    if (saved?.token) {
+      await load(saved, false);
+      if (!board.hidden) return;
+    }
+    if (window.ButtiAuth.isAdmin()) await openWithStudioSession();
+  };
+  start();
 })();

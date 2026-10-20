@@ -204,3 +204,48 @@ test("mail de connexion : lien vers la bonne page, adresse échappée", () => {
   assert.match(m.html, /atelier\.html#connexion=/);
   assert.equal(m.subject.includes("\n"), false);
 });
+
+test("gestion : la session studio obtient le jeton de Make, un client non", async () => {
+  const e = { ...env(), MAKE_PASSWORD: "secret-make" };
+  const admin = (await login(e, "tristan@buttiscreen.fr", "gestion")).json;
+  const client = (await login(e, "client@example.com")).json;
+  assert.equal((await call("/admin/gestion", { token: client.session, body: {}, e })).status, 401);
+  const original = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = async (url, init) => {
+    seen.push({ url, body: JSON.parse(init.body) });
+    return new Response(JSON.stringify({ ok: true, token: "tok123" }), { status: 200 });
+  };
+  try {
+    const res = await call("/admin/gestion", { token: admin.session, body: {}, e });
+    assert.deepEqual(await res.json(), { ok: true, email: "tristan.buttig1@gmail.com", token: "tok123" });
+    assert.match(seen[0].url, /hook\.eu1\.make\.com/);
+    assert.equal(seen[0].body.action, "login");
+    assert.equal(seen[0].body.password, "secret-make");
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("gestion : sans MAKE_PASSWORD, 503 ; refus de Make, 502 ; lien de gestion réservé au studio", async () => {
+  const e = env();
+  const admin = (await login(e, "tristan@buttiscreen.fr", "gestion")).json;
+  assert.equal((await call("/admin/gestion", { token: admin.session, body: {}, e })).status, 503);
+  const withPwd = { ...e, MAKE_PASSWORD: "x" };
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => new Response('{"ok":false}', { status: 401 });
+  try {
+    assert.equal((await call("/admin/gestion", { token: admin.session, body: {}, e: withPwd })).status, 502);
+  } finally {
+    globalThis.fetch = original;
+  }
+  const r = mockResend();
+  try {
+    await call("/auth/demande", { body: demande("tiers@example.com", { page: "gestion" }), e });
+    assert.equal(r.calls.length, 0);
+    await call("/auth/demande", { body: demande("tristan@buttiscreen.fr", { page: "gestion" }), e, ip: "198.51.100.77" });
+    assert.match(r.calls[0].body.text, /gestion\.html#connexion=/);
+  } finally {
+    r.restore();
+  }
+});

@@ -93,5 +93,6 @@
     logout,
     saveProject: (body) => adminCall("/admin/projet", { method: "POST", body }),
     listProjects: () => adminCall("/admin/projets"),
+    gestionToken: () => adminCall("/admin/gestion", { method: "POST", body: {} }),
   };
 })();

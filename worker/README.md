@@ -77,3 +77,9 @@ Après l'envoi du brief au studio, le Worker envoie au visiteur un accusé de r�
 - `ADMIN_EMAILS` (variable de `wrangler.toml`) : adresses du studio. Seules elles peuvent écrire le suivi (`POST /admin/projet`) et le lister (`GET /admin/projets`), via un lien envoyé depuis l'atelier. L'atelier ne reçoit de lien que pour ces adresses.
 - Le suivi et les sessions sont dans le KV `BRIEFS` (clés `p:`, `s:`, `ml:`, index `pidx`).
 - Tests : `node --test worker/*.test.mjs` (39 tests).
+
+## Gestion avec la session studio
+
+- `POST /admin/gestion` (session studio) : le Worker se connecte à Make avec `MAKE_PASSWORD` (secret du Worker) et renvoie le jeton de la gestion. `MAKE_OWNER_EMAIL` (défaut `tristan.buttig1@gmail.com`) est l'adresse du compte Make.
+- Sans `MAKE_PASSWORD` : 503, et la page gestion propose l'accès de secours par mot de passe.
+- Le lien de connexion peut viser la page `gestion` ou `atelier`, seulement pour les adresses de `ADMIN_EMAILS`.
