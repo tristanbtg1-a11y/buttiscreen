@@ -159,6 +159,7 @@ export function pushRdv(env, data) {
     fuseau: "Europe/Paris",
     nom: data.nom,
     email: data.email,
+    telephone: data.telephone || "",
     projet: data.projet,
     duree: data.duree || "",
     diffusion: data.diffusion || "",
