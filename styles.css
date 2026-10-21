@@ -4676,3 +4676,65 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
 .tunnel-sent .form-actions {
   margin-top: 28px;
 }
+
+/* Bouton « Lancer mon projet » du hero : deux fois plus grand, avec un combiné qui reprend le reflet du symbole play */
+.hero-start {
+  min-height: clamp(72px, 7vw, 96px);
+  padding: 0 clamp(26px, 3vw, 40px);
+  gap: clamp(12px, 1.4vw, 18px);
+  font-size: clamp(1.2rem, 2.1vw, 1.6rem);
+}
+
+.phone-ico {
+  --shine: 105deg;
+  --chrome: linear-gradient(
+    135deg,
+    #6f695f 0%,
+    #d9d3c8 18%,
+    #8c867c 34%,
+    #f1ede4 50%,
+    #7b756b 66%,
+    #cdc7bb 84%,
+    #8c867c 100%
+  );
+  display: inline-block;
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  -webkit-mask: var(--phone-shape) center / contain no-repeat;
+  mask: var(--phone-shape) center / contain no-repeat;
+  --phone-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z' fill='%23000' stroke='%23000' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background:
+    linear-gradient(
+      var(--shine),
+      transparent 38%,
+      rgba(255, 255, 255, 0.55) 46%,
+      #fff 50%,
+      rgba(255, 255, 255, 0.55) 54%,
+      transparent 62%
+    ) 160% 0 / 260% 100% no-repeat,
+    var(--chrome);
+  animation: play-shine 2.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+/* Au survol le bouton devient clair : le combiné prend alors le chrome sombre du symbole play. */
+.btn:hover .phone-ico {
+  --chrome: linear-gradient(
+    135deg,
+    #170b05 0%,
+    #6f4020 16%,
+    #1a0d06 32%,
+    #8a5126 48%,
+    #140b08 66%,
+    #5a3319 84%,
+    #1a0d06 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-ico {
+    animation: none;
+    background-position: 38% 0, 0 0;
+  }
+}
