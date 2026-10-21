@@ -38,6 +38,13 @@ function reply(body, status, origin) {
   });
 }
 
+// Facultatif : chiffres, espaces, + ( ) . - ; entre 8 et 15 chiffres (norme E.164).
+export function validPhone(value) {
+  const v = String(value);
+  const digits = v.replace(/\D/g, "").length;
+  return /^[+()\d\s.\-]{6,25}$/.test(v) && digits >= 8 && digits <= 15;
+}
+
 export function validate(input, now = Date.now()) {
   const d = input && typeof input === "object" ? input : {};
   const nom = oneLine(d.nom ?? "");
@@ -47,22 +54,25 @@ export function validate(input, now = Date.now()) {
   const duree = oneLine(d.duree ?? "").slice(0, 60);
   const diffusion = oneLine(d.diffusion ?? "").slice(0, 120);
   const creneau = oneLine(d.creneau ?? "").slice(0, 120);
+  const telephone = oneLine(d.telephone ?? "");
   const errors = {};
   if (nom.length < 2 || nom.length > MAX.nom) errors.nom = "Indiquez votre nom.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > MAX.email) errors.email = "Indiquez un e-mail valide.";
   if (!PROJETS.includes(projet)) errors.projet = "Choisissez un type de projet.";
   if (message.length < 10 || message.length > MAX.message) errors.message = "Écrivez quelques lignes sur le film.";
   if (creneau.length < 3) errors.creneau = "Choisissez un créneau de rendez-vous.";
+  if (telephone && !validPhone(telephone)) errors.telephone = "Indiquez un numéro valide ou laissez le champ vide.";
   const bot = Boolean(d.website) || !(now - Number(d.t) >= MIN_FILL_MS);
-  return { ok: !Object.keys(errors).length, bot, errors, data: { nom, email, projet, duree, diffusion, creneau, message } };
+  return { ok: !Object.keys(errors).length, bot, errors, data: { nom, email, projet, telephone, duree, diffusion, creneau, message } };
 }
 
 export function buildMail(data, env) {
-  const { nom, email, projet, duree, diffusion, creneau, message } = data;
+  const { nom, email, projet, telephone, duree, diffusion, creneau, message } = data;
   const label = String(creneau || "").replace(/\s*\([^)]*\)\s*$/, "");
   const rows = [
     ["Nom", nom],
     ["E-mail", email],
+    ...(telephone ? [["Téléphone", telephone]] : []),
     ["Projet", projet],
     ...(duree ? [["Durée", duree]] : []),
     ...(diffusion ? [["Diffusion", diffusion]] : []),
@@ -94,6 +104,7 @@ export function buildConfirmation(data, env, id) {
     "Votre brief",
     `Projet : ${projet}`,
     `E-mail : ${email}`,
+    ...(data.telephone ? [`Téléphone : ${data.telephone}`] : []),
     ...(data.duree ? [`Durée : ${data.duree}`] : []),
     ...(data.diffusion ? [`Diffusion : ${data.diffusion}`] : []),
     ...(data.creneau ? [`Créneau : ${data.creneau}`] : []),
@@ -123,7 +134,7 @@ export function buildConfirmation(data, env, id) {
     `<h1 style="margin:0 0 14px;font:600 22px Georgia,'Times New Roman',serif;color:#07060d">Votre brief est bien reçu.</h1>` +
     `<p style="margin:0 0 24px;font-size:15px;line-height:1.6">Nous le lisons avec attention et revenons vers vous personnellement sous ${esc(delay)}.</p>` +
     `<p style="margin:0 0 8px;font-size:11px;letter-spacing:2px;color:#ff6a00;font-weight:600">VOTRE BRIEF</p>` +
-    `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px">${row("Projet", esc(projet))}${row("E-mail", esc(email))}${data.duree ? row("Durée", esc(data.duree)) : ""}${data.diffusion ? row("Diffusion", esc(data.diffusion)) : ""}${data.creneau ? row("Créneau", esc(data.creneau)) : ""}</table>` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px">${row("Projet", esc(projet))}${row("E-mail", esc(email))}${data.telephone ? row("Téléphone", esc(data.telephone)) : ""}${data.duree ? row("Durée", esc(data.duree)) : ""}${data.diffusion ? row("Diffusion", esc(data.diffusion)) : ""}${data.creneau ? row("Créneau", esc(data.creneau)) : ""}</table>` +
     `<div style="margin:0 0 24px;padding:14px 16px;background:#f6f5f9;border-left:3px solid #d9d4e6;font-size:15px;line-height:1.6;white-space:pre-wrap">${esc(message)}</div>` +
     `<p style="margin:0 0 20px;font-size:15px;line-height:1.6">Pour le compléter (références, rushes, date de livraison), répondez simplement à ce message.</p>` +
     (link

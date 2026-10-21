@@ -393,10 +393,11 @@ test("rendez-vous du tunnel : le Worker écrit la fiche chez Make avec le mot de
   const f = bothFetch();
   try {
     await call("/tunnel", {
-      body: { nom: "Camille Durand", email: "Camille@Example.com", projet: "Clip", duree: "3 min", creneau: "mardi 10 h", message: "Un clip de trois minutes.", t: Date.now() - 10_000 },
+      body: { nom: "Camille Durand", email: "Camille@Example.com", projet: "Clip", duree: "3 min", telephone: "06 12 34 56 78", creneau: "mardi 10 h", message: "Un clip de trois minutes.", t: Date.now() - 10_000 },
       e,
     });
     const rdv = f.made.find((m) => m.action === "rdv");
+    assert.equal(rdv.telephone, "06 12 34 56 78");
     assert.equal(rdv.password, "pw");
     assert.equal(rdv.email, "Camille@Example.com");
     assert.equal(rdv.creneau, "mardi 10 h");

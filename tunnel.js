@@ -6,6 +6,7 @@
     nom: "",
     email: "",
     projet: "",
+    telephone: "",
     duree: "",
     diffusion: "",
     message: "",
@@ -49,6 +50,9 @@
     button.addEventListener("click", () => show(button.dataset.goto));
   });
 
+  // Facultatif : chiffres, espaces, + ( ) . - ; entre 8 et 15 chiffres. Le Worker applique la même règle.
+  const validPhone = (value) => /^[+()\d\s.\-]{6,25}$/.test(value) && value.replace(/\D/g, "").length >= 8 && value.replace(/\D/g, "").length <= 15;
+
   const setError = (id, message) => {
     const node = document.getElementById(id);
     if (!node) return;
@@ -63,18 +67,21 @@
     store.nom = String(data.get("nom") || "").trim();
     store.email = String(data.get("email") || "").trim();
     store.projet = String(data.get("projet") || "").trim();
+    store.telephone = String(data.get("telephone") || "").trim();
     store.duree = String(data.get("duree") || "").trim();
     store.diffusion = String(data.get("diffusion") || "").trim();
     store.message = String(data.get("message") || "").trim();
     const okNom = store.nom.length >= 2;
     const okMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.email);
+    const okTel = !store.telephone || validPhone(store.telephone);
     const okProjet = store.projet.length > 0;
     const okMessage = store.message.length >= 10;
     setError("err-nom", okNom ? "" : "Indiquez votre nom.");
     setError("err-email", okMail ? "" : "Indiquez un e-mail valide.");
+    setError("err-telephone", okTel ? "" : "Indiquez un numéro valide ou laissez le champ vide.");
     setError("err-projet", okProjet ? "" : "Choisissez un type de projet.");
     setError("err-message", okMessage ? "" : "Écrivez le brief : quelques lignes suffisent (10 caractères au moins).");
-    if (okNom && okMail && okProjet && okMessage) show("rdv");
+    if (okNom && okMail && okTel && okProjet && okMessage) show("rdv");
   });
 
   const slots = document.getElementById("slots");
@@ -117,6 +124,7 @@
     const rows = [
       ["Nom", store.nom],
       ["E-mail", store.email],
+      ["Téléphone", store.telephone || "—"],
       ["Projet", store.projet],
       ["Durée", store.duree || "—"],
       ["Diffusion", store.diffusion || "—"],
@@ -143,6 +151,7 @@
     [
       `Nom : ${store.nom}`,
       `E-mail : ${store.email}`,
+      ...(store.telephone ? [`Téléphone : ${store.telephone}`] : []),
       `Projet : ${store.projet}`,
       `Durée : ${store.duree || "—"}`,
       `Diffusion : ${store.diffusion || "—"}`,

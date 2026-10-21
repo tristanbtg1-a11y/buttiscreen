@@ -2,7 +2,7 @@
 // Lancer : node --test worker/contact.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
-import worker, { validate, buildMail, buildConfirmation, buildLinkMail } from "./contact.js";
+import worker, { validate, validPhone, buildMail, buildConfirmation, buildLinkMail } from "./contact.js";
 
 const ORIGIN = "https://buttiscreen.fr";
 const ENV = { RESEND_API_KEY: "re_test", MAIL_TO: "contact@buttiscreen.fr", MAIL_FROM: "Buttiscreen <brief@buttiscreen.fr>" };
@@ -394,6 +394,31 @@ test("tunnel : le studio reçoit un seul mail avec le créneau, le visiteur son 
     const id = ack.text.match(/#brief=([0-9a-f]{32})/)[1];
     const got = await (await call(`/brief/${id}`, { method: "GET", env })).json();
     assert.equal(got.brief.creneau, "mardi 14:00 (2026-10-28T14:00, Europe/Paris)");
+  } finally {
+    resend.restore();
+  }
+});
+
+test("téléphone facultatif : transmis au studio et à l'accusé s'il est donné, absent sinon, refusé s'il est invalide", async () => {
+  const resend = mockResend();
+  const env = full();
+  try {
+    const res = await call("/tunnel", { body: brief({ telephone: "+33 6 12 34 56 78" }), env });
+    assert.equal(res.status, 200);
+    const studio = resend.calls.find((c) => c.body.to[0] === "contact@buttiscreen.fr").body;
+    assert.ok(studio.text.includes("Téléphone : +33 6 12 34 56 78") && studio.html.includes("+33 6 12 34 56 78"));
+    const ack = resend.calls.find((c) => c.body.to[0] === "camille@example.com").body;
+    assert.ok(ack.text.includes("Téléphone : +33 6 12 34 56 78"));
+    resend.calls.length = 0;
+    const sans = await call("/tunnel", { body: brief({ message: "Un autre brief, sans numéro de téléphone." }), env });
+    assert.equal(sans.status, 200);
+    assert.ok(resend.calls.every((c) => !/Téléphone/.test(c.body.text)));
+    for (const telephone of ["abc", "12", "+33 6 12 34 56 78 99 00 11 22", "06<script>12345678"]) {
+      const bad = await call("/tunnel", { body: brief({ telephone, message: `Brief ${telephone} suffisamment long.` }), env });
+      assert.equal(bad.status, 422);
+      assert.ok((await bad.json()).fields.telephone);
+    }
+    assert.deepEqual(["06 12 34 56 78", "+33 (0)6.12.34.56.78", "0612345678", "+1-202-555-0143"].map(validPhone), [true, true, true, true]);
   } finally {
     resend.restore();
   }

@@ -104,6 +104,11 @@
               <span class="field-error" id="err-email" hidden></span>
             </label>
             <label class="field">
+              <span>Téléphone (facultatif)</span>
+              <input name="telephone" type="tel" autocomplete="tel" inputmode="tel" placeholder="06 12 34 56 78" />
+              <span class="field-error" id="err-telephone" hidden></span>
+            </label>
+            <label class="field">
               <span>Projet</span>
               <select name="projet" required>
                 <option value="">Choisir</option>
@@ -120,7 +125,7 @@
               <span>Durée visée</span>
               <input name="duree" type="text" placeholder="00:00:30:00" />
             </label>
-            <label class="field full">
+            <label class="field">
               <span>Où le film sera vu</span>
               <input name="diffusion" type="text" placeholder="Salle, site, réseaux" />
             </label>
@@ -176,6 +181,6 @@
     </main>
     <script src="boutique.js?v=boutique2"></script>
     <script src="brief-memo.js?v=brief1"></script>
-    <script src="tunnel.js?v=rdv1"></script>
+    <script src="tunnel.js?v=tel1"></script>
   </body>
 </html>

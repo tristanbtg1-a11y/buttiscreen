@@ -37,6 +37,7 @@
     return {
       kind: row.kind || "",
       email: row.email || "",
+      telephone: row.telephone || "",
       nom: row.nom || "",
       projet: row.projet || "",
       creneau: row.creneau || "",
@@ -188,6 +189,7 @@
     <article class="gestion-card">
       <h3>${esc(item.nom || item.email || "Rendez-vous")}</h3>
       ${line("E-mail", item.email)}
+      ${line("Téléphone", item.telephone)}
       ${line("Projet", item.projet)}
       ${line("Durée", item.duree)}
       ${line("Diffusion", item.diffusion)}
