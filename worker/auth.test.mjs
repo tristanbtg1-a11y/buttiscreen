@@ -174,7 +174,7 @@ test("/moi : renvoie le dernier brief de l'adresse", async () => {
   const r = mockResend();
   try {
     await call("/", {
-      body: { nom: "Camille Durand", email: "camille@example.com", projet: "Clip", message: "Un clip de trois minutes.", website: "", t: Date.now() - 10_000 },
+      body: { nom: "Camille Durand", email: "camille@example.com", projet: "Clip", creneau: "mar. 28 oct. · 10:00 (2026-10-28T10:00, Europe/Paris)", message: "Un clip de trois minutes.", website: "", t: Date.now() - 10_000 },
       e,
     });
   } finally {
@@ -299,7 +299,7 @@ test("devis du tunnel : l'identifiant du brief tient lieu de clé, un identifian
   let id;
   try {
     const res = await call("/tunnel", {
-      body: { nom: "Camille Durand", email: "camille@example.com", projet: "Clip", message: "Un clip de trois minutes.", t: Date.now() - 10_000 },
+      body: { nom: "Camille Durand", email: "camille@example.com", projet: "Clip", creneau: "mar. 28 oct. · 10:00 (2026-10-28T10:00, Europe/Paris)", message: "Un clip de trois minutes.", t: Date.now() - 10_000 },
       e,
     });
     id = (await res.json()).id;
@@ -406,7 +406,7 @@ test("rendez-vous du tunnel : le Worker écrit la fiche chez Make avec le mot de
   }
   const g = bothFetch();
   try {
-    await call("/tunnel", { body: { nom: "Camille Durand", email: "c@example.com", projet: "Clip", message: "Un clip de trois minutes.", t: Date.now() - 10_000 }, e: env(), ip: "198.51.100.1" });
+    await call("/tunnel", { body: { nom: "Camille Durand", email: "c@example.com", projet: "Clip", creneau: "mar. 28 oct. · 10:00 (2026-10-28T10:00, Europe/Paris)", message: "Un clip de trois minutes.", t: Date.now() - 10_000 }, e: env(), ip: "198.51.100.1" });
     assert.equal(g.made.length, 0); // sans MAKE_PASSWORD, rien n'est écrit
   } finally {
     g.restore();

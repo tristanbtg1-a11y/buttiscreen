@@ -34,7 +34,7 @@
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="preload" href="fonts/bricolage-800.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=rdv1" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -500,86 +500,16 @@
               <p class="kicker">Contact</p>
               <h2 id="contact-title">Parlons de votre film.</h2>
               <p class="lede">
-                Écrivez votre brief, il arrive directement à
-                <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
-                et le devis suit après lecture. Ou passez par
-                <a href="tunnel.html">le tunnel</a>, du brief à la livraison.
+                Tout commence par un brief et un rendez-vous de trente minutes. Vous choisissez votre créneau,
+                le devis suit après lecture du brief.
               </p>
+              <p class="fin-cta"><a class="btn" href="tunnel.html">Réserver mon rendez-vous</a></p>
             </div>
-            <aside class="fin-direct" aria-label="Écrire directement">
-              <p class="kicker">Écrire directement</p>
+            <aside class="fin-direct" aria-label="Une question avant de réserver">
+              <p class="kicker">Une question&nbsp;?</p>
               <a class="fin-mail" href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
-              <a class="fin-tunnel" href="tunnel.html">Ouvrir le tunnel</a>
             </aside>
           </div>
-          <div class="contact-layout" data-reveal>
-          <form class="brief" id="brief" action="mailto:contact@buttiscreen.fr" method="post" enctype="text/plain" data-endpoint="https://buttiscreen-contact.tristan-buttig1.workers.dev" novalidate>
-            <label class="field">
-              <span>Nom</span>
-              <input name="nom" type="text" autocomplete="name" required />
-              <span class="field-error" id="err-nom" hidden></span>
-            </label>
-            <label class="field">
-              <span>E-mail</span>
-              <input name="email" type="email" autocomplete="email" inputmode="email" required />
-              <span class="field-error" id="err-email" hidden></span>
-            </label>
-            <label class="field full">
-              <span>Projet</span>
-              <select name="projet" required>
-                <option value="">Choisir</option>
-                <option>Spot / publicité</option>
-                <option>Clip</option>
-                <option>Film / documentaire</option>
-                <option>Réseaux sociaux</option>
-                <option>Étalonnage seul</option>
-                <option>Autre</option>
-              </select>
-              <span class="field-error" id="err-projet" hidden></span>
-            </label>
-            <label class="field full">
-              <span>Message</span>
-              <textarea name="message" required></textarea>
-              <span class="field-error" id="err-message" hidden></span>
-            </label>
-            <label class="hp" aria-hidden="true">Ne pas remplir<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
-            <p class="form-fail full" id="form-fail" role="alert" hidden>
-              L’envoi n’a pas abouti. Réessayez, ou écrivez à
-              <a id="fail-mail" href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
-            </p>
-            <div class="field full form-actions">
-              <button class="btn btn-send" type="submit" id="send">Envoyer le brief</button>
-            </div>
-            <p class="fine full">
-              Vos informations servent uniquement à répondre à ce brief.
-              <a href="politique.html">Politique de confidentialité</a>.
-            </p>
-          </form>
-          <aside class="brief-note">
-            <p class="kicker">Dans le message</p>
-            <ul>
-              <li>Durée visée</li>
-              <li>Où le film sera vu</li>
-              <li>Date de livraison</li>
-              <li>Cadres utiles : 16:9, 9:16, 1:1</li>
-            </ul>
-            <p>Pas de grille de prix. Le devis suit le brief.</p>
-          </aside>
-          </div>
-          <div class="form-success" id="form-success" hidden>
-            <p class="kicker" id="success-kicker">Brief prêt</p>
-            <h3 id="success-title">Votre messagerie s’ouvre avec le message.</h3>
-            <p id="success-text">
-              Il part vers
-              <a href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>.
-              Si rien ne s’ouvre, écrivez à cette adresse.
-            </p>
-            <div class="form-actions">
-              <a class="btn" id="reopen-mail" href="mailto:contact@buttiscreen.fr">Rouvrir le message</a>
-              <button class="btn ghost" type="button" id="edit-brief">Modifier</button>
-            </div>
-          </div>
-          <p class="sr-only" role="status" id="form-status"></p>
           <footer class="footer">
             <p class="footer-brand"><strong>BUTTISCREEN</strong><span>Studio de montage vidéo · Paris</span></p>
             <nav class="footer-links" aria-label="Pied de page">
@@ -653,6 +583,6 @@
     </dialog>
     <script src="boutique.js"></script>
     <script src="brief-memo.js?v=brief1"></script>
-    <script src="main.js"></script>
+    <script src="main.js?v=rdv1"></script>
   </body>
 </html>

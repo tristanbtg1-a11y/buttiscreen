@@ -6,14 +6,14 @@
     <title>Tunnel — BUTTISCREEN</title>
     <meta
       name="description"
-      content="Brief, rendez-vous, devis, règlement et livraison. Le tunnel de BUTTISCREEN, studio de montage vidéo."
+      content="Brief et rendez-vous : le tunnel de BUTTISCREEN, studio de montage vidéo. Le devis suit après lecture du brief."
     />
     <link rel="canonical" href="https://buttiscreen.fr/tunnel.html" />
     <meta name="theme-color" content="#07060d" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=boutique2" />
+    <link rel="stylesheet" href="styles.css?v=rdv1" />
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -79,15 +79,14 @@
         <p class="kicker">Tunnel 01</p>
         <h1 class="tunnel-title">De l’écoute au master<span class="dot">.</span></h1>
         <p class="lede tunnel-lede">
-          Cinq étapes, du brief à la livraison. Un devis écrit pour votre film, jamais une grille.
+          Trois étapes : le brief, un créneau, l’envoi au studio. Un devis écrit pour votre film, jamais une grille.
         </p>
 
         <div class="tunnel-track" role="tablist" aria-label="Étapes du tunnel">
           <button class="clip is-active" type="button" role="tab" id="tab-brief" aria-selected="true" aria-controls="pane-brief" data-step="brief">Brief</button>
           <button class="clip" type="button" role="tab" id="tab-rdv" aria-selected="false" aria-controls="pane-rdv" data-step="rdv">Rendez-vous</button>
           <button class="clip" type="button" role="tab" id="tab-devis" aria-selected="false" aria-controls="pane-devis" data-step="devis">Devis</button>
-          <button class="clip" type="button" role="tab" id="tab-reglement" aria-selected="false" aria-controls="pane-reglement" data-step="reglement">Règlement</button>
-          <button class="clip" type="button" role="tab" id="tab-livraison" aria-selected="false" aria-controls="pane-livraison" data-step="livraison">Livraison</button>
+          <button class="clip" type="button" role="tab" id="tab-envoye" aria-selected="false" aria-controls="pane-envoye" data-step="envoye" hidden>Envoyé</button>
         </div>
 
         <section class="tunnel-pane" id="pane-brief" role="tabpanel" aria-labelledby="tab-brief">
@@ -157,41 +156,26 @@
             <button class="btn ghost" type="button" data-goto="rdv">Retour</button>
             <button class="btn" type="button" id="send-brief">Envoyer au studio</button>
           </div>
+          <p class="field-error" id="send-fail" role="alert" hidden>
+            L’envoi n’a pas abouti. Réessayez dans un instant, ou écrivez au studio à
+            <a id="send-mail" href="mailto:contact@buttiscreen.fr">contact@buttiscreen.fr</a>
+            en indiquant votre créneau.
+          </p>
           <p class="fine" id="send-status" role="status"></p>
         </section>
 
-        <section class="tunnel-pane" id="pane-reglement" role="tabpanel" aria-labelledby="tab-reglement" hidden>
-          <p class="kicker">04 · Stripe</p>
-          <h2>Le règlement du devis.</h2>
-          <p class="lede">
-            Le paiement passe par Stripe, sur le montant exact du devis. Rien n’est débité tant que ce montant n’existe pas.
-          </p>
-          <p class="fine">Le bouton s’active quand le devis est chiffré.</p>
-          <p class="fine" id="pay-status" role="status">Le lien Stripe arrive avec le devis chiffré.</p>
+        <section class="tunnel-pane tunnel-sent" id="pane-envoye" role="tabpanel" aria-labelledby="tab-envoye" tabindex="-1" hidden>
+          <p class="kicker">Envoyé</p>
+          <h2>Votre projet est bien envoyé au studio.</h2>
+          <p class="lede">Rendez-vous dans votre espace personnel BUTTISCREEN, «&nbsp;Mon compte&nbsp;».</p>
           <div class="form-actions">
-            <a class="btn is-wait" id="pay" aria-disabled="true">Payer le devis</a>
-            <button class="btn ghost" type="button" data-goto="livraison">Voir la livraison</button>
+            <a class="btn" href="commande.html">Mon compte</a>
           </div>
-        </section>
-
-        <section class="tunnel-pane" id="pane-livraison" role="tabpanel" aria-labelledby="tab-livraison" hidden>
-          <p class="kicker">05</p>
-          <h2>La salle de livraison.</h2>
-          <p class="lede">Vos masters s’ouvrent ici dès le règlement, nommés d’après votre film.</p>
-          <ul class="locker">
-            <li><span>Master</span><strong>16:9</strong><em>Fermé</em></li>
-            <li><span>Vertical</span><strong>9:16</strong><em>Fermé</em></li>
-            <li><span>Étalon</span><strong>ProRes</strong><em>Fermé</em></li>
-          </ul>
-          <p class="fine">
-            <a href="politique.html">Politique de confidentialité</a>.
-          </p>
         </section>
       </div>
     </main>
     <script src="boutique.js?v=boutique2"></script>
-    <script src="auth-client.js?v=phb3"></script>
     <script src="brief-memo.js?v=brief1"></script>
-    <script src="tunnel.js?v=phb3"></script>
+    <script src="tunnel.js?v=rdv1"></script>
   </body>
 </html>

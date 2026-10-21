@@ -12,6 +12,7 @@ const brief = (over = {}) => ({
   email: "camille@example.com",
   projet: "Clip",
   message: "Un clip de trois minutes, tourné en deux jours.",
+  creneau: "mar. 28 oct. · 10:00 (2026-10-28T10:00, Europe/Paris)",
   website: "",
   t: Date.now() - 10_000,
   ...over,
@@ -230,7 +231,7 @@ test("accusé : une seule fois par adresse et par jour, majuscules comprises", a
   const env = withKv();
   try {
     await postFrom(brief(), env);
-    await postFrom(brief({ email: "CAMILLE@example.com" }), env);
+    await postFrom(brief({ email: "CAMILLE@example.com", message: "Un second film, un autre brief complet." }), env);
     assert.equal(resend.calls.length, 3); // 2 briefs + 1 seul accusé
   } finally {
     resend.restore();
@@ -374,32 +375,92 @@ test("lien : robot, adresse invalide et limite par adresse", async () => {
   }
 });
 
-test("tunnel : copie du brief avec durée, diffusion et créneau, accusé sans mail au studio", async () => {
+test("tunnel : le studio reçoit un seul mail avec le créneau, le visiteur son accusé, la copie garde durée et diffusion", async () => {
   const resend = mockResend();
   const env = full();
   try {
     const res = await call("/tunnel", {
-      body: { nom: "Neo", email: "souleneo@example.com", projet: "Clip musical", duree: "3 min", diffusion: "YouTube", creneau: "mardi 14:00", message: "Un clip de trois minutes." },
+      body: brief({ email: "souleneo@example.com", duree: "3 min", diffusion: "YouTube", creneau: "mardi 14:00 (2026-10-28T14:00, Europe/Paris)" }),
       env,
     });
     assert.equal(res.status, 200);
-    assert.equal(resend.calls.length, 1); // l'accusé seulement
-    assert.deepEqual(resend.calls[0].body.to, ["souleneo@example.com"]);
-    assert.ok(resend.calls[0].body.text.includes("Durée : 3 min") && resend.calls[0].body.text.includes("Créneau : mardi 14:00"));
-    const id = resend.calls[0].body.text.match(/#brief=([0-9a-f]{32})/)[1];
+    assert.equal(resend.calls.length, 2);
+    const studio = resend.calls.find((c) => c.body.to[0] === "contact@buttiscreen.fr").body;
+    assert.equal(studio.reply_to, "souleneo@example.com");
+    assert.match(studio.subject, /^Rendez-vous mardi 14:00 — Clip — Camille Durand$/);
+    assert.ok(studio.text.includes("Créneau : mardi 14:00 (2026-10-28T14:00, Europe/Paris)") && studio.text.includes("Durée : 3 min"));
+    const ack = resend.calls.find((c) => c.body.to[0] === "souleneo@example.com").body;
+    assert.ok(ack.text.includes("Durée : 3 min") && ack.text.includes("Créneau : mardi 14:00"));
+    const id = ack.text.match(/#brief=([0-9a-f]{32})/)[1];
     const got = await (await call(`/brief/${id}`, { method: "GET", env })).json();
-    assert.equal(got.brief.creneau, "mardi 14:00");
+    assert.equal(got.brief.creneau, "mardi 14:00 (2026-10-28T14:00, Europe/Paris)");
   } finally {
     resend.restore();
   }
 });
 
-test("tunnel : brief invalide ou origine étrangère refusés", async () => {
+test("brief sans créneau : refusé, rien n'est envoyé, sur l'ancienne route comme sur le tunnel", async () => {
   const resend = mockResend();
   const env = full();
   try {
-    assert.equal((await call("/tunnel", { body: { nom: "N", email: "x", projet: "", message: "court" }, env })).status, 422);
+    for (const path of ["/", "/tunnel"]) {
+      for (const creneau of [undefined, "", "  "]) {
+        const res = await call(path, { body: brief({ creneau }), env });
+        assert.equal(res.status, 422);
+        assert.ok((await res.json()).fields.creneau);
+      }
+    }
+    assert.equal(resend.calls.length, 0);
+  } finally {
+    resend.restore();
+  }
+});
+
+test("brief : un double envoi ne crée ni deuxième mail au studio ni deuxième accusé, et rend le même identifiant", async () => {
+  const resend = mockResend();
+  const env = full();
+  try {
+    const first = await (await call("/tunnel", { body: brief(), env })).json();
+    const again = await (await call("/tunnel", { body: brief(), env })).json();
+    assert.equal(resend.calls.length, 2);
+    assert.equal(again.id, first.id);
+  } finally {
+    resend.restore();
+  }
+});
+
+test("brief : studio injoignable, 502 et aucun accusé", async () => {
+  const resend = mockResend(500);
+  const env = full();
+  try {
+    const res = await call("/tunnel", { body: brief(), env });
+    assert.equal(res.status, 502);
+    assert.equal(resend.calls.length, 1); // le mail au studio seul a été tenté
+  } finally {
+    resend.restore();
+  }
+});
+
+test("brief : trop d'envois depuis la même adresse IP en une heure, 429", async () => {
+  const resend = mockResend();
+  const env = full();
+  try {
+    for (let i = 0; i < 10; i++) {
+      assert.equal((await call("/tunnel", { body: brief({ message: `Brief numéro ${i} pour le studio.` }), env })).status, 200);
+    }
+    assert.equal((await call("/tunnel", { body: brief({ message: "Un onzième brief dans l'heure." }), env })).status, 429);
+  } finally {
+    resend.restore();
+  }
+});
+
+test("brief : invalide ou origine étrangère refusés, route inconnue 404", async () => {
+  const resend = mockResend();
+  const env = full();
+  try {
+    assert.equal((await call("/tunnel", { body: brief({ nom: "N", email: "x", projet: "", message: "court" }), env })).status, 422);
     assert.equal((await call("/tunnel", { body: brief(), env, origin: "https://evil.example" })).status, 403);
+    assert.equal((await call("/autre", { body: brief(), env })).status, 404);
     assert.equal(resend.calls.length, 0);
   } finally {
     resend.restore();
