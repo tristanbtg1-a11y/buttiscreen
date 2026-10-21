@@ -29,6 +29,13 @@ Ils se règlent une fois dans l'environnement cloud (menu de l'environnement, Ed
 
 Le scénario « BUTTISCREEN - RDV, commandes et gestion » écrit dans le data store « BUTTISCREEN gestion ». Il est modifié par le connecteur Make, pas par le dépôt. Pour ajouter un champ à une fiche : l'ajouter à la structure de données, au module d'écriture et au module de consultation, puis au Worker (`worker/auth.js`) et à `gestion.js`. Avant toute modification du scénario, sauvegarder le blueprint actuel et comparer le résultat enregistré à celui attendu.
 
+## Format des réponses
+
+- Par défaut, répondre en cartes : une carte = un titre en gras sur une ligne, puis deux ou trois lignes au plus, une seule idée. Cinq cartes au maximum ; le détail seulement sur demande.
+- Au-delà de cinq cartes, ou sur demande d'un carrousel : publier une page avec un carrousel à balayage horizontal (une carte par écran, style sombre de BUTTISCREEN : nuit violette, orange braise, coins de cadrage détachés sur la carte active). Si une page de carrousel existe déjà dans la session, la mettre à jour plutôt qu'en créer une nouvelle. Laisser dans la conversation un résumé de trois lignes et le lien. Sans possibilité de publier une page, rester sur les cartes en texte.
+- Exceptions, toujours en texte brut et intactes : erreurs, commandes, extraits de code, différences de fichiers, tableaux de résultats.
+- Aperçu de référence : https://claude.ai/artifact/MADDRKv5YJuLW7XL4BamLB (privé, ouvert par son propriétaire).
+
 ## Habitudes du projet
 
 - Une modification, une branche, une PR ; pas de fusion sans demande.
