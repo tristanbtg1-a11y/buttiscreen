@@ -4677,7 +4677,8 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
   margin-top: 28px;
 }
 
-/* Bouton « Lancer mon projet » du hero : deux fois plus grand, avec un combiné qui reprend le reflet du symbole play */
+/* Bouton « Lancer mon projet » du hero : deux fois plus grand, plein comme « Lancer le showreel », avec un combiné
+   qui reprend à l'identique le chrome et le reflet animé du symbole play. */
 .hero-start {
   min-height: clamp(72px, 7vw, 96px);
   padding: 0 clamp(26px, 3vw, 40px);
@@ -4687,16 +4688,6 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
 
 .phone-ico {
   --shine: 105deg;
-  --chrome: linear-gradient(
-    135deg,
-    #6f695f 0%,
-    #d9d3c8 18%,
-    #8c867c 34%,
-    #f1ede4 50%,
-    #7b756b 66%,
-    #cdc7bb 84%,
-    #8c867c 100%
-  );
   display: inline-block;
   flex: none;
   width: 1.5em;
@@ -4714,22 +4705,17 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
       rgba(255, 255, 255, 0.55) 54%,
       transparent 62%
     ) 160% 0 / 260% 100% no-repeat,
-    var(--chrome);
+    linear-gradient(
+      135deg,
+      #170b05 0%,
+      #6f4020 16%,
+      #1a0d06 32%,
+      #8a5126 48%,
+      #140b08 66%,
+      #5a3319 84%,
+      #1a0d06 100%
+    );
   animation: play-shine 2.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
-}
-
-/* Au survol le bouton devient clair : le combiné prend alors le chrome sombre du symbole play. */
-.btn:hover .phone-ico {
-  --chrome: linear-gradient(
-    135deg,
-    #170b05 0%,
-    #6f4020 16%,
-    #1a0d06 32%,
-    #8a5126 48%,
-    #140b08 66%,
-    #5a3319 84%,
-    #1a0d06 100%
-  );
 }
 
 @media (prefers-reduced-motion: reduce) {
