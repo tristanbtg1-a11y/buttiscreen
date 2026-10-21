@@ -1,4 +1,5 @@
-// Cloudflare Worker : reçoit le brief du formulaire de l'accueil et l'envoie par Resend.
+// Cloudflare Worker : reçoit le brief du tunnel (toujours avec un créneau de rendez-vous), le signale au studio par Resend
+// et dans la gestion (Make). Aucun brief sans rendez-vous n'est accepté.
 // Variables : RESEND_API_KEY (secret), MAIL_TO, MAIL_FROM, ALLOWED_ORIGINS (facultatif, séparées par des virgules).
 // Accusé de réception au visiteur : actif seulement si le KV « RATE » est lié (limite par adresse et par IP).
 // REPLY_DELAY règle le délai annoncé, CONFIRMATION="off" coupe l'accusé.
@@ -43,26 +44,39 @@ export function validate(input, now = Date.now()) {
   const email = oneLine(d.email ?? "");
   const projet = oneLine(d.projet ?? "");
   const message = String(d.message ?? "").trim();
+  const duree = oneLine(d.duree ?? "").slice(0, 60);
+  const diffusion = oneLine(d.diffusion ?? "").slice(0, 120);
+  const creneau = oneLine(d.creneau ?? "").slice(0, 120);
   const errors = {};
   if (nom.length < 2 || nom.length > MAX.nom) errors.nom = "Indiquez votre nom.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > MAX.email) errors.email = "Indiquez un e-mail valide.";
   if (!PROJETS.includes(projet)) errors.projet = "Choisissez un type de projet.";
   if (message.length < 10 || message.length > MAX.message) errors.message = "Écrivez quelques lignes sur le film.";
+  if (creneau.length < 3) errors.creneau = "Choisissez un créneau de rendez-vous.";
   const bot = Boolean(d.website) || !(now - Number(d.t) >= MIN_FILL_MS);
-  return { ok: !Object.keys(errors).length, bot, errors, data: { nom, email, projet, message } };
+  return { ok: !Object.keys(errors).length, bot, errors, data: { nom, email, projet, duree, diffusion, creneau, message } };
 }
 
 export function buildMail(data, env) {
-  const { nom, email, projet, message } = data;
+  const { nom, email, projet, duree, diffusion, creneau, message } = data;
+  const label = String(creneau || "").replace(/\s*\([^)]*\)\s*$/, "");
+  const rows = [
+    ["Nom", nom],
+    ["E-mail", email],
+    ["Projet", projet],
+    ...(duree ? [["Durée", duree]] : []),
+    ...(diffusion ? [["Diffusion", diffusion]] : []),
+    ["Créneau", creneau],
+  ];
   return {
     from: env.MAIL_FROM || "Buttiscreen <brief@buttiscreen.fr>",
     to: [env.MAIL_TO || "contact@buttiscreen.fr"],
     reply_to: email,
-    subject: `Brief — ${projet} — ${nom}`.slice(0, 200),
-    text: `Nom : ${nom}\nE-mail : ${email}\nProjet : ${projet}\n\n${message}`,
+    subject: `Rendez-vous ${label} — ${projet} — ${nom}`.slice(0, 200),
+    text: `${rows.map(([k, v]) => `${k} : ${v}`).join("\n")}\n\n${message}`,
     html:
-      `<p><strong>Nom</strong> : ${esc(nom)}<br><strong>E-mail</strong> : ${esc(email)}<br>` +
-      `<strong>Projet</strong> : ${esc(projet)}</p><p style="white-space:pre-wrap">${esc(message)}</p>`,
+      `<p>${rows.map(([k, v]) => `<strong>${k}</strong> : ${esc(v)}`).join("<br>")}</p>` +
+      `<p style="white-space:pre-wrap">${esc(message)}</p>`,
   };
 }
 
@@ -227,8 +241,22 @@ async function getBrief(env, id, ip, allowed) {
   );
 }
 
-// Brief du tunnel : copie seulement (le studio reçoit déjà ce brief par le tunnel), accusé si les limites le permettent.
-async function handleTunnel(request, env, ctx, allowed) {
+async function sendStudioMail(env, data) {
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify(buildMail(data, env)),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// Brief du tunnel : toujours un rendez-vous. Le studio est prévenu par Resend et par la gestion (Make) ; la réponse n'est
+// « ok » que si l'un des deux a bien reçu le projet, puisque le visiteur lit « votre projet est bien envoyé ».
+async function handleBrief(request, env, ctx, allowed) {
   let input;
   try {
     const body = await readBody(request);
@@ -237,27 +265,27 @@ async function handleTunnel(request, env, ctx, allowed) {
   } catch {
     return reply({ error: "json" }, 400, allowed);
   }
-  const d = input && typeof input === "object" ? input : {};
-  const data = {
-    nom: clip(d.nom, MAX.nom),
-    email: clip(d.email, MAX.email),
-    projet: clip(d.projet, MAX.projet),
-    duree: clip(d.duree, 60),
-    diffusion: clip(d.diffusion, 120),
-    creneau: clip(d.creneau, 120),
-    message: String(d.message ?? "").trim().slice(0, MAX.message),
-  };
+  const v = validate(input);
+  if (v.bot) return reply({ ok: true }, 200, allowed); // on ne renseigne pas les robots
+  if (!v.ok) return reply({ error: "validation", fields: v.errors }, 422, allowed);
+  const data = v.data;
   const ip = request.headers.get("cf-connecting-ip");
-  if (data.nom.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || !data.projet || data.message.length < 10) {
-    return reply({ error: "validation" }, 422, allowed);
-  }
   if (env.RATE && !(await bump(env.RATE, `t:${ip || "inconnue"}:${Math.floor(Date.now() / 3_600_000)}`, 10, 3600))) {
-    return reply({ ok: true }, 200, allowed);
+    return reply({ error: "limite" }, 429, allowed);
   }
+  // Un double clic ou un nouvel essai ne crée ni deuxième e-mail ni deuxième fiche.
+  const twin = env.RATE ? `d:${await sha256(`${data.email.toLowerCase()}|${data.creneau}|${data.message}`)}` : "";
+  if (twin) {
+    const seen = await env.RATE.get(twin);
+    if (seen) return reply(ID_RE.test(seen) ? { ok: true, id: seen } : { ok: true }, 200, allowed);
+  }
+  const [mailed, rdv] = await Promise.all([sendStudioMail(env, data), pushRdv(env, data)]);
+  if (!mailed && !(rdv && rdv.ok !== false)) return reply({ error: "send" }, 502, allowed);
   const id = await storeBrief(env, data, "tunnel");
-  const both = Promise.all([sendConfirmation(env, data, ip, id), pushRdv(env, data)]);
-  if (ctx && ctx.waitUntil) ctx.waitUntil(both);
-  else await both;
+  if (twin) await env.RATE.put(twin, id || "1", { expirationTtl: 600 });
+  const ack = sendConfirmation(env, data, ip, id);
+  if (ctx && ctx.waitUntil) ctx.waitUntil(ack);
+  else await ack;
   return reply(id ? { ok: true, id } : { ok: true }, 200, allowed);
 }
 
@@ -351,32 +379,7 @@ export default {
     if (!allowed) return reply({ error: "origin" }, 403, "");
     if (!env.RESEND_API_KEY) return reply({ error: "config" }, 500, allowed);
     if (path === "/lien") return handleLink(request, env, ctx, allowed);
-    if (path === "/tunnel") return handleTunnel(request, env, ctx, allowed);
-
-    let input;
-    try {
-      const raw = await request.text();
-      if (raw.length > 20000) return reply({ error: "size" }, 413, allowed);
-      input = JSON.parse(raw);
-    } catch {
-      return reply({ error: "json" }, 400, allowed);
-    }
-
-    const v = validate(input);
-    if (v.bot) return reply({ ok: true }, 200, allowed); // on ne renseigne pas les robots
-    if (!v.ok) return reply({ error: "validation", fields: v.errors }, 422, allowed);
-
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
-      body: JSON.stringify(buildMail(v.data, env)),
-    });
-    if (!res.ok) return reply({ error: "send" }, 502, allowed);
-
-    const id = await storeBrief(env, v.data, "site");
-    const confirmation = sendConfirmation(env, v.data, request.headers.get("cf-connecting-ip"), id);
-    if (ctx && ctx.waitUntil) ctx.waitUntil(confirmation);
-    else await confirmation;
-    return reply({ ok: true }, 200, allowed);
+    if (path === "/" || path === "/tunnel") return handleBrief(request, env, ctx, allowed);
+    return reply({ error: "introuvable" }, 404, allowed);
   },
 };

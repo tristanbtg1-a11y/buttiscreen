@@ -1,6 +1,7 @@
 (() => {
-  const MAILHOOK = "4wxc1v3zhi3323lkdnpej56j5havqk2g@hook.eu1.make.com";
+  const ENDPOINT = "https://buttiscreen-contact.tristan-buttig1.workers.dev/tunnel";
   const STUDIO = "contact@buttiscreen.fr";
+  const opened = Date.now();
   const store = {
     nom: "",
     email: "",
@@ -30,59 +31,6 @@
   const panes = [...document.querySelectorAll(".tunnel-pane")];
   const tabs = [...document.querySelectorAll(".tunnel-track .clip")];
 
-  const stripeUrl = (value) => {
-    try {
-      const url = new URL(String(value || ""));
-      return (
-        url.protocol === "https:" &&
-        (url.hostname === "buy.stripe.com" || url.hostname === "checkout.stripe.com")
-      );
-    } catch {
-      return false;
-    }
-  };
-
-  const formatEuros = (value) => {
-    const number = Number(String(value || "").replace(",", "."));
-    if (!Number.isFinite(number) || number <= 0) return "";
-    return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(number);
-  };
-
-  let briefId = Promise.resolve("");
-
-  const lookupPay = async () => {
-    const pay = document.getElementById("pay");
-    const status = document.getElementById("pay-status");
-    const email = String(store.email || (window.ButtiAuth && window.ButtiAuth.email()) || "")
-      .trim()
-      .toLowerCase();
-    if (!pay) return;
-    if (!email) {
-      if (status) status.textContent = "Le lien Stripe arrive avec le devis chiffré.";
-      return;
-    }
-    try {
-      const id = await briefId;
-      const answer = id && window.ButtiAuth ? await window.ButtiAuth.devisByBrief(id) : { status: 0, json: null };
-      const data = answer.status === 200 ? answer.json : null;
-      const amount = formatEuros(data && data.montant);
-      if (stripeUrl(data && data.url)) {
-        pay.href = data.url;
-        pay.classList.remove("is-wait");
-        pay.removeAttribute("aria-disabled");
-        if (status) status.textContent = amount ? `Devis ${amount}. Le règlement s’ouvre sur Stripe.` : "Le devis est prêt.";
-        return;
-      }
-      if (status) {
-        status.textContent = amount
-          ? `Devis ${amount}. Le lien Stripe arrive avec le devis chiffré.`
-          : "Le lien Stripe arrive avec le devis chiffré.";
-      }
-    } catch {
-      if (status) status.textContent = "Le lien Stripe arrive avec le devis chiffré.";
-    }
-  };
-
   const show = (step) => {
     panes.forEach((pane) => {
       pane.hidden = pane.id !== `pane-${step}`;
@@ -92,7 +40,6 @@
       tab.classList.toggle("is-active", on);
       tab.setAttribute("aria-selected", on ? "true" : "false");
     });
-    if (step === "reglement") lookupPay();
   };
 
   tabs.forEach((tab) => {
@@ -122,11 +69,11 @@
     const okNom = store.nom.length >= 2;
     const okMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.email);
     const okProjet = store.projet.length > 0;
-    const okMessage = store.message.length >= 8;
+    const okMessage = store.message.length >= 10;
     setError("err-nom", okNom ? "" : "Indiquez votre nom.");
     setError("err-email", okMail ? "" : "Indiquez un e-mail valide.");
     setError("err-projet", okProjet ? "" : "Choisissez un type de projet.");
-    setError("err-message", okMessage ? "" : "Écrivez le brief, quelques mots suffisent.");
+    setError("err-message", okMessage ? "" : "Écrivez le brief : quelques lignes suffisent (10 caractères au moins).");
     if (okNom && okMail && okProjet && okMessage) show("rdv");
   });
 
@@ -204,31 +151,48 @@
       store.message,
     ].join("\n");
 
-  document.getElementById("send-brief")?.addEventListener("click", async () => {
-    const status = document.getElementById("send-status");
-    window.ButtiBrief?.save(store);
-    briefId = fetch("https://buttiscreen-contact.tristan-buttig1.workers.dev/tunnel", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...store, website: "", t: Date.now() - 5000 }),
-    })
-      .then((response) => response.json())
-      .then((json) => String((json && json.id) || ""))
-      .catch(() => "");
-    // Le Worker enregistre le rendez-vous chez Make ; on attend sa réponse (4 s au plus) avant d'ouvrir la messagerie.
-    await Promise.race([briefId, new Promise((resolve) => setTimeout(resolve, 4000))]);
-    const href = `mailto:${MAILHOOK}?cc=${encodeURIComponent(STUDIO)}&subject=${encodeURIComponent("Brief BUTTISCREEN")}&body=${encodeURIComponent(bodyOf())}`;
-    if (status) status.textContent = "Le message s’ouvre dans votre messagerie, vers le studio.";
-    window.location.href = href;
-    show("reglement");
-  });
+  const sendBtn = document.getElementById("send-brief");
+  const sendStatus = document.getElementById("send-status");
+  const sendFail = document.getElementById("send-fail");
+  const sendMail = document.getElementById("send-mail");
 
-  document.getElementById("pay")?.addEventListener("click", (event) => {
-    const pay = document.getElementById("pay");
-    if (stripeUrl(pay?.getAttribute("href"))) return;
-    event.preventDefault();
-    const status = document.getElementById("pay-status");
-    if (status) status.textContent = "Le devis se charge. Réappuyez dans un instant.";
-    lookupPay();
+  // L'envoi passe par le Worker, qui prévient le studio par e-mail et dans la gestion. Le message de réussite
+  // n'apparaît que sur sa réponse ; en cas d'échec, un lien vers la messagerie reste en secours, sans s'ouvrir seul.
+  sendBtn?.addEventListener("click", async () => {
+    if (sendBtn.disabled) return;
+    sendBtn.disabled = true;
+    if (sendFail) sendFail.hidden = true;
+    if (sendStatus) sendStatus.textContent = "Envoi au studio en cours…";
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), 15000);
+    let ok = false;
+    try {
+      const response = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...store, website: "", t: opened }),
+        signal: ctrl.signal,
+      });
+      const json = await response.json().catch(() => null);
+      ok = response.ok && Boolean(json && json.ok);
+    } catch {
+      ok = false;
+    } finally {
+      window.clearTimeout(timer);
+    }
+    if (ok) {
+      window.ButtiBrief?.save(store);
+      if (sendStatus) sendStatus.textContent = "";
+      const tab = document.getElementById("tab-envoye");
+      if (tab) tab.hidden = false;
+      show("envoye");
+      document.getElementById("pane-envoye")?.focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    sendBtn.disabled = false;
+    if (sendStatus) sendStatus.textContent = "";
+    if (sendMail) sendMail.href = `mailto:${STUDIO}?subject=${encodeURIComponent("Brief BUTTISCREEN")}&body=${encodeURIComponent(bodyOf())}`;
+    if (sendFail) sendFail.hidden = false;
   });
 })();

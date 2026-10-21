@@ -4660,3 +4660,19 @@ dialog.welcome.is-paused:not(.is-closing) .welcome-play {
   cursor: pointer;
   margin-bottom: 1rem;
 }
+
+.fin-cta {
+  margin: 28px 0 0;
+}
+
+.tunnel-sent h2 {
+  max-width: 18ch;
+}
+
+.tunnel-sent:focus {
+  outline: none;
+}
+
+.tunnel-sent .form-actions {
+  margin-top: 28px;
+}
